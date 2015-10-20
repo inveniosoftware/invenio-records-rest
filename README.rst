@@ -22,23 +22,23 @@
     as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 =========================
- Invenio-Records-RestAPI
+ Invenio-Records-Rest
 =========================
 
-.. image:: https://img.shields.io/travis/inveniosoftware/invenio-records-restapi.svg
-        :target: https://travis-ci.org/inveniosoftware/invenio-records-restapi
+.. image:: https://img.shields.io/travis/inveniosoftware/invenio-records-rest.svg
+        :target: https://travis-ci.org/inveniosoftware/invenio-records-rest
 
-.. image:: https://img.shields.io/coveralls/inveniosoftware/invenio-records-restapi.svg
-        :target: https://coveralls.io/r/inveniosoftware/invenio-records-restapi
+.. image:: https://img.shields.io/coveralls/inveniosoftware/invenio-records-rest.svg
+        :target: https://coveralls.io/r/inveniosoftware/invenio-records-rest
 
-.. image:: https://img.shields.io/github/tag/inveniosoftware/invenio-records-restapi.svg
-        :target: https://github.com/inveniosoftware/invenio-records-restapi/releases
+.. image:: https://img.shields.io/github/tag/inveniosoftware/invenio-records-rest.svg
+        :target: https://github.com/inveniosoftware/invenio-records-rest/releases
 
-.. image:: https://img.shields.io/pypi/dm/invenio-records-restapi.svg
-        :target: https://pypi.python.org/pypi/invenio-records-restapi
+.. image:: https://img.shields.io/pypi/dm/invenio-records-rest.svg
+        :target: https://pypi.python.org/pypi/invenio-records-rest
 
-.. image:: https://img.shields.io/github/license/inveniosoftware/invenio-records-restapi.svg
-        :target: https://github.com/inveniosoftware/invenio-records-restapi/blob/master/LICENSE
+.. image:: https://img.shields.io/github/license/inveniosoftware/invenio-records-rest.svg
+        :target: https://github.com/inveniosoftware/invenio-records-rest/blob/master/LICENSE
 
 
 REST API for invenio-records.
@@ -46,4 +46,4 @@ REST API for invenio-records.
 *This is an experimental developer preview release.*
 
 * Free software: GPLv2 license
-* Documentation: https://pythonhosted.org/invenio-records-restapi/
+* Documentation: https://pythonhosted.org/invenio-records-rest/
