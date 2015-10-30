@@ -28,3 +28,4 @@ Authors
 REST API for invenio-records.
 
 - Nicolas Harraudeau <nicolas.harraudeau@cern.ch>
+- Lars Holm Nielsen <lars.holm.nielsen@cern.ch>

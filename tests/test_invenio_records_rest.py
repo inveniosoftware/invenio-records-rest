@@ -68,7 +68,7 @@ test_data_patched = apply_patch(test_data, test_patch)
 
 
 def test_valid_create(app):
-    """Test VALID record creation request (POST .../records/)"""
+    """Test VALID record creation request (POST .../records/)."""
     with app.app_context():
         InvenioRecordsREST(app)
         with app.test_client() as client:
@@ -94,7 +94,7 @@ def test_valid_create(app):
 
 
 def test_invalid_create(app):
-    """Test INVALID record creation request (POST .../records/)"""
+    """Test INVALID record creation request (POST .../records/)."""
     with app.app_context():
         InvenioRecordsREST(app)
         with app.test_client() as client:
@@ -127,7 +127,7 @@ def test_invalid_create(app):
 
 
 def test_valid_get(app):
-    """Test VALID record get request (GET .../records/<record_id>)"""
+    """Test VALID record get request (GET .../records/<record_id>)."""
     with app.app_context():
         InvenioRecordsREST(app)
         # create the record using the internal API
@@ -152,7 +152,7 @@ def test_valid_get(app):
 
 
 def test_invalid_get(app):
-    """Test INVALID record get request (GET .../records/<record_id>)"""
+    """Test INVALID record get request (GET .../records/<record_id>)."""
     with app.app_context():
         InvenioRecordsREST(app)
         with app.test_client() as client:
@@ -175,7 +175,7 @@ def test_invalid_get(app):
 
 
 def test_valid_patch(app):
-    """Test VALID record patch request (PATCH .../records/<record_id>)"""
+    """Test VALID record patch request (PATCH .../records/<record_id>)."""
     with app.app_context():
         InvenioRecordsREST(app)
         # create the record using the internal API
@@ -204,7 +204,7 @@ def test_valid_patch(app):
 
 
 def test_invalid_patch(app):
-    """Test INVALID record patch request (PATCH .../records/<record_id>)"""
+    """Test INVALID record patch request (PATCH .../records/<record_id>)."""
     with app.app_context():
         InvenioRecordsREST(app)
         with app.test_client() as client:
@@ -263,7 +263,7 @@ def test_invalid_patch(app):
 
 
 def test_valid_put(app):
-    """Test VALID record patch request (PATCH .../records/<record_id>)"""
+    """Test VALID record patch request (PATCH .../records/<record_id>)."""
     with app.app_context():
         InvenioRecordsREST(app)
         # create the record using the internal API
@@ -292,7 +292,7 @@ def test_valid_put(app):
 
 
 def test_invalid_put(app):
-    """Test INVALID record put request (PUT .../records/<record_id>)"""
+    """Test INVALID record put request (PUT .../records/<record_id>)."""
     with app.app_context():
         InvenioRecordsREST(app)
         with app.test_client() as client:
@@ -339,8 +339,9 @@ def test_invalid_put(app):
 
 
 def subtest_self_link(response_data, response_headers, client):
-    """Check that the returned self link returns the same data and that the
-    headers has the same link as 'Location'.
+    """Check that the returned self link returns the same data.
+
+    Also, check that headers have the same link as 'Location'.
     """
     assert 'links' in response_data.keys() \
         and isinstance(response_data['links'], dict)
