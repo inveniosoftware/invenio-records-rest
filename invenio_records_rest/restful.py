@@ -34,6 +34,7 @@ from sqlalchemy.orm.exc import NoResultFound
 blueprint = Blueprint(
     'invenio_records_rest',
     __name__,
+    url_prefix='/records'
 )
 
 
@@ -188,9 +189,9 @@ class RecordResource(ContentNegotiatedMethodView):
         return self.make_response(record)
 
 
-blueprint.add_url_rule('/records',
+blueprint.add_url_rule('/',
                        view_func=RecordsListResource
                        .as_view(RecordsListResource.view_name))
-blueprint.add_url_rule('/records/<int:record_id>',
+blueprint.add_url_rule('/<int:record_id>',
                        view_func=RecordResource
                        .as_view(RecordResource.view_name))
