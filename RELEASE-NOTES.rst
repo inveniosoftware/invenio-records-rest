@@ -2,7 +2,7 @@
  Invenio-Records-Rest v1.0.0
 ================================
 
-Invenio-Records-Rest v1.0.0 was released on October 30, 2015.
+Invenio-Records-Rest v1.0.0 was released on November 1, 2015.
 
 About
 -----
