@@ -30,7 +30,7 @@ from .restful import blueprint
 
 
 class InvenioRecordsREST(object):
-    """Invenio-Records-Rest extension."""
+    """Invenio-Records-REST extension."""
 
     def __init__(self, app=None):
         """Extension initialization."""

@@ -33,8 +33,8 @@ is open to whoever wants to implement it.
 Write Documentation
 ~~~~~~~~~~~~~~~~~~~
 
-Invenio-Records-Rest could always use more documentation, whether as part of the
-official Invenio-Records-Rest docs, in docstrings, or even on the web in blog posts,
+Invenio-Records-REST could always use more documentation, whether as part of the
+official Invenio-Records-REST docs, in docstrings, or even on the web in blog posts,
 articles, and such.
 
 Submit Feedback

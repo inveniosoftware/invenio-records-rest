@@ -21,9 +21,9 @@
     waive the privileges and immunities granted to it by virtue of its status
     as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-=========================
- Invenio-Records-Rest
-=========================
+======================
+ Invenio-Records-REST
+======================
 
 .. image:: https://img.shields.io/travis/inveniosoftware/invenio-records-rest.svg
         :target: https://travis-ci.org/inveniosoftware/invenio-records-rest

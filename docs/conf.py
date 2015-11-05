@@ -69,7 +69,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Invenio-Records-Rest'
+project = u'Invenio-Records-REST'
 copyright = u'2015, CERN'
 author = u'CERN'
 
@@ -316,7 +316,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'invenio-records-rest', u'Invenio-Records-Rest Documentation',
+    (master_doc, 'invenio-records-rest', u'Invenio-Records-REST Documentation',
      author, 'invenio-records-rest', 'REST API for invenio-records.',
      'Miscellaneous'),
 ]

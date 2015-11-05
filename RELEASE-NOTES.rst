@@ -1,8 +1,8 @@
-================================
- Invenio-Records-Rest v1.0.0
-================================
+=============================
+ Invenio-Records-REST v1.0.0
+=============================
 
-Invenio-Records-Rest v1.0.0 was released on November 1, 2015.
+Invenio-Records-REST v1.0.0 was released on November 1, 2015.
 
 About
 -----
@@ -26,7 +26,7 @@ Documentation
 
    http://pythonhosted.org/invenio-records-rest/
 
-Happy hacking and thanks for flying Invenio-Records-Rest.
+Happy hacking and thanks for flying Invenio-Records-REST.
 
 | Invenio Development Team
 |   Email: info@invenio-software.org
