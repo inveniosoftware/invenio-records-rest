@@ -36,6 +36,7 @@ history = open('CHANGES.rst').read()
 tests_require = [
     'check-manifest>=0.25',
     'coverage>=4.0',
+    'invenio-db[all]>=1.0.0a5',
     'isort>=4.2.2',
     'pep257>=0.7.0',
     'pytest-cache>=1.0',
@@ -45,14 +46,8 @@ tests_require = [
 ]
 
 extras_require = {
-    'mysql': [
-        'pymysql>=0.6.7',
-    ],
-    'postgresql': [
-        'psycopg2>=2.6.1',
-    ],
     'docs': [
-        "Sphinx>=1.3",
+        'Sphinx>=1.3',
     ],
     'tests': tests_require,
 }
@@ -65,13 +60,12 @@ setup_requires = [
 ]
 
 install_requires = [
-    'Flask-restful>=0.3.0',
     'Flask>=0.10',
     'Flask-CLI>=0.2.1',
     'six>=1.10',
-    'invenio-rest>=1.0.0a1',
-    'invenio-records>=1.0.0a2',
-    # FIXME 'invenio-pidstore>=1.0.0a1',
+    'invenio-rest>=1.0.0a2',
+    'invenio-records>=1.0.0a3',
+    'invenio-pidstore>=1.0.0a1',
 ]
 
 packages = find_packages()
