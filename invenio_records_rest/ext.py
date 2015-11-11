@@ -26,7 +26,7 @@
 
 from __future__ import absolute_import, print_function
 
-from .restful import blueprint
+from .views import create_blueprint
 
 
 class InvenioRecordsREST(object):
@@ -40,9 +40,23 @@ class InvenioRecordsREST(object):
     def init_app(self, app):
         """Flask application initialization."""
         self.init_config(app)
+        # Register records API blueprints
+        app.register_blueprint(
+            create_blueprint(app.config["RECORDS_REST_ENDPOINTS"])
+        )
         app.extensions['invenio-records-rest'] = self
-        app.register_blueprint(blueprint)
 
     def init_config(self, app):
         """Initialize configuration."""
-        pass
+        # Set up API endpoints for records.
+        app.config.setdefault(
+            "RECORDS_REST_ENDPOINTS",
+            dict(
+                recid=dict(
+                    pid_type='recid',
+                    pid_minter='recid_minter',
+                    list_route='/records/',
+                    item_route='/records/<pid_value>',
+                ),
+            )
+        )

@@ -36,7 +36,7 @@ history = open('CHANGES.rst').read()
 tests_require = [
     'check-manifest>=0.25',
     'coverage>=4.0',
-    'invenio-db[all]>=1.0.0a5',
+    'invenio-db[all]>=1.0.0a6',
     'isort>=4.2.2',
     'pep257>=0.7.0',
     'pytest-cache>=1.0',
@@ -63,9 +63,9 @@ install_requires = [
     'Flask>=0.10',
     'Flask-CLI>=0.2.1',
     'six>=1.10',
-    'invenio-rest>=1.0.0a2',
-    'invenio-records>=1.0.0a3',
-    'invenio-pidstore>=1.0.0a1',
+    'invenio-rest>=1.0.0a3',
+    'invenio-records>=1.0.0a4',
+    'invenio-pidstore>=1.0.0a2',
 ]
 
 packages = find_packages()
