@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2015, 2016 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -26,7 +26,64 @@
 
 from __future__ import absolute_import, print_function
 
+from werkzeug.utils import import_string, cached_property
+
 from .views import create_blueprint
+
+
+class _RecordRESTState(object):
+    """Record REST state."""
+
+    def __init__(self, app):
+        """Initialize state."""
+        self.app = app
+        self._read_permission_factory = None
+        self._create_permission_factory = None
+        self._update_permission_factory = None
+        self._delete_permission_factory = None
+
+    @cached_property
+    def read_permission_factory(self):
+        """Load default read permission factory."""
+        if self._read_permission_factory is None:
+            imp = self.app.config[
+                "RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY"
+            ]
+            self._read_permission_factory = import_string(imp) if imp else None
+        return self._read_permission_factory
+
+    @cached_property
+    def create_permission_factory(self):
+        """Load default create permission factory."""
+        if self._create_permission_factory is None:
+            imp = self.app.config[
+                "RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY"
+            ]
+            self._create_permission_factory = import_string(imp) \
+                if imp else None
+        return self._create_permission_factory
+
+    @cached_property
+    def update_permission_factory(self):
+        """Load default update permission factory."""
+        if self._update_permission_factory is None:
+            imp = self.app.config[
+                "RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY"
+            ]
+            self._update_permission_factory = import_string(imp) \
+                if imp else None
+        return self._update_permission_factory
+
+    @cached_property
+    def delete_permission_factory(self):
+        """Load default delete permission factory."""
+        if self._delete_permission_factory is None:
+            imp = self.app.config[
+                "RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY"
+            ]
+            self._delete_permission_factory = import_string(imp) \
+                if imp else None
+        return self._delete_permission_factory
 
 
 class InvenioRecordsREST(object):
@@ -44,7 +101,7 @@ class InvenioRecordsREST(object):
         app.register_blueprint(
             create_blueprint(app.config["RECORDS_REST_ENDPOINTS"])
         )
-        app.extensions['invenio-records-rest'] = self
+        app.extensions['invenio-records-rest'] = _RecordRESTState(app)
 
     def init_config(self, app):
         """Initialize configuration."""

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2015, 2016 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -25,18 +25,34 @@
 
 """Minimal Flask application example for development.
 
+For this example the access control is disabled.
+
 Run example development server:
 
 .. code-block:: console
 
-   $ cd examples
-   $ flask -a app.py db init
-   $ flask -a app.py db create
-   $ flask -a app.py load_fixture
-   $ flask -a app.py --debug run
+    $ cd examples
+    $ flask -a app.py db init
+    $ flask -a app.py db create
+    $ flask -a app.py fixture records
+    $ flask -a app.py --debug run
+
+Try to get some records:
+
+.. code-block:: console
+
+    $ curl -XGET http://localhost:5000/records/1
+    $ curl -XGET http://localhost:5000/records/2
+    $ curl -XGET http://localhost:5000/records/3
+    $ curl -XGET http://localhost:5000/records/4
+    $ curl -XGET http://localhost:5000/records/5
+    $ curl -XGET http://localhost:5000/records/6
+    $ curl -XGET http://localhost:5000/records/7
 """
 
 from __future__ import absolute_import, print_function
+
+import os
 
 from flask import Flask
 from flask_celeryext import FlaskCeleryExt
@@ -48,13 +64,25 @@ from invenio_rest import InvenioREST
 
 from invenio_records_rest import InvenioRecordsREST
 
+
+# create application's instance directory. Needed for this example only.
+current_dir = os.path.dirname(os.path.realpath(__file__))
+instance_dir = os.path.join(current_dir, 'app_instance')
+if not os.path.exists(instance_dir):
+    os.makedirs(instance_dir)
+
 # Create Flask application
-app = Flask(__name__)
+app = Flask(__name__, instance_path=instance_dir)
 app.config.update(
     CELERY_ALWAYS_EAGER=True,
     CELERY_CACHE_BACKEND="memory",
     CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
     CELERY_RESULT_BACKEND="cache",
+    # No permission checking
+    RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY=None,
+    RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY=None,
+    RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY=None,
+    RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY=None,
 )
 FlaskCLI(app)
 FlaskCeleryExt(app)
@@ -65,8 +93,13 @@ InvenioRecords(app)
 InvenioRecordsREST(app)
 
 
-@app.cli.command()
-def load_fixture():
+@app.cli.group()
+def fixtures():
+    """Command for working with test data."""
+
+
+@fixtures.command()
+def records():
     """Load test data fixture."""
     import uuid
     from invenio_records.api import Record
@@ -111,6 +144,3 @@ def load_fixture():
         # Record 7 - Unregistered PID
         PersistentIdentifier.create(
             'recid', '7', status=PIDStatus.RESERVED)
-
-if __name__ == "__main__":
-    app.run()

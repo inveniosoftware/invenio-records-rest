@@ -42,8 +42,14 @@ from invenio_rest.decorators import require_content_types
 from jsonpatch import JsonPatchException, JsonPointerException
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.routing import BuildError
+from werkzeug.local import LocalProxy
+from werkzeug.utils import import_string
 
 from .serializers import record_to_json_serializer
+
+
+current_records_rest = LocalProxy(
+    lambda: current_app.extensions['invenio-records-rest'])
 
 
 def create_blueprint(endpoints):
@@ -62,11 +68,44 @@ def create_blueprint(endpoints):
 
 
 def create_url_rules(endpoint, list_route=None, item_route=None,
-                     pid_type=None, pid_minter=None):
-    """Create Werkzeug URL rules."""
+                     pid_type=None, pid_minter=None,
+                     read_permission_factory_imp=None,
+                     create_permission_factory_imp=None,
+                     update_permission_factory_imp=None,
+                     delete_permission_factory_imp=None):
+    """Create Werkzeug URL rules.
+
+    :param endpoint: Name of endpoint.
+    :param list_route: record listing URL route . Required.
+    :param item_route: record URL route (must include ``<pid_value>`` pattern).
+        Required.
+    :param pid_type: Persistent identifier type for endpoint. Required.
+    :param template: Template to render. Defaults to
+        ``invenio_records_ui/detail.html``.
+    :param read_permission_factory: Import path to factory that creates a read
+        permission object for a given record.
+    :param create_permission_factory: Import path to factory that creates a
+        create permission object for a given record.
+    :param update_permission_factory: Import path to factory that creates a
+        update permission object for a given record.
+    :param delete_permission_factory: Import path to factory that creates a
+        delete permission object for a given record.
+
+    :returns: a list of dictionaries with can each be passed as keywords
+        arguments to ``Blueprint.add_url_rule``.
+    """
     assert list_route
     assert item_route
     assert pid_type
+
+    read_permission_factory = import_string(read_permission_factory_imp) \
+        if read_permission_factory_imp else None
+    create_permission_factory = import_string(create_permission_factory_imp) \
+        if create_permission_factory_imp else None
+    update_permission_factory = import_string(update_permission_factory_imp) \
+        if update_permission_factory_imp else None
+    delete_permission_factory = import_string(delete_permission_factory_imp) \
+        if delete_permission_factory_imp else None
 
     resolver = Resolver(pid_type=pid_type, object_type='rec',
                         getter=Record.get_record)
@@ -77,10 +116,15 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         RecordsListResource.view_name.format(endpoint),
         resolver=resolver,
         minter_name=pid_minter,
+        read_permission_factory=read_permission_factory,
+        create_permission_factory=create_permission_factory,
         serializers=serializers)
     item_view = RecordResource.as_view(
         RecordResource.view_name.format(endpoint),
         resolver=resolver,
+        read_permission_factory=read_permission_factory,
+        update_permission_factory=update_permission_factory,
+        delete_permission_factory=delete_permission_factory,
         serializers=serializers)
 
     return [
@@ -129,8 +173,42 @@ def pass_record(f):
                     })
                 abort(500)
 
-        return f(self, pid, record, *args, **kwargs)
+        return f(self, pid=pid, record=record, *args, **kwargs)
     return inner
+
+
+def verify_record_permission(permission_factory, record):
+    """Check that the current user has the required permissions on record.
+
+    :param permission_factory: permission factory used to check permissions.
+    :param record: record whose access is limited.
+    """
+    # Note, cannot be done in one line due overloading of boolean
+    # operations permission object.
+    if not permission_factory(record).can():
+        from flask_login import current_user
+        if not current_user.is_authenticated:
+            abort(401)
+        abort(403)
+
+
+def need_record_permission(factory_name):
+    """Decorator checking that the user has the required permissions on record.
+
+    :param factory_name: name of the factory to retrieve.
+    """
+    def need_record_permission_builder(f):
+        @wraps(f)
+        def need_record_permission_decorator(self, record, *args, **kwargs):
+            permission_factory = (
+                getattr(self, factory_name) or
+                getattr(current_records_rest, factory_name)
+            )
+            if permission_factory:
+                verify_record_permission(permission_factory, record)
+            return f(self, record=record, *args, **kwargs)
+        return need_record_permission_decorator
+    return need_record_permission_builder
 
 
 class RecordsListResource(ContentNegotiatedMethodView):
@@ -138,11 +216,15 @@ class RecordsListResource(ContentNegotiatedMethodView):
 
     view_name = '{0}_list'
 
-    def __init__(self, resolver=None, minter_name=None, **kwargs):
+    def __init__(self, resolver=None, minter_name=None,
+                 read_permission_factory=None, create_permission_factory=None,
+                 **kwargs):
         """Constructor."""
         super(RecordsListResource, self).__init__(**kwargs)
         self.resolver = resolver
         self.minter = current_pidstore.minters[minter_name]
+        self.read_permission_factory = read_permission_factory
+        self.create_permission_factory = create_permission_factory
 
     def post(self, **kwargs):
         """Create a record.
@@ -165,6 +247,12 @@ class RecordsListResource(ContentNegotiatedMethodView):
             # Create record
             record = Record.create(data, id_=record_uuid)
 
+            # Check permissions
+            permission_factory = self.create_permission_factory or \
+                current_records_rest.create_permission_factory
+            if permission_factory:
+                verify_record_permission(permission_factory, record)
+
             db.session.commit()
         except SQLAlchemyError:
             db.session.rollback()
@@ -178,15 +266,21 @@ class RecordResource(ContentNegotiatedMethodView):
 
     view_name = '{0}_item'
 
-    def __init__(self, resolver=None, **kwargs):
+    def __init__(self, resolver=None, read_permission_factory=None,
+                 update_permission_factory=None,
+                 delete_permission_factory=None, **kwargs):
         """Constructor.
 
         :param resolver: Persistent identifier resolver instance.
         """
         super(RecordResource, self).__init__(**kwargs)
         self.resolver = resolver
+        self.read_permission_factory = read_permission_factory
+        self.update_permission_factory = update_permission_factory
+        self.delete_permission_factory = delete_permission_factory
 
     @pass_record
+    @need_record_permission('read_permission_factory')
     def get(self, pid, record, **kwargs):
         """Get a record.
 
@@ -199,6 +293,7 @@ class RecordResource(ContentNegotiatedMethodView):
 
     @require_content_types('application/json-patch+json')
     @pass_record
+    @need_record_permission('update_permission_factory')
     def patch(self, pid, record, **kwargs):
         """Modify a record.
 
@@ -226,6 +321,7 @@ class RecordResource(ContentNegotiatedMethodView):
 
     @require_content_types('application/json')
     @pass_record
+    @need_record_permission('update_permission_factory')
     def put(self, pid, record, **kwargs):
         """Replace a record.
 
