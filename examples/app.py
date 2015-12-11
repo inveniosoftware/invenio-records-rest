@@ -34,7 +34,7 @@ Run example development server:
     $ cd examples
     $ flask -a app.py db init
     $ flask -a app.py db create
-    $ flask -a app.py fixture records
+    $ flask -a app.py fixtures records
     $ flask -a app.py --debug run
 
 Try to get some records:
@@ -144,3 +144,4 @@ def records():
         # Record 7 - Unregistered PID
         PersistentIdentifier.create(
             'recid', '7', status=PIDStatus.RESERVED)
+    db.session.commit()
