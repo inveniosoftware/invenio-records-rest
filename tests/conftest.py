@@ -39,7 +39,6 @@ from flask_menu import Menu
 from flask_security.utils import encrypt_password
 from invenio_accounts import InvenioAccounts
 from invenio_accounts.views import blueprint as accounts_blueprint
-from invenio_db import InvenioDB, db
 from invenio_pidstore import InvenioPIDStore
 from invenio_pidstore.resolver import Resolver
 from invenio_records import InvenioRecords
@@ -50,10 +49,14 @@ from sqlalchemy_utils.functions import create_database, database_exists, \
 
 from invenio_access import InvenioAccess
 from invenio_access.models import ActionUsers
+from invenio_db import InvenioDB, db
 from invenio_records_rest import InvenioRecordsREST
+from invenio_search import InvenioSearch, current_search_client
 
-from permissions import records_create_all, \
-    records_delete_all, records_read_all, records_update_all
+from access_records import filter_record_access_query_enhancer, \
+    prepare_indexing
+from permissions import records_create_all, records_delete_all, \
+    records_read_all, records_update_all
 
 
 @pytest.fixture()
@@ -61,6 +64,7 @@ def app(request):
     """Flask application fixture."""
     instance_path = tempfile.mkdtemp()
     app = Flask('testapp', instance_path=instance_path)
+    es_index = 'invenio_records_rest_test_index'
     app.config.update(
         TESTING=True,
         SERVER_NAME='localhost:5000',
@@ -72,12 +76,22 @@ def app(request):
         RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY=None,
         RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY=None,
         RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY=None,
+        RECORDS_REST_DEFAULT_SEARCH_INDEX=es_index,
+        SEARCH_INDEX_DEFAULT=es_index,
+        SEARCH_AUTOINDEX=[],
+        SEARCH_QUERY_ENHANCERS=[filter_record_access_query_enhancer],
     )
+    # update the application with the configuration provided by the test
+    if hasattr(request, 'param') and 'config' in request.param:
+        app.config.update(**request.param['config'])
+
     FlaskCLI(app)
     InvenioDB(app)
     InvenioREST(app)
     InvenioRecords(app)
     InvenioPIDStore(app)
+    InvenioSearch(app)
+    InvenioAccess(app)
     InvenioRecordsREST(app)
 
     with app.app_context():
@@ -86,6 +100,10 @@ def app(request):
             create_database(db.engine.url)
         db.drop_all()
         db.create_all()
+        if current_search_client.indices.exists(es_index):
+            current_search_client.indices.delete(es_index)
+            current_search_client.indices.create(es_index)
+        prepare_indexing(app)
 
     def finalize():
         with app.app_context():

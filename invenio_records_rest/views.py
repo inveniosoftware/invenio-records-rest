@@ -37,6 +37,7 @@ from invenio_pidstore.errors import PIDDeletedError, PIDDoesNotExistError, \
     PIDMissingObjectError, PIDRedirectedError, PIDUnregistered
 from invenio_pidstore.models import PersistentIdentifier
 from invenio_pidstore.resolver import Resolver
+from invenio_search import Query, current_search_client
 from invenio_records.api import Record
 from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.decorators import require_content_types
@@ -45,8 +46,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.local import LocalProxy
 from werkzeug.routing import BuildError
 from werkzeug.utils import import_string
-
-from .serializers import record_to_json_serializer
 
 current_records_rest = LocalProxy(
     lambda: current_app.extensions['invenio-records-rest'])
@@ -68,11 +67,13 @@ def create_blueprint(endpoints):
 
 
 def create_url_rules(endpoint, list_route=None, item_route=None,
-                     pid_type=None, pid_minter=None,
+                     pid_type=None, pid_minter=None, pid_fetcher=None,
                      read_permission_factory_imp=None,
                      create_permission_factory_imp=None,
                      update_permission_factory_imp=None,
-                     delete_permission_factory_imp=None):
+                     delete_permission_factory_imp=None,
+                     record_serializers=None, search_serializers=None,
+                     search_index=None, search_type=None):
     """Create Werkzeug URL rules.
 
     :param endpoint: Name of endpoint.
@@ -90,6 +91,10 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         update permission object for a given record.
     :param delete_permission_factory: Import path to factory that creates a
         delete permission object for a given record.
+    :param search_index: Name of the search index used when searching records.
+    :param search_type: Name of the search type used when searching records.
+    :param record_serializers: serializers used for records.
+    :param search_serializers: serializers used for search results.
 
     :returns: a list of dictionaries with can each be passed as keywords
         arguments to ``Blueprint.add_url_rule``.
@@ -97,6 +102,8 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     assert list_route
     assert item_route
     assert pid_type
+    assert search_serializers
+    assert record_serializers
 
     read_permission_factory = import_string(read_permission_factory_imp) \
         if read_permission_factory_imp else None
@@ -107,25 +114,34 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     delete_permission_factory = import_string(delete_permission_factory_imp) \
         if delete_permission_factory_imp else None
 
+    # import the serializers
+    record_serializers = {mime: import_string(func) for mime, func in
+                          record_serializers.items()}
+    search_serializers = {mime: import_string(func) for mime, func in
+                          search_serializers.items()}
+
     resolver = Resolver(pid_type=pid_type, object_type='rec',
                         getter=partial(Record.get_record, with_deleted=True))
-
-    serializers = {'application/json': record_to_json_serializer, }
 
     list_view = RecordsListResource.as_view(
         RecordsListResource.view_name.format(endpoint),
         resolver=resolver,
         minter_name=pid_minter,
+        pid_type=pid_type,
+        pid_fetcher=pid_fetcher,
         read_permission_factory=read_permission_factory,
         create_permission_factory=create_permission_factory,
-        serializers=serializers)
+        record_serializers=record_serializers,
+        search_serializers=search_serializers,
+        search_index=search_index,
+        search_type=search_type)
     item_view = RecordResource.as_view(
         RecordResource.view_name.format(endpoint),
         resolver=resolver,
         read_permission_factory=read_permission_factory,
         update_permission_factory=update_permission_factory,
         delete_permission_factory=delete_permission_factory,
-        serializers=serializers)
+        serializers=record_serializers)
 
     return [
         dict(rule=list_route, view_func=list_view),
@@ -216,15 +232,77 @@ class RecordsListResource(ContentNegotiatedMethodView):
 
     view_name = '{0}_list'
 
-    def __init__(self, resolver=None, minter_name=None,
-                 read_permission_factory=None, create_permission_factory=None,
-                 **kwargs):
+    def __init__(self, resolver=None, minter_name=None, pid_type=None,
+                 pid_fetcher=None, read_permission_factory=None,
+                 create_permission_factory=None,
+                 search_index=None, search_type=None,
+                 record_serializers=None,
+                 search_serializers=None, **kwargs):
         """Constructor."""
-        super(RecordsListResource, self).__init__(**kwargs)
+        super(RecordsListResource, self).__init__(
+            method_serializers={
+                'GET': search_serializers,
+                'POST': record_serializers,
+            },
+            **kwargs)
         self.resolver = resolver
+        self.pid_type = pid_type
         self.minter = current_pidstore.minters[minter_name]
+        self.pid_fetcher = current_pidstore.fetchers[pid_fetcher]
         self.read_permission_factory = read_permission_factory
         self.create_permission_factory = create_permission_factory
+        self.search_index = search_index
+        self.search_type = search_type
+
+    def get(self, **kwargs):
+        """Search records.
+
+        :returns: the search result containing hits and aggregations as
+        returned by invenio-search.
+        """
+        page = request.values.get('page', 1, type=int)
+        size = request.values.get('size', 10, type=int)
+        sort = request.values.get('sort', '', type=str)
+        query = Query(request.values.get('q', ''))[(page-1)*size:page*size]
+
+        for sort_key in sort.split(','):
+            if sort_key:
+                query = query.sort(sort_key)
+
+        search_index = self.search_index or current_records_rest.search_index
+        search_type = self.search_type or current_records_rest.search_type
+
+        response = current_search_client.search(
+            index=search_index,
+            doc_type=search_type,
+            body=query.body,
+            version=True,
+        )
+        links = {}
+        if page > 1:
+            links['prev'] = url_for(
+                'invenio_records_rest.{0}_list'.format(self.pid_type),
+                page=page - 1,
+                size=size,
+                sort=sort,
+                q=request.values.get('q', ''),
+                _external=True,
+            )
+        if size * page < int(response['hits']['total']):
+            links['next'] = url_for(
+                'invenio_records_rest.{0}_list'.format(self.pid_type),
+                page=page + 1,
+                size=size,
+                sort=sort,
+                q=request.values.get('q', ''),
+                _external=True,
+            )
+
+        return self.make_response(
+            pid_fetcher=self.pid_fetcher,
+            search_result=response,
+            links=links,
+        )
 
     def post(self, **kwargs):
         """Create a record.

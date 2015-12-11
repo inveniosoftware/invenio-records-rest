@@ -26,7 +26,7 @@
 
 from __future__ import absolute_import, print_function
 
-from werkzeug.utils import import_string, cached_property
+from werkzeug.utils import cached_property, import_string
 
 from .views import create_blueprint
 
@@ -41,6 +41,8 @@ class _RecordRESTState(object):
         self._create_permission_factory = None
         self._update_permission_factory = None
         self._delete_permission_factory = None
+        self._search_index = None
+        self._search_type = None
 
     @cached_property
     def read_permission_factory(self):
@@ -85,6 +87,24 @@ class _RecordRESTState(object):
                 if imp else None
         return self._delete_permission_factory
 
+    @cached_property
+    def search_index(self):
+        """Record search index."""
+        if self._search_index is None:
+            self._search_index = self.app.config[
+                'SEARCH_INDEX_DEFAULT'
+            ]
+        return self._search_index
+
+    @cached_property
+    def search_type(self):
+        """Record search type."""
+        if self._search_type is None:
+            self._search_type = self.app.config[
+                'SEARCH_DOC_TYPE_DEFAULT'
+            ]
+        return self._search_type
+
 
 class InvenioRecordsREST(object):
     """Invenio-Records-REST extension."""
@@ -112,6 +132,15 @@ class InvenioRecordsREST(object):
                 recid=dict(
                     pid_type='recid',
                     pid_minter='recid_minter',
+                    pid_fetcher='recid_fetcher',
+                    record_serializers={
+                        'application/json': ('invenio_records_rest.serializers'
+                                             ':record_to_json_serializer'),
+                    },
+                    search_serializers={
+                        'application/json': ('invenio_records_rest.serializers'
+                                             ':search_to_json_serializer'),
+                    },
                     list_route='/records/',
                     item_route='/records/<pid_value>',
                 ),

@@ -48,6 +48,12 @@ Try to get some records:
     $ curl -XGET http://localhost:5000/records/5
     $ curl -XGET http://localhost:5000/records/6
     $ curl -XGET http://localhost:5000/records/7
+
+Then search for existing records:
+
+    $ curl -v -XGET 'http://localhost:5000/records/?size=3'
+    $ curl -v -XGET 'http://localhost:5000/records/?size=2&page=3'
+    $ curl -v -XGET 'http://localhost:5000/records/?q=awesome'
 """
 
 from __future__ import absolute_import, print_function
@@ -58,12 +64,12 @@ from flask import Flask
 from flask_celeryext import FlaskCeleryExt
 from flask_cli import FlaskCLI
 from invenio_db import InvenioDB, db
-from invenio_pidstore import InvenioPIDStore
 from invenio_records import InvenioRecords
 from invenio_rest import InvenioREST
 
+from invenio_pidstore import InvenioPIDStore
 from invenio_records_rest import InvenioRecordsREST
-
+from invenio_search import InvenioSearch
 
 # create application's instance directory. Needed for this example only.
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -90,7 +96,22 @@ InvenioDB(app)
 InvenioREST(app)
 InvenioPIDStore(app)
 InvenioRecords(app)
+InvenioSearch(app)
 InvenioRecordsREST(app)
+
+# A few documents which will be added in order to make search interesting
+record_examples = [{
+    'title': 'Awesome meeting report',
+    'description': 'Notes of the last meeting.',
+    'participants': 42,
+}, {
+    'title': 'Furniture order',
+    'description': 'Tables for the meeting room.',
+}]
+record_examples += [{
+    'title': 'LHC experiment {}'.format(idx),
+    'description': 'Data from experiment {}.'.format(idx)
+} for idx in range(20)]
 
 
 @app.cli.group()
@@ -111,14 +132,22 @@ def records():
         pid1 = PersistentIdentifier.create(
             'recid', '1', object_type='rec', object_uuid=rec_uuid,
             status=PIDStatus.REGISTERED)
-        Record.create({'title': 'Registered '}, id_=rec_uuid)
+        Record.create({
+            'title': 'Registered',
+            'description': 'This is an awesome description',
+            # "mint" the record as recid minter does
+            'control_number': 1
+        }, id_=rec_uuid)
 
         # Record 2 - Deleted PID with record
         rec_uuid = uuid.uuid4()
         pid = PersistentIdentifier.create(
             'recid', '2', object_type='rec', object_uuid=rec_uuid,
             status=PIDStatus.REGISTERED)
-        Record.create({'title': 'Live '}, id_=rec_uuid)
+        Record.create({
+            'title': 'Live ',
+            'control_number': 2
+        }, id_=rec_uuid)
         pid.delete()
 
         # Record 3 - Deleted PID without a record
@@ -144,4 +173,16 @@ def records():
         # Record 7 - Unregistered PID
         PersistentIdentifier.create(
             'recid', '7', status=PIDStatus.RESERVED)
+
+        for rec_idx in range(len(record_examples)):
+            rec_uuid = uuid.uuid4()
+            rec_pid = str(8 + rec_idx)
+            pid1 = PersistentIdentifier.create(
+                'recid', rec_pid, object_type='rec', object_uuid=rec_uuid,
+                status=PIDStatus.REGISTERED)
+            # "mint" the record as recid minter does
+            record = dict(record_examples[rec_idx])
+            record['control_number'] = rec_pid
+            # create the record
+            Record.create(record, id_=rec_uuid)
     db.session.commit()
