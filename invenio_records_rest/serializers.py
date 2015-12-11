@@ -26,6 +26,7 @@
 
 from __future__ import absolute_import, print_function
 
+import pytz
 from flask import jsonify, url_for
 
 
@@ -51,17 +52,18 @@ def record_to_json_serializer(pid, record, code=200, headers=None):
     """
     # FIXME: use a formatter instead once it is implemented
     self_link = record_self_link(pid, record, _external=True)
-    response = jsonify({
+    formatted_record = {
         'id': pid.pid_value,
         'metadata': record,
         'links': {
             'self': self_link
         },
         # FIXME: ISO8601 encoded timestamps in UTC
-        'created': record.model.created,
-        'updated': record.model.updated,
-        'revision': record.model.version_id,
-    })
+        'created': pytz.utc.localize(record.created).isoformat(),
+        'updated': pytz.utc.localize(record.updated).isoformat(),
+        'revision': record.revision_id,
+    }
+    response = jsonify(formatted_record)
     response.status_code = code
     if headers is not None:
         response.headers.extend(headers)

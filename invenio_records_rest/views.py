@@ -319,7 +319,7 @@ class RecordResource(ContentNegotiatedMethodView):
         :param record: Record object.
         :returns: The requested record.
         """
-        self.check_etag(str(record.model.version_id))
+        self.check_etag(str(record.revision_id))
         return pid, record
 
     @require_content_types('application/json-patch+json')
@@ -340,7 +340,7 @@ class RecordResource(ContentNegotiatedMethodView):
         if data is None:
             abort(400)
 
-        self.check_etag(str(record.model.version_id))
+        self.check_etag(str(record.revision_id))
         try:
             record = record.patch(data)
         except (JsonPatchException, JsonPointerException):
@@ -367,7 +367,7 @@ class RecordResource(ContentNegotiatedMethodView):
         data = request.get_json()
         if data is None:
             abort(400)
-        self.check_etag(str(record.model.version_id))
+        self.check_etag(str(record.revision_id))
         record.clear()
         record.update(data)
         record.commit()
