@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2015, 2016 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -31,15 +31,18 @@ import copy
 import json
 import uuid
 
+import pytest
 from flask import Flask, url_for
 from invenio_db import db
-from invenio_pidstore import current_pidstore
 from invenio_records import Record
 from jsonpatch import apply_patch
 from mock import patch
 from six import string_types
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm.exc import NoResultFound
 
+from invenio_pidstore import current_pidstore
+from invenio_pidstore.models import PersistentIdentifier
 from invenio_records_rest import InvenioRecordsREST
 
 
@@ -81,11 +84,150 @@ def create_record(data):
     return pid, record
 
 
+def delete_record(pid, app):
+    """Delete a given record."""
+    with app.test_client() as client:
+        headers = [('Accept', 'application/json')]
+        res = client.delete(url_for('invenio_records_rest.recid_item',
+                                    pid_value=pid.pid_value),
+                            headers=headers)
+        assert res.status_code == 204
+
+
 def control_num(data, cn=1):
     """Inject a control number in data."""
     data = copy.deepcopy(data)
     data['control_number'] = cn
     return data
+
+
+def test_valid_delete(app):
+    """Test VALID record delete request (DELETE .../records/<record_id>)."""
+    with app.app_context():
+        # create the record using the internal API
+        pid, record = create_record(test_data)
+
+        with app.test_client() as client:
+            headers = [('Accept', 'application/json')]
+            res = client.delete(url_for('invenio_records_rest.recid_item',
+                                        pid_value=pid.pid_value),
+                                headers=headers)
+            assert res.status_code == 204
+            # check database state
+            with pytest.raises(NoResultFound):
+                Record.get_record(record.id)
+            assert pid.is_deleted()
+
+            # check that DELETE with non JSON accepted format will work
+            # as it returns nothing
+            pid, record = create_record(test_data)
+            headers = [('Accept', 'video/mp4')]
+            res = client.delete(url_for('invenio_records_rest.recid_item',
+                                        pid_value=pid.pid_value),
+                                headers=headers)
+            assert res.status_code == 204
+
+
+def test_delete_deleted(app):
+    """Test deleting a perviously deleted record."""
+    with app.app_context():
+        # create the record using the internal API
+        pid, record = create_record(test_data)
+        delete_record(pid, app)
+
+        with app.test_client() as client:
+            headers = [('Accept', 'application/json')]
+            res = client.delete(url_for('invenio_records_rest.recid_item',
+                                        pid_value=pid.pid_value),
+                                headers=headers)
+            assert res.status_code == 410
+            # check that the returned record matches the given data
+            response_data = json.loads(res.get_data(as_text=True))
+            assert response_data['status'] == 410
+            assert 'no longer available' in response_data['message']
+
+
+def test_invalid_delete(app):
+    """Test INVALID record delete request (DELETE .../records/<record_id>)."""
+    with app.app_context():
+        with app.test_client() as client:
+            # check that GET with non existing id will return 404
+            headers = [('Accept', 'application/json')]
+            res = client.delete(url_for('invenio_records_rest.recid_item',
+                                        pid_value=0),
+                                headers=headers)
+            assert res.status_code == 404
+
+            # check that deleting a deleted record returns 410
+            pid, record = create_record(test_data)
+            res = client.delete(url_for('invenio_records_rest.recid_item',
+                                        pid_value=pid.pid_value),
+                                headers=headers)
+            assert res.status_code == 204
+            res = client.delete(url_for('invenio_records_rest.recid_item',
+                                        pid_value=pid.pid_value),
+                                headers=headers)
+            assert res.status_code == 410
+
+
+def test_delete_with_sqldatabase_error(app):
+    """Test VALID record delete request (GET .../records/<record_id>)."""
+    with app.app_context():
+        # create the record using the internal API
+        pid, record = create_record(test_data)
+        db.session.expire(record.model)
+        pid_value = pid.pid_value
+        pid_type = pid.pid_type
+        record_id = record.id
+
+        db.session.commit()
+        Record.get_record(record_id)
+
+        def raise_exception():
+            raise SQLAlchemyError()
+
+        with app.test_client() as client:
+            # start a new SQLAlchemy session so that it will rollback
+            # everything
+            nested_transaction = db.session().transaction
+            orig_rollback = nested_transaction.rollback
+            flags = {'rollbacked': False}
+
+            def custom_rollback(*args, **kwargs):
+                flags['rollbacked'] = True
+                orig_rollback(*args, **kwargs)
+            nested_transaction.rollback = custom_rollback
+
+            with patch.object(PersistentIdentifier, 'delete',
+                              side_effect=raise_exception):
+                headers = [('Accept', 'application/json')]
+                res = client.delete(url_for('invenio_records_rest.recid_item',
+                                            pid_value=pid_value),
+                                    headers=headers)
+                assert res.status_code == 500
+            # check that the transaction is finished
+            assert db.session().transaction is not nested_transaction
+            # check that the session has rollbacked
+            assert flags['rollbacked']
+
+    with app.app_context():
+        with app.test_client() as client:
+            # check that the record and PID have not been deleted
+            Record.get_record(record_id)
+            assert not PersistentIdentifier.get(pid_type,
+                                                pid_value).is_deleted()
+            # try to delete without exception, the transaction should have been
+            # rollbacked
+            headers = [('Accept', 'application/json')]
+            res = client.delete(url_for('invenio_records_rest.recid_item',
+                                        pid_value=pid_value),
+                                headers=headers)
+            assert res.status_code == 204
+            # check database state
+            with pytest.raises(NoResultFound):
+                Record.get_record(record_id)
+            assert PersistentIdentifier.get(pid_type,
+                                            pid_value).is_deleted()
 
 
 def test_valid_create(app, resolver):
@@ -184,6 +326,26 @@ def test_valid_get(app):
             subtest_self_link(response_data, res.headers, client)
 
 
+def test_get_deleted(app):
+    """Test getting deleted record."""
+    with app.app_context():
+        # create the record using the internal API
+        pid, record = create_record(test_data)
+        delete_record(pid, app)
+
+        with app.test_client() as client:
+            headers = [('Accept', 'application/json')]
+            # check get response for deleted resource
+            get_res = client.get(url_for('invenio_records_rest.recid_item',
+                                         pid_value=pid.pid_value),
+                                 headers=headers)
+            assert get_res.status_code == 410
+            # check that the returned record matches the given data
+            response_data = json.loads(get_res.get_data(as_text=True))
+            assert response_data['status'] == 410
+            assert 'no longer available' in response_data['message']
+
+
 def test_invalid_get(app):
     """Test INVALID record get request (GET .../records/<record_id>)."""
     with app.app_context():
@@ -235,6 +397,28 @@ def test_valid_patch(app, resolver):
             subtest_self_link(response_data, res.headers, client)
 
 
+def test_patch_deleted(app):
+    """Test patching deleted record."""
+    with app.app_context():
+        # create the record using the internal API
+        pid, record = create_record(test_data)
+        delete_record(pid, app)
+
+        with app.test_client() as client:
+            headers = [('Content-Type', 'application/json-patch+json'),
+                       ('Accept', 'application/json')]
+            # check patch response for deleted resource
+            patch_res = client.patch(url_for('invenio_records_rest.recid_item',
+                                             pid_value=pid.pid_value),
+                                     data=json.dumps(test_patch),
+                                     headers=headers)
+            assert patch_res.status_code == 410
+            # check that the returned record matches the given data
+            response_data = json.loads(patch_res.get_data(as_text=True))
+            assert response_data['status'] == 410
+            assert 'no longer available' in response_data['message']
+
+
 def test_invalid_patch(app):
     """Test INVALID record patch request (PATCH .../records/<record_id>)."""
     with app.app_context():
@@ -244,7 +428,6 @@ def test_invalid_patch(app):
                        ('Accept', 'application/json')]
             res = client.patch(url_for('invenio_records_rest.recid_item',
                                        pid_value=0),
-                               data=json.dumps(test_patch),
                                headers=headers)
             assert res.status_code == 404
 
@@ -315,6 +498,28 @@ def test_valid_put(app, resolver):
 
             # check that the returned self link returns the same data
             subtest_self_link(response_data, res.headers, client)
+
+
+def test_put_deleted(app):
+    """Test putting deleted record."""
+    with app.app_context():
+        # create the record using the internal API
+        pid, record = create_record(test_data)
+        delete_record(pid, app)
+
+        with app.test_client() as client:
+            headers = [('Content-Type', 'application/json'),
+                       ('Accept', 'application/json')]
+            # check put response for deleted resource
+            put_res = client.put(url_for('invenio_records_rest.recid_item',
+                                         pid_value=pid.pid_value),
+                                 data=json.dumps(test_data_patched),
+                                 headers=headers)
+            assert put_res.status_code == 410
+            # check that the returned record matches the given data
+            response_data = json.loads(put_res.get_data(as_text=True))
+            assert response_data['status'] == 410
+            assert 'no longer available' in response_data['message']
 
 
 def test_invalid_put(app):
@@ -531,6 +736,43 @@ def test_put_one_permissions(app, user_factory, resolver):
             # check that the returned record matches the given data
             response_data = json.loads(res.get_data(as_text=True))
             assert response_data['metadata'] == test_data_patched
+
+
+def test_delete_one_permissions(app, user_factory, resolver):
+    with app.app_context():
+        # create the record using the internal API
+        pid, internal_record = create_record(test_data)
+        with user_factory('allowed') as allowed_user, \
+                user_factory('forbidden') as forbidden_user:
+            # create one user allowed to delete the record
+            allowed_user.delete_access(True, str(internal_record.id))
+            allowed_login = allowed_user.login_function()
+            # create one user who is not allowed to delete the record
+            forbidden_user.delete_access(False, str(internal_record.id))
+            forbidden_login = forbidden_user.login_function()
+            db.session.commit()
+
+        headers = [('Content-Type', 'application/json')]
+        # test get without being authenticated
+        with app.test_client() as client:
+            res = client.delete(url_for('invenio_records_rest.recid_item',
+                                        pid_value=pid.pid_value),
+                                headers=headers)
+            assert res.status_code == 401
+        # test not allowed get
+        with app.test_client() as client:
+            forbidden_login(client)
+            res = client.delete(url_for('invenio_records_rest.recid_item',
+                                        pid_value=pid.pid_value),
+                                headers=headers)
+            assert res.status_code == 403
+        # test allowed get
+        with app.test_client() as client:
+            allowed_login(client)
+            res = client.delete(url_for('invenio_records_rest.recid_item',
+                                        pid_value=pid.pid_value),
+                                headers=headers)
+            assert res.status_code == 204
 
 
 def subtest_self_link(response_data, response_headers, client):

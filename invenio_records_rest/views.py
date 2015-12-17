@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2015, 2016 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -27,7 +27,7 @@
 from __future__ import absolute_import, print_function
 
 import uuid
-from functools import wraps
+from functools import partial, wraps
 
 from flask import Blueprint, abort, current_app, jsonify, make_response, \
     request, url_for
@@ -35,18 +35,18 @@ from invenio_db import db
 from invenio_pidstore import current_pidstore
 from invenio_pidstore.errors import PIDDeletedError, PIDDoesNotExistError, \
     PIDMissingObjectError, PIDRedirectedError, PIDUnregistered
+from invenio_pidstore.models import PersistentIdentifier
 from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
 from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.decorators import require_content_types
 from jsonpatch import JsonPatchException, JsonPointerException
 from sqlalchemy.exc import SQLAlchemyError
-from werkzeug.routing import BuildError
 from werkzeug.local import LocalProxy
+from werkzeug.routing import BuildError
 from werkzeug.utils import import_string
 
 from .serializers import record_to_json_serializer
-
 
 current_records_rest = LocalProxy(
     lambda: current_app.extensions['invenio-records-rest'])
@@ -108,7 +108,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         if delete_permission_factory_imp else None
 
     resolver = Resolver(pid_type=pid_type, object_type='rec',
-                        getter=Record.get_record)
+                        getter=partial(Record.get_record, with_deleted=True))
 
     serializers = {'application/json': record_to_json_serializer, }
 
@@ -273,11 +273,42 @@ class RecordResource(ContentNegotiatedMethodView):
 
         :param resolver: Persistent identifier resolver instance.
         """
-        super(RecordResource, self).__init__(**kwargs)
+        super(RecordResource, self).__init__(method_serializers={
+            'DELETE': {
+                '*/*': lambda *args: make_response(*args),
+            },
+        }, **kwargs)
         self.resolver = resolver
         self.read_permission_factory = read_permission_factory
         self.update_permission_factory = update_permission_factory
         self.delete_permission_factory = delete_permission_factory
+
+    @pass_record
+    @need_record_permission('delete_permission_factory')
+    def delete(self, pid, record, **kwargs):
+        """Delete a record.
+
+        :param pid: Persistent identifier for record.
+        :param record: Record object.
+        """
+        self.check_etag(str(record.model.version_id))
+
+        try:
+            record.delete()
+            # mark all PIDs as DELETED
+            all_pids = PersistentIdentifier.query.filter(
+                PersistentIdentifier.object_type == pid.object_type,
+                PersistentIdentifier.object_uuid == pid.object_uuid,
+            ).all()
+            for rec_pid in all_pids:
+                if not rec_pid.is_deleted():
+                    rec_pid.delete()
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception("Failed to delete record.")
+            abort(500)
+        return '', 204
 
     @pass_record
     @need_record_permission('read_permission_factory')
