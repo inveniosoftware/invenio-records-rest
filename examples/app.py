@@ -75,9 +75,9 @@ if not os.path.exists(instance_dir):
 app = Flask(__name__, instance_path=instance_dir)
 app.config.update(
     CELERY_ALWAYS_EAGER=True,
-    CELERY_CACHE_BACKEND="memory",
+    CELERY_CACHE_BACKEND='memory',
     CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
-    CELERY_RESULT_BACKEND="cache",
+    CELERY_RESULT_BACKEND='cache',
     # No permission checking
     RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY=None,
     RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY=None,

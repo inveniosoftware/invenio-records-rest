@@ -47,7 +47,7 @@ class _RecordRESTState(object):
         """Load default read permission factory."""
         if self._read_permission_factory is None:
             imp = self.app.config[
-                "RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY"
+                'RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY'
             ]
             self._read_permission_factory = import_string(imp) if imp else None
         return self._read_permission_factory
@@ -57,7 +57,7 @@ class _RecordRESTState(object):
         """Load default create permission factory."""
         if self._create_permission_factory is None:
             imp = self.app.config[
-                "RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY"
+                'RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY'
             ]
             self._create_permission_factory = import_string(imp) \
                 if imp else None
@@ -68,7 +68,7 @@ class _RecordRESTState(object):
         """Load default update permission factory."""
         if self._update_permission_factory is None:
             imp = self.app.config[
-                "RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY"
+                'RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY'
             ]
             self._update_permission_factory = import_string(imp) \
                 if imp else None
@@ -79,7 +79,7 @@ class _RecordRESTState(object):
         """Load default delete permission factory."""
         if self._delete_permission_factory is None:
             imp = self.app.config[
-                "RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY"
+                'RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY'
             ]
             self._delete_permission_factory = import_string(imp) \
                 if imp else None
@@ -99,7 +99,7 @@ class InvenioRecordsREST(object):
         self.init_config(app)
         # Register records API blueprints
         app.register_blueprint(
-            create_blueprint(app.config["RECORDS_REST_ENDPOINTS"])
+            create_blueprint(app.config['RECORDS_REST_ENDPOINTS'])
         )
         app.extensions['invenio-records-rest'] = _RecordRESTState(app)
 
@@ -107,7 +107,7 @@ class InvenioRecordsREST(object):
         """Initialize configuration."""
         # Set up API endpoints for records.
         app.config.setdefault(
-            "RECORDS_REST_ENDPOINTS",
+            'RECORDS_REST_ENDPOINTS',
             dict(
                 recid=dict(
                     pid_type='recid',

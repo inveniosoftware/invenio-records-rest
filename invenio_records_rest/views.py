@@ -145,7 +145,7 @@ def pass_record(f):
             abort(410)
         except PIDMissingObjectError as e:
             current_app.logger.exception(
-                "No object assigned to {0}.".format(e.pid),
+                'No object assigned to {0}.'.format(e.pid),
                 extra={'pid': e.pid})
             abort(500)
         except PIDRedirectedError as e:
@@ -156,7 +156,7 @@ def pass_record(f):
                     pid_value=e.destination_pid.pid_value)
                 data = dict(
                     status=301,
-                    message="Moved Permanently",
+                    message='Moved Permanently',
                     location=location,
                 )
                 response = make_response(jsonify(data), data['status'])
@@ -164,8 +164,8 @@ def pass_record(f):
                 return response
             except BuildError:
                 current_app.logger.exception(
-                    "Invalid redirect - pid_type '{0}' "
-                    "endpoint missing.".format(
+                    'Invalid redirect - pid_type "{0}" '
+                    'endpoint missing.'.format(
                         e.destination_pid.pid_type),
                     extra={
                         'pid': e.pid,
@@ -256,7 +256,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
             db.session.commit()
         except SQLAlchemyError:
             db.session.rollback()
-            current_app.logger.exception("Failed to create record.")
+            current_app.logger.exception('Failed to create record.')
             abort(500)
         return self.make_response(pid, record, 201)
 
@@ -306,7 +306,7 @@ class RecordResource(ContentNegotiatedMethodView):
             db.session.commit()
         except Exception:
             db.session.rollback()
-            current_app.logger.exception("Failed to delete record.")
+            current_app.logger.exception('Failed to delete record.')
             abort(500)
         return '', 204
 

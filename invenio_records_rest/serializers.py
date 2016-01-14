@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2015, 2016 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -39,7 +39,7 @@ def record_self_link(pid, record, **kwargs):
     :Returns Type: str
     """
     return url_for(
-        "invenio_records_rest.{0}_item".format(pid.pid_type),
+        'invenio_records_rest.{0}_item'.format(pid.pid_type),
         pid_value=pid.pid_value, **kwargs)
 
 
