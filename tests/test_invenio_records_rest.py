@@ -953,6 +953,8 @@ custom_search_to_json_serializer = search_to_json_serializer_factory(
                 'pid_type': 'recid',
                 'pid_minter': 'recid_minter',
                 'pid_fetcher': 'recid_fetcher',
+                'search_index': 'invenio_records_rest_test_index',
+                'search_type': 'record',
                 'record_serializers': {
                     'application/json': 'invenio_records_rest.serializers'
                     ':record_to_json_serializer',

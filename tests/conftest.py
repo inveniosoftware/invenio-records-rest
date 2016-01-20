@@ -51,6 +51,7 @@ from invenio_access import InvenioAccess
 from invenio_access.models import ActionUsers
 from invenio_db import InvenioDB, db
 from invenio_records_rest import InvenioRecordsREST
+from invenio_records_rest import config
 from invenio_search import InvenioSearch, current_search_client
 
 from access_records import filter_record_access_query_enhancer, \
@@ -71,16 +72,18 @@ def app(request):
         SQLALCHEMY_DATABASE_URI=os.environ.get(
             'SQLALCHEMY_DATABASE_URI', 'sqlite:///test.db'
         ),
+        RECORDS_REST_ENDPOINTS=config.RECORDS_REST_ENDPOINTS,
         # No permission checking
         RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY=None,
         RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY=None,
         RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY=None,
         RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY=None,
         RECORDS_REST_DEFAULT_SEARCH_INDEX=es_index,
-        SEARCH_INDEX_DEFAULT=es_index,
-        SEARCH_AUTOINDEX=[],
         SEARCH_QUERY_ENHANCERS=[filter_record_access_query_enhancer],
+        SEARCH_AUTOINDEX=[],
     )
+    app.config['RECORDS_REST_ENDPOINTS']['recid']['search_index'] = es_index
+
     # update the application with the configuration provided by the test
     if hasattr(request, 'param') and 'config' in request.param:
         app.config.update(**request.param['config'])

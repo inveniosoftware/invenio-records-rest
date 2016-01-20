@@ -104,6 +104,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     assert pid_type
     assert search_serializers
     assert record_serializers
+    assert search_index
 
     read_permission_factory = import_string(read_permission_factory_imp) \
         if read_permission_factory_imp else None
@@ -269,12 +270,9 @@ class RecordsListResource(ContentNegotiatedMethodView):
             if sort_key:
                 query = query.sort(sort_key)
 
-        search_index = self.search_index or current_records_rest.search_index
-        search_type = self.search_type or current_records_rest.search_type
-
         response = current_search_client.search(
-            index=search_index,
-            doc_type=search_type,
+            index=self.search_index,
+            doc_type=self.search_type,
             body=query.body,
             version=True,
         )

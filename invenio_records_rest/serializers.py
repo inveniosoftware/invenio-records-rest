@@ -137,22 +137,21 @@ def record_hit_formatter(hit, pid_fetcher):
     fetched_pid = pid_fetcher(hit['_id'], hit['_source'])
     self_link = record_self_link(fetched_pid.pid_value, fetched_pid.pid_type,
                                  hit['_source'], _external=True)
-    source = hit['_source']
-    created = source['_created']
-    updated = source['_updated']
-    revision = hit['_version']
-    for key in ['_created', '_updated']:
-        del source[key]
-    return {
+    data = {
         'id': fetched_pid.pid_value,
-        'metadata': source,
+        'metadata': hit['_source'],
         'links': {
             'self': self_link
         },
-        'created': created,
-        'updated': updated,
-        'revision': revision,
+        'revision': hit['_version'],
     }
+
+    for key in ['_created', '_updated']:
+        if key in data['metadata']:
+            data[key[1:]] = data['metadata'][key]
+            del data['metadata'][key]
+
+    return data
 
 search_to_json_serializer = search_to_json_serializer_factory(
     hit_formatter=record_hit_formatter

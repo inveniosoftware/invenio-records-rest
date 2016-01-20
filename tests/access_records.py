@@ -99,8 +99,8 @@ def index_record_modification(sender, changes):
     for id in records_to_index:
         if id not in records_to_delete:
             current_search_client.index(
-                index=current_app.config['SEARCH_INDEX_DEFAULT'],
-                doc_type=current_app.config['SEARCH_DOC_TYPE_DEFAULT'],
+                index='invenio_records_rest_test_index',
+                doc_type='record',
                 id=id,
                 body=records_to_index[id].body,
                 version=records_to_index[id].version,
@@ -108,8 +108,8 @@ def index_record_modification(sender, changes):
             )
     for id in records_to_delete:
         current_search_client.delete(
-            index=current_app.config['SEARCH_INDEX_DEFAULT'],
-            doc_type=current_app.config['SEARCH_DOC_TYPE_DEFAULT'],
+            index='invenio_records_rest_test_index',
+            doc_type='record',
             id=id,
         )
 

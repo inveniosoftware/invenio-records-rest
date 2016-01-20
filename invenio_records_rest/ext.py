@@ -28,6 +28,7 @@ from __future__ import absolute_import, print_function
 
 from werkzeug.utils import cached_property, import_string
 
+from . import config
 from .views import create_blueprint
 
 
@@ -48,9 +49,8 @@ class _RecordRESTState(object):
     def read_permission_factory(self):
         """Load default read permission factory."""
         if self._read_permission_factory is None:
-            imp = self.app.config[
-                'RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY'
-            ]
+            imp = self.app.config.get(
+                'RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY')
             self._read_permission_factory = import_string(imp) if imp else None
         return self._read_permission_factory
 
@@ -58,9 +58,8 @@ class _RecordRESTState(object):
     def create_permission_factory(self):
         """Load default create permission factory."""
         if self._create_permission_factory is None:
-            imp = self.app.config[
-                'RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY'
-            ]
+            imp = self.app.config.get(
+                'RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY')
             self._create_permission_factory = import_string(imp) \
                 if imp else None
         return self._create_permission_factory
@@ -69,9 +68,8 @@ class _RecordRESTState(object):
     def update_permission_factory(self):
         """Load default update permission factory."""
         if self._update_permission_factory is None:
-            imp = self.app.config[
-                'RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY'
-            ]
+            imp = self.app.config.get(
+                'RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY')
             self._update_permission_factory = import_string(imp) \
                 if imp else None
         return self._update_permission_factory
@@ -80,30 +78,11 @@ class _RecordRESTState(object):
     def delete_permission_factory(self):
         """Load default delete permission factory."""
         if self._delete_permission_factory is None:
-            imp = self.app.config[
-                'RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY'
-            ]
+            imp = self.app.config.get(
+                'RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY')
             self._delete_permission_factory = import_string(imp) \
                 if imp else None
         return self._delete_permission_factory
-
-    @cached_property
-    def search_index(self):
-        """Record search index."""
-        if self._search_index is None:
-            self._search_index = self.app.config[
-                'SEARCH_INDEX_DEFAULT'
-            ]
-        return self._search_index
-
-    @cached_property
-    def search_type(self):
-        """Record search type."""
-        if self._search_type is None:
-            self._search_type = self.app.config[
-                'SEARCH_DOC_TYPE_DEFAULT'
-            ]
-        return self._search_type
 
 
 class InvenioRecordsREST(object):
@@ -126,23 +105,6 @@ class InvenioRecordsREST(object):
     def init_config(self, app):
         """Initialize configuration."""
         # Set up API endpoints for records.
-        app.config.setdefault(
-            'RECORDS_REST_ENDPOINTS',
-            dict(
-                recid=dict(
-                    pid_type='recid',
-                    pid_minter='recid_minter',
-                    pid_fetcher='recid_fetcher',
-                    record_serializers={
-                        'application/json': ('invenio_records_rest.serializers'
-                                             ':record_to_json_serializer'),
-                    },
-                    search_serializers={
-                        'application/json': ('invenio_records_rest.serializers'
-                                             ':search_to_json_serializer'),
-                    },
-                    list_route='/records/',
-                    item_route='/records/<pid_value>',
-                ),
-            )
-        )
+        for k in dir(config):
+            if k.startswith('RECORDS_REST_'):
+                app.config.setdefault(k, getattr(config, k))
