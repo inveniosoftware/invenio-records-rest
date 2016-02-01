@@ -72,6 +72,7 @@ def app(request):
         SQLALCHEMY_DATABASE_URI=os.environ.get(
             'SQLALCHEMY_DATABASE_URI', 'sqlite:///test.db'
         ),
+        SQLALCHEMY_TRACK_MODIFICATIONS=True,
         RECORDS_REST_ENDPOINTS=config.RECORDS_REST_ENDPOINTS,
         # No permission checking
         RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY=None,

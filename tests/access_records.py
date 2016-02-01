@@ -28,16 +28,14 @@ from collections import namedtuple
 
 import flask
 import pytz
-from flask import current_app
 from flask_security import current_user
 from flask_sqlalchemy import before_models_committed, models_committed
+from invenio_access.models import ActionUsers
+from invenio_db import db
 from invenio_query_parser.ast import AndOp, DoubleQuotedValue, Keyword, \
     KeywordOp, NotOp
 from invenio_records.models import RecordMetadata
 from invenio_records.permissions import records_read_all
-
-from invenio_access.models import ActionUsers
-from invenio_db import db
 from invenio_search import current_search_client
 
 IndexedRecord = namedtuple('IndexedRecord', ['body', 'version'])
@@ -138,5 +136,6 @@ def filter_record_access_query_enhancer(query, **kwargs):
 
 
 def prepare_indexing(app):
+    """Prepare indexing."""
     before_models_committed.connect(register_record_modification)
     models_committed.connect(index_record_modification)

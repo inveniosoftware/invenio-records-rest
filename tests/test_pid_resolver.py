@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2015, 2016 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -23,35 +23,15 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 
-"""Module tests."""
+"""PID resolver tests."""
 
 from __future__ import absolute_import, print_function
 
-import copy
-import uuid
-
 from flask import url_for
 from invenio_db import db
-from invenio_pidstore import current_pidstore
 from invenio_pidstore.models import PersistentIdentifier, PIDStatus
-from invenio_records import Record
 
-
-def create_record(data):
-    """Create a test record."""
-    with db.session.begin_nested():
-        data = copy.deepcopy(data)
-        rec_uuid = uuid.uuid4()
-        pid = current_pidstore.minters['recid_minter'](rec_uuid, data)
-        record = Record.create(data, id_=rec_uuid)
-    return pid, record
-
-
-def control_num(data, cn=1):
-    """Inject a control number in data."""
-    data = copy.deepcopy(data)
-    data['control_number'] = cn
-    return data
+from helpers import create_record
 
 
 def test_tombstone(app):
