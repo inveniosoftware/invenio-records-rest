@@ -43,6 +43,7 @@ RECORDS_REST_ENDPOINTS = dict(
         },
         list_route='/records/',
         item_route='/records/<pid_value>',
+        default_media_type='application/json',
     ),
 )
 

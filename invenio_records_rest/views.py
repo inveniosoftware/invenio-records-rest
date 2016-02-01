@@ -73,7 +73,8 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      update_permission_factory_imp=None,
                      delete_permission_factory_imp=None,
                      record_serializers=None, search_serializers=None,
-                     search_index=None, search_type=None):
+                     search_index=None, search_type=None,
+                     default_media_type=None):
     """Create Werkzeug URL rules.
 
     :param endpoint: Name of endpoint.
@@ -95,6 +96,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     :param search_type: Name of the search type used when searching records.
     :param record_serializers: serializers used for records.
     :param search_serializers: serializers used for search results.
+    :param default_media_type: default media type for both records and search.
 
     :returns: a list of dictionaries with can each be passed as keywords
         arguments to ``Blueprint.add_url_rule``.
@@ -135,14 +137,16 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         record_serializers=record_serializers,
         search_serializers=search_serializers,
         search_index=search_index,
-        search_type=search_type)
+        search_type=search_type,
+        default_media_type=default_media_type)
     item_view = RecordResource.as_view(
         RecordResource.view_name.format(endpoint),
         resolver=resolver,
         read_permission_factory=read_permission_factory,
         update_permission_factory=update_permission_factory,
         delete_permission_factory=delete_permission_factory,
-        serializers=record_serializers)
+        serializers=record_serializers,
+        default_media_type=default_media_type)
 
     return [
         dict(rule=list_route, view_func=list_view),
@@ -235,16 +239,20 @@ class RecordsListResource(ContentNegotiatedMethodView):
 
     def __init__(self, resolver=None, minter_name=None, pid_type=None,
                  pid_fetcher=None, read_permission_factory=None,
-                 create_permission_factory=None,
-                 search_index=None, search_type=None,
-                 record_serializers=None,
-                 search_serializers=None, **kwargs):
+                 create_permission_factory=None, search_index=None,
+                 search_type=None, record_serializers=None,
+                 search_serializers=None, default_media_type=None, **kwargs):
         """Constructor."""
         super(RecordsListResource, self).__init__(
             method_serializers={
                 'GET': search_serializers,
                 'POST': record_serializers,
             },
+            default_method_media_type={
+                'GET': default_media_type,
+                'POST': default_media_type,
+            },
+            default_media_type=default_media_type,
             **kwargs)
         self.resolver = resolver
         self.pid_type = pid_type
@@ -344,16 +352,24 @@ class RecordResource(ContentNegotiatedMethodView):
 
     def __init__(self, resolver=None, read_permission_factory=None,
                  update_permission_factory=None,
-                 delete_permission_factory=None, **kwargs):
+                 delete_permission_factory=None, default_media_type=None,
+                 **kwargs):
         """Constructor.
 
         :param resolver: Persistent identifier resolver instance.
         """
-        super(RecordResource, self).__init__(method_serializers={
-            'DELETE': {
-                '*/*': lambda *args: make_response(*args),
+        super(RecordResource, self).__init__(
+            method_serializers={
+                'DELETE': {'*/*': lambda *args: make_response(*args), },
             },
-        }, **kwargs)
+            default_method_media_type={
+                'GET': default_media_type,
+                'PUT': default_media_type,
+                'DELETE': '*/*',
+                'PATCH': default_media_type,
+            },
+            default_media_type=default_media_type,
+            **kwargs)
         self.resolver = resolver
         self.read_permission_factory = read_permission_factory
         self.update_permission_factory = update_permission_factory
