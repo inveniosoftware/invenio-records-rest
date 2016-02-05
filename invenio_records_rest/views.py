@@ -47,6 +47,8 @@ from werkzeug.local import LocalProxy
 from werkzeug.routing import BuildError
 from werkzeug.utils import import_string
 
+from .errors import MaxResultWindowError
+
 current_records_rest = LocalProxy(
     lambda: current_app.extensions['invenio-records-rest'])
 
@@ -74,7 +76,8 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      delete_permission_factory_imp=None,
                      record_serializers=None, search_serializers=None,
                      search_index=None, search_type=None,
-                     default_media_type=None):
+                     default_media_type=None,
+                     max_result_window=None):
     """Create Werkzeug URL rules.
 
     :param endpoint: Name of endpoint.
@@ -97,6 +100,10 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     :param record_serializers: serializers used for records.
     :param search_serializers: serializers used for search results.
     :param default_media_type: default media type for both records and search.
+    :param max_result_window: maximum number of results that Elasticsearch can
+        provide for the given search index without use of scroll. This value
+        should correspond to Elasticsearch ``index.max_result_window`` value
+        for the index.
 
     :returns: a list of dictionaries with can each be passed as keywords
         arguments to ``Blueprint.add_url_rule``.
@@ -138,7 +145,8 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         search_serializers=search_serializers,
         search_index=search_index,
         search_type=search_type,
-        default_media_type=default_media_type)
+        default_media_type=default_media_type,
+        max_result_window=max_result_window)
     item_view = RecordResource.as_view(
         RecordResource.view_name.format(endpoint),
         resolver=resolver,
@@ -241,7 +249,8 @@ class RecordsListResource(ContentNegotiatedMethodView):
                  pid_fetcher=None, read_permission_factory=None,
                  create_permission_factory=None, search_index=None,
                  search_type=None, record_serializers=None,
-                 search_serializers=None, default_media_type=None, **kwargs):
+                 search_serializers=None, default_media_type=None,
+                 max_result_window=None, **kwargs):
         """Constructor."""
         super(RecordsListResource, self).__init__(
             method_serializers={
@@ -262,6 +271,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         self.create_permission_factory = create_permission_factory
         self.search_index = search_index
         self.search_type = search_type
+        self.max_result_window = max_result_window or 10000
 
     def get(self, **kwargs):
         """Search records.
@@ -272,6 +282,8 @@ class RecordsListResource(ContentNegotiatedMethodView):
         page = request.values.get('page', 1, type=int)
         size = request.values.get('size', 10, type=int)
         sort = request.values.get('sort', '', type=str)
+        if page*size >= self.max_result_window:
+            raise MaxResultWindowError()
         query = Query(request.values.get('q', ''))[(page-1)*size:page*size]
 
         for sort_key in sort.split(','):
@@ -294,7 +306,8 @@ class RecordsListResource(ContentNegotiatedMethodView):
                 q=request.values.get('q', ''),
                 _external=True,
             )
-        if size * page < int(response['hits']['total']):
+        if size * page < int(response['hits']['total']) and \
+                size * page < self.max_result_window:
             links['next'] = url_for(
                 'invenio_records_rest.{0}_list'.format(self.pid_type),
                 page=page + 1,

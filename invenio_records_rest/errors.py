@@ -22,33 +22,15 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""Invenio-Records-REST configuration."""
+"""Search errors."""
 
 from __future__ import absolute_import, print_function
 
-RECORDS_REST_ENDPOINTS = dict(
-    recid=dict(
-        pid_type='recid',
-        pid_minter='recid_minter',
-        pid_fetcher='recid_fetcher',
-        search_index='records',
-        search_type=None,
-        record_serializers={
-            'application/json': ('invenio_records_rest.serializers'
-                                 ':record_to_json_serializer'),
-        },
-        search_serializers={
-            'application/json': ('invenio_records_rest.serializers'
-                                 ':search_to_json_serializer'),
-        },
-        list_route='/records/',
-        item_route='/records/<pid_value>',
-        default_media_type='application/json',
-        max_result_window=10000,
-    ),
-)
+from invenio_rest.errors import RESTException
 
-RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY = None
-RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY = None
-RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY = None
-RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY = None
+
+class MaxResultWindowError(RESTException):
+    """Maximum number of results passed."""
+
+    code = 400
+    description = "Maximum number of results have been reached."

@@ -22,7 +22,6 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-
 """Search tests."""
 
 from __future__ import absolute_import, print_function
@@ -165,6 +164,19 @@ def test_invalid_search(app, user_factory):
                                      q='back'),
                              headers=headers)
             assert res.status_code == 406
+
+
+def test_max_result_window(app, user_factory):
+    """Test INVALID record search request (GET .../records/?q=...)."""
+    with app.app_context():
+        url = url_for('invenio_records_rest.recid_list',
+                      page='500', size='20', _external=False)
+    with app.test_client() as client:
+        res = client.get(url)
+        assert res.status_code == 400
+        body = json.loads(res.get_data(as_text=True))
+        assert 'message' in body
+        assert body['status'] == 400
 
 
 def test_search_default_aggregation_serialization(app, user_factory):
