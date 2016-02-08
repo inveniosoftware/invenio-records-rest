@@ -26,6 +26,10 @@
 
 from __future__ import absolute_import, print_function
 
+
+def _(x):
+    return x
+
 RECORDS_REST_ENDPOINTS = dict(
     recid=dict(
         pid_type='recid',
@@ -47,6 +51,39 @@ RECORDS_REST_ENDPOINTS = dict(
         max_result_window=10000,
     ),
 )
+
+RECORDS_REST_SORT_OPTIONS = dict(
+    records=dict(
+        best_match=dict(
+            title=_('Best match'),
+            fields=['_score'],
+            default_order='desc',
+            order=1,
+        ),
+    )
+)
+"""Sort options for default sorter factory.
+
+The structure of the dictionary is as follows::
+
+    {
+        "<index or index alias>": {
+            "fields": ["<search_field>", "<search_field>", ...],
+            "title": "<title displayed to end user in search-ui>",
+            "default_order": "<default sort order in search-ui>",
+        }
+    }
+
+Each search field can be either:
+
+- A string of the form ``"<field name>"`` (ascending) or ``"-<field name>"``
+  (descending).
+- A dictionary with Elasicsearch sorting syntax (e.g.
+  ``{"price" : {"order" : "asc", "mode" : "avg"}}``).
+- A callable taking one boolean parameter (``True`` for ascending and ``False``
+  for descending) and returning a dictionary like above. This is useful if you
+  need to extract extra sorting parameters (e.g. for geo location searches).
+"""
 
 RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY = None
 RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY = None

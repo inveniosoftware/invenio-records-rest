@@ -42,8 +42,6 @@ class _RecordRESTState(object):
         self._create_permission_factory = None
         self._update_permission_factory = None
         self._delete_permission_factory = None
-        self._search_index = None
-        self._search_type = None
 
     @cached_property
     def read_permission_factory(self):

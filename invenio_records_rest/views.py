@@ -49,6 +49,7 @@ from werkzeug.routing import BuildError
 from werkzeug.utils import import_string
 
 from .errors import InvalidQueryRESTError, MaxResultWindowRESTError
+from .sorter import default_sorter_factory
 
 current_records_rest = LocalProxy(
     lambda: current_app.extensions['invenio-records-rest'])
@@ -78,7 +79,8 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      record_serializers=None, search_serializers=None,
                      search_index=None, search_type=None,
                      default_media_type=None,
-                     max_result_window=None, use_options_view=True):
+                     max_result_window=None, use_options_view=True,
+                     sorter_factory_imp=None):
     """Create Werkzeug URL rules.
 
     :param endpoint: Name of endpoint.
@@ -88,13 +90,13 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     :param pid_type: Persistent identifier type for endpoint. Required.
     :param template: Template to render. Defaults to
         ``invenio_records_ui/detail.html``.
-    :param read_permission_factory: Import path to factory that creates a read
-        permission object for a given record.
-    :param create_permission_factory: Import path to factory that creates a
+    :param read_permission_factory_imp: Import path to factory that creates a
+        read permission object for a given record.
+    :param create_permission_factory_imp: Import path to factory that creates a
         create permission object for a given record.
-    :param update_permission_factory: Import path to factory that creates a
+    :param update_permission_factory_imp: Import path to factory that creates a
         update permission object for a given record.
-    :param delete_permission_factory: Import path to factory that creates a
+    :param delete_permission_factory_imp: Import path to factory that creates a
         delete permission object for a given record.
     :param search_index: Name of the search index used when searching records.
     :param search_type: Name of the search type used when searching records.
@@ -149,7 +151,11 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         search_index=search_index,
         search_type=search_type,
         default_media_type=default_media_type,
-        max_result_window=max_result_window)
+        max_result_window=max_result_window,
+        sorter_factory=(
+            import_string(sorter_factory_imp) if sorter_factory_imp
+            else default_sorter_factory),
+    )
     item_view = RecordResource.as_view(
         RecordResource.view_name.format(endpoint),
         resolver=resolver,
@@ -305,7 +311,8 @@ class RecordsListResource(ContentNegotiatedMethodView):
                  create_permission_factory=None, search_index=None,
                  search_type=None, record_serializers=None,
                  search_serializers=None, default_media_type=None,
-                 max_result_window=None, **kwargs):
+                 max_result_window=None,
+                 sorter_factory=None, **kwargs):
         """Constructor."""
         super(RecordsListResource, self).__init__(
             method_serializers={
@@ -327,6 +334,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         self.search_index = search_index
         self.search_type = search_type
         self.max_result_window = max_result_window or 10000
+        self.sorter_factory = sorter_factory
 
     def get(self, **kwargs):
         """Search records.
@@ -336,35 +344,40 @@ class RecordsListResource(ContentNegotiatedMethodView):
         """
         page = request.values.get('page', 1, type=int)
         size = request.values.get('size', 10, type=int)
-        sort = request.values.get('sort', '', type=str)
         if page*size >= self.max_result_window:
             raise MaxResultWindowRESTError()
 
-        # Parse query
+        # Parse and slice query
         try:
             query = Query(request.values.get('q', ''))[(page-1)*size:page*size]
         except SyntaxError:
             raise InvalidQueryRESTError()
 
-        for sort_key in sort.split(','):
-            if sort_key:
-                query = query.sort(sort_key)
+        # Arguments that must be added in prev/next links
+        urlkwargs = dict()
 
+        # Sort
+        query, qs_kwargs = self.sorter_factory(query, self.search_index)
+        urlkwargs.update(qs_kwargs)
+
+        # Execute search
         response = current_search_client.search(
             index=self.search_index,
             doc_type=self.search_type,
             body=query.body,
             version=True,
         )
+
+        # Generate links for prev/next
         links = {}
         if page > 1:
             links['prev'] = url_for(
                 'invenio_records_rest.{0}_list'.format(self.pid_type),
                 page=page - 1,
                 size=size,
-                sort=sort,
                 q=request.values.get('q', ''),
                 _external=True,
+                **urlkwargs
             )
         if size * page < int(response['hits']['total']) and \
                 size * page < self.max_result_window:
@@ -372,9 +385,9 @@ class RecordsListResource(ContentNegotiatedMethodView):
                 'invenio_records_rest.{0}_list'.format(self.pid_type),
                 page=page + 1,
                 size=size,
-                sort=sort,
                 q=request.values.get('q', ''),
                 _external=True,
+                **urlkwargs
             )
 
         return self.make_response(

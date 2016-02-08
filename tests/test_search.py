@@ -345,5 +345,5 @@ def subtest_expected_hits(hits, expected, client):
         expected_data = expected[idx][1]
         # check that the returned self link returns the same data
         subtest_self_link(record_data, None, client)
-        assert record_data['id'] in expected_id
+        assert record_data['id'] == expected_id
         assert record_data['metadata'] == expected_data
