@@ -62,6 +62,10 @@ install:
   - "travis_retry pip install -r .travis-${REQUIREMENTS}-requirements.txt"
   - "travis_retry pip install -e .[all]"
 
+# Give elasticsearch time to start up
+before_script:
+  - sleep 10
+
 script:
   - "./run-tests.sh"
 

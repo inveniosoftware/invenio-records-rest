@@ -166,6 +166,22 @@ def test_invalid_search(app, user_factory):
             assert res.status_code == 406
 
 
+def test_invalid_search_query_syntax(app, user_factory):
+    """Test INVALID record search request (GET .../records/?q=...)."""
+    with app.app_context():
+        with app.test_client() as client:
+            # test not supported accept type
+            headers = [('Accept', 'application/json')]
+            res = client.get(
+                url_for('invenio_records_rest.recid_list', q='+title:bad',
+                        _external=False),
+                headers=headers)
+            assert res.status_code == 400
+            body = json.loads(res.get_data(as_text=True))
+            assert 'message' in body
+            assert body['status'] == 400
+
+
 def test_max_result_window(app, user_factory):
     """Test INVALID record search request (GET .../records/?q=...)."""
     with app.app_context():

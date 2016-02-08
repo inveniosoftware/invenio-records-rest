@@ -29,8 +29,15 @@ from __future__ import absolute_import, print_function
 from invenio_rest.errors import RESTException
 
 
-class MaxResultWindowError(RESTException):
+class MaxResultWindowRESTError(RESTException):
     """Maximum number of results passed."""
 
     code = 400
     description = "Maximum number of results have been reached."
+
+
+class InvalidQueryRESTError(RESTException):
+    """Invalid query syntax."""
+
+    code = 400
+    description = "Invalid query syntax."

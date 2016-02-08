@@ -37,17 +37,17 @@ from invenio_pidstore.errors import PIDDeletedError, PIDDoesNotExistError, \
     PIDMissingObjectError, PIDRedirectedError, PIDUnregistered
 from invenio_pidstore.models import PersistentIdentifier
 from invenio_pidstore.resolver import Resolver
-from invenio_search import Query, current_search_client
 from invenio_records.api import Record
 from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.decorators import require_content_types
+from invenio_search import Query, current_search_client
 from jsonpatch import JsonPatchException, JsonPointerException
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.local import LocalProxy
 from werkzeug.routing import BuildError
 from werkzeug.utils import import_string
 
-from .errors import MaxResultWindowError
+from .errors import InvalidQueryRESTError, MaxResultWindowRESTError
 
 current_records_rest = LocalProxy(
     lambda: current_app.extensions['invenio-records-rest'])
@@ -283,8 +283,13 @@ class RecordsListResource(ContentNegotiatedMethodView):
         size = request.values.get('size', 10, type=int)
         sort = request.values.get('sort', '', type=str)
         if page*size >= self.max_result_window:
-            raise MaxResultWindowError()
-        query = Query(request.values.get('q', ''))[(page-1)*size:page*size]
+            raise MaxResultWindowRESTError()
+
+        # Parse query
+        try:
+            query = Query(request.values.get('q', ''))[(page-1)*size:page*size]
+        except SyntaxError:
+            raise InvalidQueryRESTError()
 
         for sort_key in sort.split(','):
             if sort_key:
