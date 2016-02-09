@@ -81,7 +81,6 @@ def app(request):
         RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY=None,
         RECORDS_REST_DEFAULT_SEARCH_INDEX=es_index,
         SEARCH_QUERY_ENHANCERS=[filter_record_access_query_enhancer],
-        SEARCH_AUTOINDEX=[],
     )
     app.config['RECORDS_REST_ENDPOINTS']['recid']['search_index'] = es_index
 
@@ -122,6 +121,7 @@ def app(request):
 
 @pytest.fixture()
 def accounts(app):
+    """Accounts."""
     app.config.update(
         WTF_CSRF_ENABLED=False,
         SECRET_KEY='CHANGEME',
