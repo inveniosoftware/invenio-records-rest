@@ -41,7 +41,6 @@ def test_version():
 def test_init():
     """Test extension initialization."""
     app = Flask('testapp')
-    app.config.update(SERVER_NAME='http://localhost:5000/')
     ext = InvenioRecordsREST()
     assert 'invenio-records-rest' not in app.extensions
     ext.init_app(app)

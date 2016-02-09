@@ -31,6 +31,7 @@ from functools import partial, wraps
 
 from flask import Blueprint, abort, current_app, jsonify, make_response, \
     request, url_for
+from flask.views import MethodView
 from invenio_db import db
 from invenio_pidstore import current_pidstore
 from invenio_pidstore.errors import PIDDeletedError, PIDDoesNotExistError, \
@@ -77,7 +78,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      record_serializers=None, search_serializers=None,
                      search_index=None, search_type=None,
                      default_media_type=None,
-                     max_result_window=None):
+                     max_result_window=None, use_options_view=True):
     """Create Werkzeug URL rules.
 
     :param endpoint: Name of endpoint.
@@ -104,6 +105,8 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         provide for the given search index without use of scroll. This value
         should correspond to Elasticsearch ``index.max_result_window`` value
         for the index.
+    :param use_options_view: Determines if a special option view should be
+        installed.
 
     :returns: a list of dictionaries with can each be passed as keywords
         arguments to ``Blueprint.add_url_rule``.
@@ -156,10 +159,24 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         serializers=record_serializers,
         default_media_type=default_media_type)
 
-    return [
+    views = [
         dict(rule=list_route, view_func=list_view),
         dict(rule=item_route, view_func=item_view),
     ]
+
+    if use_options_view:
+        options_view = RecordsListOptionsResource.as_view(
+            RecordsListOptionsResource.view_name.format(endpoint),
+            search_index=search_index,
+            max_result_window=max_result_window,
+            default_media_type=default_media_type,
+            search_media_types=search_serializers.keys(),
+            item_media_types=record_serializers.keys(),
+        )
+        return [
+            dict(rule="{0}_options".format(list_route), view_func=options_view)
+        ] + views
+    return views
 
 
 def pass_record(f):
@@ -238,6 +255,44 @@ def need_record_permission(factory_name):
             return f(self, record=record, *args, **kwargs)
         return need_record_permission_decorator
     return need_record_permission_builder
+
+
+class RecordsListOptionsResource(MethodView):
+    """Resource for displaying options about records list/item views."""
+
+    view_name = '{0}_list_options'
+
+    def __init__(self, search_index=None, max_result_window=None,
+                 default_media_type=None, search_media_types=None,
+                 item_media_types=None):
+        """Initialize method view."""
+        self.search_index = search_index
+        self.max_result_window = max_result_window or 10000
+        self.default_media_type = default_media_type
+        self.item_media_types = item_media_types
+        self.search_media_types = search_media_types
+
+    def get(self):
+        """Get options."""
+        opts = current_app.config['RECORDS_REST_SORT_OPTIONS'].get(
+            self.search_index)
+
+        sort_fields = []
+        if opts:
+            for key, item in sorted(opts.items(), key=lambda x: x[1]['order']):
+                sort_fields.append(
+                    {key: dict(
+                        title=item['title'],
+                        default_order=item.get('default_order', 'asc'))}
+                )
+
+        return jsonify(dict(
+            sort_fields=sort_fields,
+            max_result_window=self.max_result_window,
+            default_media_type=self.default_media_type,
+            search_media_types=sorted(self.search_media_types),
+            item_media_types=sorted(self.item_media_types),
+        ))
 
 
 class RecordsListResource(ContentNegotiatedMethodView):
