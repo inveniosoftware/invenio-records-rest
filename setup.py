@@ -68,7 +68,7 @@ install_requires = [
     'invenio-rest>=1.0.0a4',
     'invenio-records>=1.0.0a7',
     'invenio-pidstore>=1.0.0a3',
-    'invenio-search>=v1.0.0a3',
+    'invenio-search>=v1.0.0a4',
 ]
 
 packages = find_packages()
