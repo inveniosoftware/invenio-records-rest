@@ -41,13 +41,13 @@ Try to get some records:
 
 .. code-block:: console
 
-    $ curl -XGET http://localhost:5000/records/1
-    $ curl -XGET http://localhost:5000/records/2
-    $ curl -XGET http://localhost:5000/records/3
-    $ curl -XGET http://localhost:5000/records/4
-    $ curl -XGET http://localhost:5000/records/5
-    $ curl -XGET http://localhost:5000/records/6
-    $ curl -XGET http://localhost:5000/records/7
+    $ curl -v -XGET http://localhost:5000/records/1
+    $ curl -v -XGET http://localhost:5000/records/2
+    $ curl -v -XGET http://localhost:5000/records/3
+    $ curl -v -XGET http://localhost:5000/records/4
+    $ curl -v -XGET http://localhost:5000/records/5
+    $ curl -v -XGET http://localhost:5000/records/6
+    $ curl -v -XGET http://localhost:5000/records/7
 
 Then search for existing records:
 
@@ -55,6 +55,16 @@ Then search for existing records:
     $ curl -v -XGET 'http://localhost:5000/records/?size=2&page=3'
     $ curl -v -XGET 'http://localhost:5000/records/?q=awesome'
     $ curl -v -XGET 'http://localhost:5000/records/?sort=-control_number'
+
+Default sorting (without/with query):
+
+    $ curl -v -XGET 'http://localhost:5000/records/?typefilter=data&q='
+    $ curl -v -XGET 'http://localhost:5000/records/?typefilter=data&q=data'
+
+Aggregations and filtering (post filter + filter):
+
+    $ curl -v -XGET 'http://localhost:5000/records/?type=order'
+    $ curl -v -XGET 'http://localhost:5000/records/?typefilter=order'
 
 View options about the endpoint:
 
@@ -78,6 +88,7 @@ from invenio_search import InvenioSearch, current_search_client
 
 from invenio_records_rest import InvenioRecordsREST
 from invenio_records_rest.config import RECORDS_REST_ENDPOINTS
+from invenio_records_rest.facets import terms_filter
 
 # create application's instance directory. Needed for this example only.
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -103,11 +114,33 @@ app.config.update(
 )
 app.config['RECORDS_REST_ENDPOINTS'] = RECORDS_REST_ENDPOINTS
 app.config['RECORDS_REST_ENDPOINTS']['recid']['search_index'] = index_name
+# Sort options
 app.config['RECORDS_REST_SORT_OPTIONS'] = {
     index_name: {
         'title': dict(fields=['title'], title='Title', order=1),
         'control_number': dict(
             fields=['control_number'], title='Record identifier', order=1),
+    }
+}
+# Default sorting.
+app.config['RECORDS_REST_DEFAULT_SORT'] = {
+    index_name: {
+        'query': 'control_number',
+        'noquery': '-control_number',
+    }
+}
+# Aggregations and filtering
+app.config['RECORDS_REST_FACETS'] = {
+    index_name: {
+        'aggs': {
+            'type': {'terms': {'field': 'type'}}
+        },
+        'post_filters': {
+            'type': terms_filter('type'),
+        },
+        'filters': {
+            'typefilter': terms_filter('type'),
+        }
     }
 }
 FlaskCLI(app)
@@ -125,13 +158,16 @@ record_examples = [{
     'title': 'Awesome meeting report',
     'description': 'Notes of the last meeting.',
     'participants': 42,
+    'type': 'report',
 }, {
     'title': 'Furniture order',
     'description': 'Tables for the meeting room.',
+    'type': 'order',
 }]
 record_examples += [{
     'title': 'LHC experiment {}'.format(idx),
-    'description': 'Data from experiment {}.'.format(idx)
+    'description': 'Data from experiment {}.'.format(idx),
+    'type': 'data',
 } for idx in range(20)]
 
 

@@ -49,6 +49,7 @@ from werkzeug.routing import BuildError
 from werkzeug.utils import import_string
 
 from .errors import InvalidQueryRESTError, MaxResultWindowRESTError
+from .facets import default_facets_factory
 from .sorter import default_sorter_factory
 
 current_records_rest = LocalProxy(
@@ -80,7 +81,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      search_index=None, search_type=None,
                      default_media_type=None,
                      max_result_window=None, use_options_view=True,
-                     sorter_factory_imp=None):
+                     facets_factory_imp=None, sorter_factory_imp=None):
     """Create Werkzeug URL rules.
 
     :param endpoint: Name of endpoint.
@@ -152,6 +153,9 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         search_type=search_type,
         default_media_type=default_media_type,
         max_result_window=max_result_window,
+        facets_factory=(
+            import_string(facets_factory_imp) if facets_factory_imp
+            else default_facets_factory),
         sorter_factory=(
             import_string(sorter_factory_imp) if sorter_factory_imp
             else default_sorter_factory),
@@ -311,7 +315,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
                  create_permission_factory=None, search_index=None,
                  search_type=None, record_serializers=None,
                  search_serializers=None, default_media_type=None,
-                 max_result_window=None,
+                 max_result_window=None, facets_factory=None,
                  sorter_factory=None, **kwargs):
         """Constructor."""
         super(RecordsListResource, self).__init__(
@@ -334,6 +338,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         self.search_index = search_index
         self.search_type = search_type
         self.max_result_window = max_result_window or 10000
+        self.facets_factory = facets_factory
         self.sorter_factory = sorter_factory
 
     def get(self, **kwargs):
@@ -355,6 +360,10 @@ class RecordsListResource(ContentNegotiatedMethodView):
 
         # Arguments that must be added in prev/next links
         urlkwargs = dict()
+
+        # Facets
+        query, qs_kwargs = self.facets_factory(query, self.search_index)
+        urlkwargs.update(qs_kwargs)
 
         # Sort
         query, qs_kwargs = self.sorter_factory(query, self.search_index)

@@ -26,6 +26,8 @@
 
 from __future__ import absolute_import, print_function
 
+from invenio_records_rest.facets import terms_filter
+
 
 def _(x):
     return x
@@ -83,6 +85,38 @@ Each search field can be either:
 - A callable taking one boolean parameter (``True`` for ascending and ``False``
   for descending) and returning a dictionary like above. This is useful if you
   need to extract extra sorting parameters (e.g. for geo location searches).
+"""
+
+RECORDS_REST_FACETS = dict(
+    records=dict(
+        aggs=dict(
+            type=dict(terms=dict(field='type'))
+        ),
+        post_filters=dict(
+            type=terms_filter('type'),
+        )
+    )
+)
+"""Facets per index for the default facets factory.
+
+The structure of the dictionary is as follows::
+
+    {
+        "<index or index alias>": {
+            "aggs": {
+                "<key>": <aggregation definition>,
+                ...
+            }
+            "filters": {
+                "<key>": <filter func>,
+                ...
+            }
+            "post_filters": {
+                "<key>": <filter func>,
+                ...
+            }
+        }
+    }
 """
 
 RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY = None
