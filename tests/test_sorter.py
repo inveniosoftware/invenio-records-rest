@@ -103,23 +103,50 @@ def test_default_sorter_factory(app, user_factory):
             myfield=dict(
                 fields=['field1', '-field2'],
             )
-        )
+        ),
+    )
+    app.config["RECORDS_REST_DEFAULT_SORT"] = dict(
+        myindex=dict(
+            query='-myfield',
+            noquery='myfield',
+        ),
     )
 
+    # Sort
     with app.test_request_context("?sort=myfield"):
         query, urlargs = default_sorter_factory(Query("value"), 'myindex')
         assert query.body['sort'] == \
             [{'field1': {'order': 'asc'}}, {'field2': {'order': 'desc'}}]
         assert urlargs['sort'] == 'myfield'
 
+    # Reverse sort
     with app.test_request_context("?sort=-myfield"):
         query, urlargs = default_sorter_factory(Query("value"), 'myindex')
         assert query.body['sort'] == \
             [{'field1': {'order': 'desc'}}, {'field2': {'order': 'asc'}}]
         assert urlargs['sort'] == '-myfield'
 
-    for u in ["?sort=invalid", "?sort=", "?test="]:
-        with app.test_request_context():
-            query, urlargs = default_sorter_factory(Query("value"), 'myindex')
-            assert 'sort' not in query.body
-            assert urlargs == {}
+    # Invalid sort key
+    with app.test_request_context("?sort=invalid"):
+        query, urlargs = default_sorter_factory(Query("value"), 'myindex')
+        assert 'sort' not in query.body
+        assert urlargs == {}
+
+    # Default sort without query
+    with app.test_request_context("/?q="):
+        query, urlargs = default_sorter_factory(Query("value"), 'myindex')
+        assert query.body['sort'] == \
+            [{'field1': {'order': 'asc'}}, {'field2': {'order': 'desc'}}]
+        assert urlargs == dict(sort='myfield')
+
+    # Default sort with query
+    with app.test_request_context("/?q=test"):
+        query, urlargs = default_sorter_factory(Query("value"), 'myindex')
+        assert query.body['sort'] == \
+            [{'field1': {'order': 'desc'}}, {'field2': {'order': 'asc'}}]
+        assert urlargs == dict(sort='-myfield')
+
+    # Default sort another index
+    with app.test_request_context("/?q=test"):
+        query, urlargs = default_sorter_factory(Query("value"), 'aidx')
+        assert 'sort' not in query.body

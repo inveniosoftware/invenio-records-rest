@@ -126,6 +126,12 @@ def default_sorter_factory(query, index):
     sort_arg_name = 'sort'
     urlfield = request.values.get(sort_arg_name, '', type=str)
 
+    # Get default sorting if sort is not specified.
+    if not urlfield:
+        has_query = request.values.get('q', type=str)
+        urlfield = current_app.config['RECORDS_REST_DEFAULT_SORT'].get(
+            index, {}).get('query' if has_query else 'noquery', '')
+
     # Parse sort argument
     key, asc = parse_sort_field(urlfield)
 

@@ -56,11 +56,17 @@ RECORDS_REST_ENDPOINTS = dict(
 
 RECORDS_REST_SORT_OPTIONS = dict(
     records=dict(
-        best_match=dict(
+        bestmatch=dict(
             title=_('Best match'),
             fields=['_score'],
             default_order='desc',
             order=1,
+        ),
+        mostrecent=dict(
+            title=_('Most recent'),
+            fields=['created_date'],
+            default_order='desc',
+            order=2,
         ),
     )
 )
@@ -86,6 +92,14 @@ Each search field can be either:
   for descending) and returning a dictionary like above. This is useful if you
   need to extract extra sorting parameters (e.g. for geo location searches).
 """
+
+RECORDS_REST_DEFAULT_SORT = dict(
+    records=dict(
+        query='bestmatch',
+        noquery='mostrecent',
+    )
+)
+"""Default sort option per index with/without query string."""
 
 RECORDS_REST_FACETS = dict(
     records=dict(
