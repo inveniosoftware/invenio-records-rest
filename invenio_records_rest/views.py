@@ -378,26 +378,18 @@ class RecordsListResource(ContentNegotiatedMethodView):
         )
 
         # Generate links for prev/next
-        links = {}
+        urlkwargs.update(
+            size=size,
+            q=request.values.get('q', ''),
+            _external=True,
+        )
+        endpoint = 'invenio_records_rest.{0}_list'.format(self.pid_type)
+        links = dict(self=url_for(endpoint, page=page, **urlkwargs))
         if page > 1:
-            links['prev'] = url_for(
-                'invenio_records_rest.{0}_list'.format(self.pid_type),
-                page=page - 1,
-                size=size,
-                q=request.values.get('q', ''),
-                _external=True,
-                **urlkwargs
-            )
+            links['prev'] = url_for(endpoint, page=page-1, **urlkwargs)
         if size * page < int(response['hits']['total']) and \
                 size * page < self.max_result_window:
-            links['next'] = url_for(
-                'invenio_records_rest.{0}_list'.format(self.pid_type),
-                page=page + 1,
-                size=size,
-                q=request.values.get('q', ''),
-                _external=True,
-                **urlkwargs
-            )
+            links['next'] = url_for(endpoint, page=page+1, **urlkwargs)
 
         return self.make_response(
             pid_fetcher=self.pid_fetcher,
