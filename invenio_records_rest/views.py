@@ -41,15 +41,16 @@ from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
 from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.decorators import require_content_types
-from invenio_search import Query, current_search_client
+from invenio_search import current_search_client
 from jsonpatch import JsonPatchException, JsonPointerException
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.local import LocalProxy
 from werkzeug.routing import BuildError
 from werkzeug.utils import import_string
 
-from .errors import InvalidQueryRESTError, MaxResultWindowRESTError
+from .errors import MaxResultWindowRESTError
 from .facets import default_facets_factory
+from .query import default_query_factory
 from .sorter import default_sorter_factory
 
 current_records_rest = LocalProxy(
@@ -81,7 +82,8 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      search_index=None, search_type=None,
                      default_media_type=None,
                      max_result_window=None, use_options_view=True,
-                     facets_factory_imp=None, sorter_factory_imp=None):
+                     facets_factory_imp=None, sorter_factory_imp=None,
+                     query_factory_imp=None):
     """Create Werkzeug URL rules.
 
     :param endpoint: Name of endpoint.
@@ -159,6 +161,9 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         sorter_factory=(
             import_string(sorter_factory_imp) if sorter_factory_imp
             else default_sorter_factory),
+        query_factory=(
+            import_string(query_factory_imp) if query_factory_imp
+            else default_query_factory),
     )
     item_view = RecordResource.as_view(
         RecordResource.view_name.format(endpoint),
@@ -316,7 +321,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
                  search_type=None, record_serializers=None,
                  search_serializers=None, default_media_type=None,
                  max_result_window=None, facets_factory=None,
-                 sorter_factory=None, **kwargs):
+                 sorter_factory=None, query_factory=None, **kwargs):
         """Constructor."""
         super(RecordsListResource, self).__init__(
             method_serializers={
@@ -340,6 +345,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         self.max_result_window = max_result_window or 10000
         self.facets_factory = facets_factory
         self.sorter_factory = sorter_factory
+        self.query_factory = query_factory
 
     def get(self, **kwargs):
         """Search records.
@@ -352,14 +358,11 @@ class RecordsListResource(ContentNegotiatedMethodView):
         if page*size >= self.max_result_window:
             raise MaxResultWindowRESTError()
 
-        # Parse and slice query
-        try:
-            query = Query(request.values.get('q', ''))[(page-1)*size:page*size]
-        except SyntaxError:
-            raise InvalidQueryRESTError()
-
         # Arguments that must be added in prev/next links
         urlkwargs = dict()
+
+        query, qs_kwargs = self.query_factory(self.search_index, page, size)
+        urlkwargs.update(qs_kwargs)
 
         # Facets
         query, qs_kwargs = self.facets_factory(query, self.search_index)
