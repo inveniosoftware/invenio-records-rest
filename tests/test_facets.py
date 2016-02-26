@@ -32,7 +32,7 @@ from invenio_search.api import Query
 from werkzeug.datastructures import MultiDict
 
 from invenio_records_rest.facets import _aggregations, _create_filter_dsl, \
-    default_facets_factory, _post_filter, _query_filter, terms_filter
+    _post_filter, _query_filter, default_facets_factory, terms_filter
 
 
 def test_terms_filter():

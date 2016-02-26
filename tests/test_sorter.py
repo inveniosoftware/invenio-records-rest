@@ -27,7 +27,6 @@
 from __future__ import absolute_import, print_function
 
 import pytest
-
 from invenio_search.api import Query
 
 from invenio_records_rest.sorter import default_sorter_factory, eval_field, \

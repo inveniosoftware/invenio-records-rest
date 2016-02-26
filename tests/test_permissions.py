@@ -31,9 +31,8 @@ import copy
 import json
 
 from flask import url_for
-from invenio_db import db
-
 from helpers import create_record, test_data, test_data_patched, test_patch
+from invenio_db import db
 
 
 def test_create_permissions(app, user_factory, resolver):

@@ -50,6 +50,7 @@ from werkzeug.utils import import_string
 
 from .errors import MaxResultWindowRESTError
 from .facets import default_facets_factory
+from .links import default_links_factory
 from .query import default_query_factory
 from .sorter import default_sorter_factory
 
@@ -83,7 +84,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      default_media_type=None,
                      max_result_window=None, use_options_view=True,
                      facets_factory_imp=None, sorter_factory_imp=None,
-                     query_factory_imp=None):
+                     query_factory_imp=None, links_factory_imp=None):
     """Create Werkzeug URL rules.
 
     :param endpoint: Name of endpoint.
@@ -131,6 +132,8 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         if update_permission_factory_imp else None
     delete_permission_factory = import_string(delete_permission_factory_imp) \
         if delete_permission_factory_imp else None
+    links_factory = import_string(links_factory_imp) \
+        if links_factory_imp else default_links_factory
 
     # import the serializers
     record_serializers = {mime: import_string(func) for mime, func in
@@ -164,6 +167,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         query_factory=(
             import_string(query_factory_imp) if query_factory_imp
             else default_query_factory),
+        item_links_factory=links_factory,
     )
     item_view = RecordResource.as_view(
         RecordResource.view_name.format(endpoint),
@@ -172,6 +176,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         update_permission_factory=update_permission_factory,
         delete_permission_factory=delete_permission_factory,
         serializers=record_serializers,
+        links_factory=links_factory,
         default_media_type=default_media_type)
 
     views = [
@@ -321,7 +326,8 @@ class RecordsListResource(ContentNegotiatedMethodView):
                  search_type=None, record_serializers=None,
                  search_serializers=None, default_media_type=None,
                  max_result_window=None, facets_factory=None,
-                 sorter_factory=None, query_factory=None, **kwargs):
+                 sorter_factory=None, query_factory=None,
+                 item_links_factory=None, **kwargs):
         """Constructor."""
         super(RecordsListResource, self).__init__(
             method_serializers={
@@ -346,6 +352,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         self.facets_factory = facets_factory
         self.sorter_factory = sorter_factory
         self.query_factory = query_factory
+        self.item_links_factory = item_links_factory
 
     def get(self, **kwargs):
         """Search records.
@@ -355,7 +362,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         """
         page = request.values.get('page', 1, type=int)
         size = request.values.get('size', 10, type=int)
-        if page*size >= self.max_result_window:
+        if page * size >= self.max_result_window:
             raise MaxResultWindowRESTError()
 
         # Arguments that must be added in prev/next links
@@ -373,7 +380,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         urlkwargs.update(qs_kwargs)
 
         # Execute search
-        response = current_search_client.search(
+        search_result = current_search_client.search(
             index=self.search_index,
             doc_type=self.search_type,
             body=query.body,
@@ -390,14 +397,15 @@ class RecordsListResource(ContentNegotiatedMethodView):
         links = dict(self=url_for(endpoint, page=page, **urlkwargs))
         if page > 1:
             links['prev'] = url_for(endpoint, page=page-1, **urlkwargs)
-        if size * page < int(response['hits']['total']) and \
+        if size * page < int(search_result['hits']['total']) and \
                 size * page < self.max_result_window:
             links['next'] = url_for(endpoint, page=page+1, **urlkwargs)
 
         return self.make_response(
             pid_fetcher=self.pid_fetcher,
-            search_result=response,
+            search_result=search_result,
             links=links,
+            item_links_factory=self.item_links_factory,
         )
 
     def post(self, **kwargs):
@@ -432,7 +440,13 @@ class RecordsListResource(ContentNegotiatedMethodView):
             db.session.rollback()
             current_app.logger.exception('Failed to create record.')
             abort(500)
-        return self.make_response(pid, record, 201)
+        response = self.make_response(pid, record, 201,
+                                      links_factory=self.item_links_factory)
+
+        endpoint = 'invenio_records_rest.{0}_item'.format(pid.pid_type)
+        location = url_for(endpoint, pid_value=pid.pid_value, _external=True)
+        response.headers.extend(dict(location=location))
+        return response
 
 
 class RecordResource(ContentNegotiatedMethodView):
@@ -443,6 +457,7 @@ class RecordResource(ContentNegotiatedMethodView):
     def __init__(self, resolver=None, read_permission_factory=None,
                  update_permission_factory=None,
                  delete_permission_factory=None, default_media_type=None,
+                 links_factory=None,
                  **kwargs):
         """Constructor.
 
@@ -464,6 +479,7 @@ class RecordResource(ContentNegotiatedMethodView):
         self.read_permission_factory = read_permission_factory
         self.update_permission_factory = update_permission_factory
         self.delete_permission_factory = delete_permission_factory
+        self.links_factory = links_factory
 
     @pass_record
     @need_record_permission('delete_permission_factory')
@@ -502,7 +518,9 @@ class RecordResource(ContentNegotiatedMethodView):
         :returns: The requested record.
         """
         self.check_etag(str(record.revision_id))
-        return pid, record
+
+        return self.make_response(pid, record,
+                                  links_factory=self.links_factory)
 
     @require_content_types('application/json-patch+json')
     @pass_record
@@ -530,7 +548,8 @@ class RecordResource(ContentNegotiatedMethodView):
 
         record.commit()
         db.session.commit()
-        return pid, record
+        return self.make_response(pid, record,
+                                  links_factory=self.links_factory)
 
     @require_content_types('application/json')
     @pass_record
@@ -554,4 +573,5 @@ class RecordResource(ContentNegotiatedMethodView):
         record.update(data)
         record.commit()
         db.session.commit()
-        return self.make_response(pid, record)
+        return self.make_response(pid, record,
+                                  links_factory=self.links_factory)

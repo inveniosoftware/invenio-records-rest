@@ -64,11 +64,13 @@ setup_requires = [
 
 install_requires = [
     'Flask-CLI>=0.2.1',
-    'six>=1.10',
-    'invenio-rest>=1.0.0a4',
-    'invenio-records>=1.0.0a7',
     'invenio-pidstore>=1.0.0a3',
+    'invenio-records>=1.0.0a7',
+    'invenio-rest>=1.0.0a4',
     'invenio-search>=v1.0.0a4',
+    'marshmallow>=2.5.0',
+    'python-dateutil>=2.4.2',
+    'six>=1.10',
 ]
 
 packages = find_packages()

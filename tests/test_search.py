@@ -31,15 +31,13 @@ import json
 
 import pytest
 from flask import url_for
+from helpers import control_num, create_record, subtest_self_link, test_data, \
+    test_data2, test_data3, test_data4
 from invenio_db import db
 from invenio_search import current_search_client
 from six.moves.urllib.parse import parse_qs, urlparse
 
-from invenio_records_rest.serializers import record_hit_formatter, \
-    search_to_json_serializer_factory
-
-from helpers import control_num, create_record, subtest_self_link, \
-    test_data, test_data2, test_data3, test_data4
+from invenio_records_rest.facets import terms_filter
 
 
 def test_valid_search(app, user_factory):
@@ -209,17 +207,6 @@ def test_search_default_aggregation_serialization(app, user_factory):
     })
 
 
-def aggregations_formatter(aggregations):
-    """Aggregation formatter."""
-    aggregations['custom_formatter'] = True
-    return aggregations
-
-custom_search_to_json_serializer = search_to_json_serializer_factory(
-    hit_formatter=record_hit_formatter,
-    aggregations_formatter=aggregations_formatter,
-)
-
-
 @pytest.mark.parametrize('app', [({
     'config': {
         'RECORDS_REST_ENDPOINTS': {
@@ -231,16 +218,26 @@ custom_search_to_json_serializer = search_to_json_serializer_factory(
                 'search_type': 'record',
                 'record_serializers': {
                     'application/json': 'invenio_records_rest.serializers'
-                    ':record_to_json_serializer',
+                    ':json_v1_response',
                 },
                 'search_serializers': {
-                    'application/json': 'test_search'
-                    ':custom_search_to_json_serializer',
+                    'application/json': 'invenio_records_rest.serializers'
+                    ':json_v1_search'
                 },
                 'list_route': '/records/',
                 'item_route': '/records/<pid_value>',
             }
-        }
+        },
+        'RECORDS_REST_FACETS': {
+            'invenio_records_rest_test_index': {
+                'aggs': {
+                    'stars': {'terms': {'field': 'stars'}}
+                },
+                'post_filters': {
+                    'type': terms_filter('type'),
+                }
+            }
+        },
     }
 })], indirect=['app'])
 def test_search_custom_aggregation_serialization(app, user_factory):
@@ -254,7 +251,6 @@ def test_search_custom_aggregation_serialization(app, user_factory):
             'sum_other_doc_count': 0,
             'doc_count_error_upper_bound': 0,
         },
-        'custom_formatter': True,
     })
 
 
@@ -345,5 +341,5 @@ def subtest_expected_hits(hits, expected, client):
         expected_data = expected[idx][1]
         # check that the returned self link returns the same data
         subtest_self_link(record_data, None, client)
-        assert record_data['id'] == expected_id
+        assert str(record_data['id']) == expected_id
         assert record_data['metadata'] == expected_data

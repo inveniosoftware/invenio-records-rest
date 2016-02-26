@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2016 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -22,10 +22,14 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+"""Record serialization."""
 
-pep257 invenio_records_rest && \
-isort -rc -c -df **/*.py && \
-check-manifest --ignore ".travis-*" && \
-sphinx-build -qnNW docs docs/_build/html && \
-python setup.py test && \
-sphinx-build -qnNW -b doctest docs docs/_build/doctest
+from __future__ import absolute_import, print_function
+
+from .json import JSONSerializer
+from .response import record_responsify, search_responsify
+from .schemas.json import RecordSchemaJSONV1
+
+json_v1 = JSONSerializer(RecordSchemaJSONV1)
+json_v1_response = record_responsify(json_v1, 'application/json')
+json_v1_search = search_responsify(json_v1, 'application/json')

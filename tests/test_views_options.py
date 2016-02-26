@@ -82,11 +82,11 @@ def test_options_view(app, user_factory):
                 'search_type': 'record',
                 'record_serializers': {
                     'application/json': 'invenio_records_rest.serializers'
-                    ':record_to_json_serializer',
+                    ':json_v1_response',
                 },
                 'search_serializers': {
-                    'application/json': 'test_search'
-                    ':custom_search_to_json_serializer',
+                    'application/json': 'invenio_records_rest.serializers'
+                    ':json_v1_search'
                 },
                 'list_route': '/records/',
                 'item_route': '/records/<pid_value>',

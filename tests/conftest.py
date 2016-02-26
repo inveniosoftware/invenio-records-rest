@@ -33,34 +33,32 @@ import tempfile
 from contextlib import contextmanager
 
 import pytest
+from access_records import filter_record_access_query_enhancer, \
+    prepare_indexing
 from flask import Flask, url_for
 from flask_cli import FlaskCLI
 from flask_menu import Menu
 from flask_security.utils import encrypt_password
+from invenio_access import InvenioAccess
+from invenio_access.models import ActionUsers
 from invenio_accounts import InvenioAccounts
 from invenio_accounts.views import blueprint as accounts_blueprint
+from invenio_db import InvenioDB, db
 from invenio_pidstore import InvenioPIDStore
 from invenio_pidstore.resolver import Resolver
 from invenio_records import InvenioRecords
 from invenio_records.api import Record
 from invenio_rest import InvenioREST
+from invenio_search import InvenioSearch, current_search_client
+from permissions import records_create_all, records_delete_all, \
+    records_read_all, records_update_all
 from sqlalchemy_utils.functions import create_database, database_exists, \
     drop_database
 
-from invenio_access import InvenioAccess
-from invenio_access.models import ActionUsers
-from invenio_db import InvenioDB, db
-from invenio_records_rest import InvenioRecordsREST
-from invenio_records_rest import config
-from invenio_search import InvenioSearch, current_search_client
-
-from access_records import filter_record_access_query_enhancer, \
-    prepare_indexing
-from permissions import records_create_all, records_delete_all, \
-    records_read_all, records_update_all
+from invenio_records_rest import InvenioRecordsREST, config
 
 
-@pytest.fixture()
+@pytest.yield_fixture()
 def app(request):
     """Flask application fixture."""
     instance_path = tempfile.mkdtemp()
@@ -105,6 +103,7 @@ def app(request):
     InvenioRecordsREST(app)
 
     with app.app_context():
+        # Setup app
         if not database_exists(str(db.engine.url)) and \
            app.config['SQLALCHEMY_DATABASE_URI'] != 'sqlite://':
             create_database(db.engine.url)
@@ -115,15 +114,17 @@ def app(request):
             current_search_client.indices.create(es_index)
         prepare_indexing(app)
 
-    def finalize():
-        with app.app_context():
-            db.drop_all()
-            if app.config['SQLALCHEMY_DATABASE_URI'] != 'sqlite://':
-                drop_database(db.engine.url)
-            shutil.rmtree(instance_path)
+    with app.app_context():
+        # Yield app in request context
+        with app.test_request_context():
+            yield app
 
-    request.addfinalizer(finalize)
-    return app
+    with app.app_context():
+        # Teardown app
+        db.drop_all()
+        if app.config['SQLALCHEMY_DATABASE_URI'] != 'sqlite://':
+            drop_database(db.engine.url)
+        shutil.rmtree(instance_path)
 
 
 @pytest.fixture()
@@ -151,7 +152,6 @@ def accounts(app):
 @pytest.yield_fixture
 def user_factory(app, accounts):
     """Create a user which has all permissions on every records."""
-
     password = '123456'
 
     with app.test_request_context():

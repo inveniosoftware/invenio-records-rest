@@ -32,15 +32,14 @@ import json
 
 import pytest
 from flask import url_for
+from helpers import control_num, create_record, subtest_self_link, test_data, \
+    test_data_patched, test_patch
 from invenio_db import db
 from invenio_pidstore.models import PersistentIdentifier
 from invenio_records import Record
 from mock import patch
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import NoResultFound
-
-from helpers import control_num, create_record, subtest_self_link, \
-    test_data, test_data_patched, test_patch
 
 
 def delete_record(pid, app):
@@ -203,6 +202,7 @@ def test_valid_create(app, resolver):
             pid, internal_record = resolver.resolve(response_data['id'])
             assert internal_record == response_data['metadata']
 
+            assert res.headers['Location'] == response_data['links']['self']
             # check that the returned self link returns the same data
             subtest_self_link(response_data, res.headers, client)
 
@@ -272,7 +272,7 @@ def test_valid_get(app):
 
             # check the returned id
             assert 'id' in response_data.keys()
-            assert response_data['id'] == pid.pid_value
+            assert str(response_data['id']) == pid.pid_value
 
             # check that the returned self link returns the same data
             subtest_self_link(response_data, res.headers, client)
