@@ -41,7 +41,8 @@ import copy
 from flask import current_app, request
 
 
-def geolocation_sort(argument, unit, mode=None, distance_type=None):
+def geolocation_sort(field_name, argument, unit, mode=None,
+                     distance_type=None):
     """Sort field factory for geo-location based sorting.
 
     :param argument: Name of URL query string field to parse pin location from.
@@ -55,7 +56,7 @@ def geolocation_sort(argument, unit, mode=None, distance_type=None):
         locations = request.values.getlist(argument, type=str)
         field = {
             '_geo_distance': {
-                'pin.location': locations,
+                field_name: locations,
                 'order': 'asc' if asc else 'desc',
                 'unit': unit,
             }

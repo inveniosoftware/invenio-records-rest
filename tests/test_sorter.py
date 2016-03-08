@@ -83,7 +83,7 @@ def test_geolocation_sort(app):
     """Test geolocation sort."""
     with app.test_request_context("/?pin=10,20&pin=gcpuuz94kkp"):
         v = geolocation_sort(
-            'pin', 'km', mode='avg', distance_type='arc')(True)
+            'pin.location', 'pin', 'km', mode='avg', distance_type='arc')(True)
         assert v == {
             '_geo_distance': {
                 'pin.location': ['10,20', 'gcpuuz94kkp'],
