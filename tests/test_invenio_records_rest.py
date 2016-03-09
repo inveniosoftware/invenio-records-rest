@@ -193,7 +193,7 @@ def test_valid_create(app, resolver):
             assert res.status_code == 201
             # check that the returned record matches the given data
             response_data = json.loads(res.get_data(as_text=True))
-            # note that recid_minter ingests the control_number.
+            # note that recid ingests the control_number.
             assert response_data['metadata'] == control_num(test_data)
 
             # check that an internal record returned id and that it contains

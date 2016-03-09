@@ -69,8 +69,8 @@ def xml_search(*args, **kwargs):
         'RECORDS_REST_ENDPOINTS': {
             'recid': {
                 'pid_type': 'recid',
-                'pid_minter': 'recid_minter',
-                'pid_fetcher': 'recid_fetcher',
+                'pid_minter': 'recid',
+                'pid_fetcher': 'recid',
                 'search_index': 'invenio_records_rest_test_index',
                 'search_type': 'record',
                 'record_serializers': {

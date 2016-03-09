@@ -35,8 +35,8 @@ def _(x):
 RECORDS_REST_ENDPOINTS = dict(
     recid=dict(
         pid_type='recid',
-        pid_minter='recid_minter',
-        pid_fetcher='recid_fetcher',
+        pid_minter='recid',
+        pid_fetcher='recid',
         search_index='records',
         search_type=None,
         record_serializers={

@@ -70,7 +70,7 @@ def create_record(data):
     with db.session.begin_nested():
         data = copy.deepcopy(data)
         rec_uuid = uuid.uuid4()
-        pid = current_pidstore.minters['recid_minter'](rec_uuid, data)
+        pid = current_pidstore.minters['recid'](rec_uuid, data)
         record = Record.create(data, id_=rec_uuid)
     return pid, record
 
