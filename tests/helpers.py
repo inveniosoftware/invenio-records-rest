@@ -78,7 +78,7 @@ def create_record(data):
 def control_num(data, cn=1):
     """Inject a control number in data."""
     data = copy.deepcopy(data)
-    data['control_number'] = cn
+    data['control_number'] = str(cn)
     return data
 
 

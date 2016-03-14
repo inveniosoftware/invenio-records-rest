@@ -203,7 +203,7 @@ def records():
             'title': 'Registered',
             'description': 'This is an awesome description',
             # "mint" the record as recid minter does
-            'control_number': 1
+            'control_number': '1',
         }, id_=rec_uuid)
         index_queue.append(pid1.object_uuid)
 
@@ -214,7 +214,7 @@ def records():
             status=PIDStatus.REGISTERED)
         Record.create({
             'title': 'Live ',
-            'control_number': 2
+            'control_number': '2',
         }, id_=rec_uuid)
         pid.delete()
 
@@ -250,7 +250,7 @@ def records():
                 status=PIDStatus.REGISTERED)
             # "mint" the record as recid minter does
             record = dict(record_examples[rec_idx])
-            record['control_number'] = rec_pid
+            record['control_number'] = str(rec_pid)
             # create the record
             Record.create(record, id_=rec_uuid)
             index_queue.append(rec_uuid)

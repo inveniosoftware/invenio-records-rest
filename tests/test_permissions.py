@@ -162,7 +162,7 @@ def test_patch_one_permissions(app, user_factory, resolver):
             # check that the returned record matches the given data
             response_data = json.loads(res.get_data(as_text=True))
             test = copy.deepcopy(test_data_patched)
-            test['control_number'] = 1
+            test['control_number'] = '1'
             assert response_data['metadata'] == test
 
 

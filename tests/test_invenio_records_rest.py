@@ -336,7 +336,7 @@ def test_valid_patch(app, resolver):
             # check that the returned record matches the given data
             response_data = json.loads(res.get_data(as_text=True))
             test = copy.deepcopy(test_data_patched)
-            test['control_number'] = 1
+            test['control_number'] = '1'
             assert response_data['metadata'] == test
 
             # check that an internal record returned id and that it contains
