@@ -71,7 +71,7 @@ class DataCite31Serializer(MarshmallowSerializer):
 
     def serialize_oaipmh(self, pid, record):
         """Serialize a single record for OAI-PMH."""
-        obj = self.transform_record(pid, record) \
+        obj = self.transform_record(pid, record['_source']) \
             if isinstance(record['_source'], Record) \
             else self.transform_search_hit(pid, record)
 
