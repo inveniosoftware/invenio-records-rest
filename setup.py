@@ -53,7 +53,7 @@ extras_require = {
         'Sphinx>=1.3',
     ],
     'datacite': [
-        'datacite>=0.2.0',
+        'datacite>=0.2.1',
     ],
     'dublincore': [
         'dcxml>=0.1.0',
