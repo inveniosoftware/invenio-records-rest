@@ -26,6 +26,8 @@
 
 from __future__ import absolute_import, print_function
 
+from flask import request
+
 from .facets import terms_filter
 from .utils import deny_all
 
@@ -54,6 +56,26 @@ RECORDS_REST_ENDPOINTS = dict(
         max_result_window=10000,
     ),
 )
+
+RECORDS_REST_DEFAULT_LOADERS = {
+    'application/json': lambda: request.get_json(),
+    'application/json-patch+json': lambda: request.get_json(force=True),
+}
+"""Default data loaders per request mime type.
+
+This option can be overritten in each REST endpoint as follows::
+
+    {
+        "recid": {
+            ...
+            "record_loaders": {
+                "aplication/json": "mypackage.utils:myloader"
+            },
+            ...
+        }
+    }
+
+"""
 
 RECORDS_REST_SORT_OPTIONS = dict(
     records=dict(

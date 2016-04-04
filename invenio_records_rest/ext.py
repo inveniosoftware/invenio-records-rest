@@ -41,6 +41,13 @@ class _RecordRESTState(object):
         self.app = app
 
     @cached_property
+    def loaders(self):
+        """Load default read permission factory."""
+        return load_or_import_from_config(
+            'RECORDS_REST_DEFAULT_LOADERS', app=self.app
+        )
+
+    @cached_property
     def read_permission_factory(self):
         """Load default read permission factory."""
         return load_or_import_from_config(

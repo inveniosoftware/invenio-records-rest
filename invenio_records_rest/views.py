@@ -79,7 +79,9 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      create_permission_factory_imp=None,
                      update_permission_factory_imp=None,
                      delete_permission_factory_imp=None,
-                     record_serializers=None, search_serializers=None,
+                     record_serializers=None,
+                     record_loaders=None,
+                     search_serializers=None,
                      search_index=None, search_type=None,
                      default_media_type=None,
                      max_result_window=None, use_options_view=True,
@@ -140,7 +142,9 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         links_factory_imp, default=default_links_factory
     )
 
-    # import the serializers
+    if record_loaders:
+        record_loaders = {mime: obj_or_import_string(func)
+                          for mime, func in record_loaders.items()}
     record_serializers = {mime: obj_or_import_string(func)
                           for mime, func in record_serializers.items()}
     search_serializers = {mime: obj_or_import_string(func)
@@ -158,6 +162,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         read_permission_factory=read_permission_factory,
         create_permission_factory=create_permission_factory,
         record_serializers=record_serializers,
+        record_loaders=record_loaders,
         search_serializers=search_serializers,
         search_index=search_index,
         search_type=search_type,
@@ -181,6 +186,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         update_permission_factory=update_permission_factory,
         delete_permission_factory=delete_permission_factory,
         serializers=record_serializers,
+        loaders=record_loaders,
         links_factory=links_factory,
         default_media_type=default_media_type)
 
@@ -329,6 +335,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
                  pid_fetcher=None, read_permission_factory=None,
                  create_permission_factory=None, search_index=None,
                  search_type=None, record_serializers=None,
+                 record_loaders=None,
                  search_serializers=None, default_media_type=None,
                  max_result_window=None, facets_factory=None,
                  sorter_factory=None, query_factory=None,
@@ -359,6 +366,8 @@ class RecordsListResource(ContentNegotiatedMethodView):
         self.sorter_factory = sorter_factory
         self.query_factory = query_factory
         self.item_links_factory = item_links_factory
+        self.loaders = record_loaders or \
+            current_records_rest.loaders
 
     def get(self, **kwargs):
         """Search records.
@@ -419,13 +428,12 @@ class RecordsListResource(ContentNegotiatedMethodView):
 
         :returns: The created record.
         """
-        if request.content_type != 'application/json':
+        if request.content_type not in self.loaders:
             abort(415)
 
-        # TODO: accept non json content (MARC21...)
-        data = request.get_json()
+        data = self.loaders[request.content_type]()
         if data is None:
-            return abort(400)
+            abort(400)
 
         try:
             # Create uuid for record
@@ -462,6 +470,7 @@ class RecordResource(ContentNegotiatedMethodView):
                  update_permission_factory=None,
                  delete_permission_factory=None, default_media_type=None,
                  links_factory=None,
+                 loaders=None,
                  **kwargs):
         """Constructor.
 
@@ -484,6 +493,7 @@ class RecordResource(ContentNegotiatedMethodView):
         self.update_permission_factory = update_permission_factory
         self.delete_permission_factory = delete_permission_factory
         self.links_factory = links_factory
+        self.loaders = loaders or current_records_rest.loaders
 
     @pass_record
     @need_record_permission('delete_permission_factory')
@@ -538,9 +548,7 @@ class RecordResource(ContentNegotiatedMethodView):
         :param record: Record object.
         :returns: The modified record.
         """
-        # TODO: accept 'application/json' mediatype and use the object
-        # to replace the specified attributes
-        data = request.get_json(force=True)
+        data = self.loaders[request.content_type]()
         if data is None:
             abort(400)
 
@@ -555,7 +563,6 @@ class RecordResource(ContentNegotiatedMethodView):
         return self.make_response(pid, record,
                                   links_factory=self.links_factory)
 
-    @require_content_types('application/json')
     @pass_record
     @need_record_permission('update_permission_factory')
     def put(self, pid, record, **kwargs):
@@ -568,8 +575,10 @@ class RecordResource(ContentNegotiatedMethodView):
         :param record: Record object.
         :returns: The modified record.
         """
-        # TODO: accept non json content (MARC21...)
-        data = request.get_json()
+        if request.content_type not in self.loaders:
+            abort(415)
+
+        data = self.loaders[request.content_type]()
         if data is None:
             abort(400)
         self.check_etag(str(record.revision_id))
