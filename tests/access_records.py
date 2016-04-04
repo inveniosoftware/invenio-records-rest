@@ -28,6 +28,7 @@ from collections import namedtuple
 
 import flask
 import pytz
+from flask import current_app
 from flask_security import current_user
 from flask_sqlalchemy import before_models_committed, models_committed
 from invenio_access.models import ActionUsers
@@ -94,11 +95,12 @@ def index_record_modification(sender, changes):
     """Reset the set of processed records for the next session."""
     records_to_index = flask.g.get('invenio_search_records_to_index', dict())
     records_to_delete = flask.g.get('invenio_search_records_to_delete', set())
+    es_index = current_app.config["RECORDS_REST_DEFAULT_SEARCH_INDEX"]
     for id in records_to_index:
         if id not in records_to_delete:
             current_search_client.index(
-                index='invenio_records_rest_test_index',
-                doc_type='record',
+                index=es_index,
+                doc_type='testrecord-v1.0.0',
                 id=id,
                 body=records_to_index[id].body,
                 version=records_to_index[id].version,
@@ -106,8 +108,8 @@ def index_record_modification(sender, changes):
             )
     for id in records_to_delete:
         current_search_client.delete(
-            index='invenio_records_rest_test_index',
-            doc_type='record',
+            index=es_index,
+            doc_type='testrecord-v1.0.0',
             id=id,
         )
 

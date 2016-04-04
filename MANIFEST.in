@@ -40,6 +40,8 @@ recursive-include docs *.py
 recursive-include docs *.rst
 recursive-include docs Makefile
 recursive-include examples *.py
+recursive-include examples *.json
 recursive-include misc *.py
 recursive-include misc *.rst
 recursive-include tests *.py
+recursive-include tests *.json

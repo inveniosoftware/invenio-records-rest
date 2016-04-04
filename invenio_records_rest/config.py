@@ -54,6 +54,19 @@ RECORDS_REST_ENDPOINTS = dict(
         item_route='/records/<pid_value>',
         default_media_type='application/json',
         max_result_window=10000,
+        suggestions=[
+            dict(
+                route='/records/_suggestions',
+                opts=dict(
+                    completion=dict(
+                        field='suggest_title',
+                        fuzzy=dict(
+                            fuzziness=2
+                        )
+                    )
+                )
+            )
+        ]
     ),
 )
 

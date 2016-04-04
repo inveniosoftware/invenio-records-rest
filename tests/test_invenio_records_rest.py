@@ -29,12 +29,14 @@ from __future__ import absolute_import, print_function
 
 import copy
 import json
+from time import sleep
 
 import pytest
 from flask import url_for
 from helpers import control_num, create_record, subtest_self_link, test_data, \
     test_data_patched, test_patch
 from invenio_db import db
+from invenio_indexer.api import RecordIndexer
 from invenio_pidstore.models import PersistentIdentifier
 from invenio_records import Record
 from mock import patch
@@ -516,3 +518,28 @@ def test_invalid_put(app):
                              data='{invalid-json',
                              headers=headers)
             assert res.status_code == 400
+
+
+def test_valid_suggest(app, resolver):
+    """Test VALID record creation request (POST .../records/)."""
+    with app.app_context():
+        pid, record = create_record(test_data)
+        db.session.commit()
+        indexer = RecordIndexer()
+        indexer.index_by_id(record.id)
+        sleep(3)
+        with app.test_client() as client:
+            headers = [('Content-Type', 'application/json'),
+                       ('Accept', 'application/json')]
+            res = client.get(url_for('invenio_records_rest.recid_suggests',
+                                     text="Back"),
+                             headers=headers)
+            assert res.status_code == 200
+            # check that the returned record matches the given data
+            response_data = json.loads(res.get_data(as_text=True))
+
+            assert len(response_data['suggest_title']) == 1
+
+            title = response_data['suggest_title'][0]['options'][0]['text']
+            # note that recid ingests the control_number.
+            assert title == record['title']

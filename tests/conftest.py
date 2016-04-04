@@ -31,6 +31,7 @@ import os
 import shutil
 import tempfile
 from contextlib import contextmanager
+from time import sleep
 
 import pytest
 from access_records import filter_record_access_query_enhancer, \
@@ -64,7 +65,7 @@ def app(request):
     """Flask application fixture."""
     instance_path = tempfile.mkdtemp()
     app = Flask('testapp', instance_path=instance_path)
-    es_index = 'invenio_records_rest_test_index'
+    es_index = 'testrecords-testrecord-v1.0.0'
     app.config.update(
         TESTING=True,
         SERVER_NAME='localhost:5000',
@@ -72,6 +73,8 @@ def app(request):
             'SQLALCHEMY_DATABASE_URI', 'sqlite:///test.db'
         ),
         SQLALCHEMY_TRACK_MODIFICATIONS=True,
+        INDEXER_DEFAULT_INDEX=es_index,
+        INDEXER_DEFAULT_DOC_TYPE='testrecord-v1.0.0',
         RECORDS_REST_ENDPOINTS=config.RECORDS_REST_ENDPOINTS,
         # No permission checking
         RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY=None,
@@ -99,7 +102,8 @@ def app(request):
     InvenioREST(app)
     InvenioRecords(app)
     InvenioPIDStore(app)
-    InvenioSearch(app)
+    search = InvenioSearch(app)
+    search.register_mappings('testrecords', 'data')
     InvenioAccess(app)
     InvenioRecordsREST(app)
 
@@ -110,10 +114,10 @@ def app(request):
             create_database(db.engine.url)
         db.drop_all()
         db.create_all()
-        if current_search_client.indices.exists(es_index):
-            current_search_client.indices.delete(es_index)
-            current_search_client.indices.create(es_index)
+        list(search.create(ignore=[400]))
         prepare_indexing(app)
+
+    sleep(5)
 
     with app.app_context():
         # Yield app in request context
@@ -125,6 +129,10 @@ def app(request):
         db.drop_all()
         if app.config['SQLALCHEMY_DATABASE_URI'] != 'sqlite://':
             drop_database(db.engine.url)
+        list(search.delete(ignore=[404]))
+        test_index = 'testrecords-testrecord-v1.0.0'
+        if current_search_client.indices.exists(test_index):
+            current_search_client.indices.delete(test_index)
         shutil.rmtree(instance_path)
 
 

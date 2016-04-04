@@ -26,7 +26,9 @@
 
 from __future__ import absolute_import, print_function
 
+import json
 import uuid
+from copy import deepcopy
 from functools import partial, wraps
 
 from flask import Blueprint, abort, current_app, jsonify, make_response, \
@@ -87,7 +89,8 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      default_media_type=None,
                      max_result_window=None, use_options_view=True,
                      facets_factory_imp=None, sorter_factory_imp=None,
-                     query_factory_imp=None, links_factory_imp=None):
+                     query_factory_imp=None, links_factory_imp=None,
+                     suggestions=None):
     """Create Werkzeug URL rules.
 
     :param endpoint: Name of endpoint.
@@ -202,6 +205,27 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         dict(rule=item_route, view_func=item_view),
     ]
 
+    suggestions = suggestions or []
+    for suggestion in suggestions:
+        suggest_view = RecordsSuggestsResource.as_view(
+            RecordsSuggestsResource.view_name.format(endpoint),
+            suggestion_opts=suggestion['opts'],
+            pid_type=pid_type,
+            pid_fetcher=pid_fetcher,
+            read_permission_factory=read_permission_factory,
+            create_permission_factory=create_permission_factory,
+            search_serializers=search_serializers,
+            search_index=search_index,
+            search_type=search_type,
+            default_media_type=default_media_type,
+            item_links_factory=links_factory,
+        )
+
+        views.append(dict(
+            rule=suggestion['route'],
+            view_func=suggest_view
+        ))
+
     if use_options_view:
         options_view = RecordsListOptionsResource.as_view(
             RecordsListOptionsResource.view_name.format(endpoint),
@@ -292,6 +316,60 @@ def need_record_permission(factory_name):
             return f(self, record=record, *args, **kwargs)
         return need_record_permission_decorator
     return need_record_permission_builder
+
+
+class RecordsSuggestsResource(ContentNegotiatedMethodView):
+    """Resource for records suggests."""
+
+    view_name = '{0}_suggests'
+
+    def __init__(self, suggestion_opts,
+                 pid_type=None, pid_fetcher=None, read_permission_factory=None,
+                 create_permission_factory=None, search_index=None,
+                 search_type=None,
+                 search_serializers=None, default_media_type=None,
+                 item_links_factory=None, **kwargs):
+        """Constructor."""
+        super(RecordsSuggestsResource, self).__init__(
+            method_serializers={
+                'GET': search_serializers,
+            },
+            default_method_media_type={
+                'GET': default_media_type,
+            },
+            default_media_type=default_media_type,
+            **kwargs)
+        self.suggestion_opts = suggestion_opts
+        self.pid_type = pid_type
+        self.pid_fetcher = current_pidstore.fetchers[pid_fetcher]
+        self.read_permission_factory = read_permission_factory
+        self.create_permission_factory = create_permission_factory
+        self.search_index = search_index
+        self.search_type = search_type
+        self.item_links_factory = item_links_factory
+
+    def get(self, **kwargs):
+        """Search records.
+
+        :returns: the search result containing hits and aggregations as
+        returned by invenio-search.
+        """
+        text = request.values.get('text', "", type=str)
+
+        opts = deepcopy(self.suggestion_opts)
+        opts['text'] = text
+        query = {
+            self.suggestion_opts['completion']['field']: opts
+        }
+
+        # Execute search
+        search_result = current_search_client.suggest(
+            index=self.search_index,
+            #  doc_type=self.search_type,
+            body=query,
+        )
+
+        return make_response(jsonify(search_result))
 
 
 class RecordsListOptionsResource(MethodView):
