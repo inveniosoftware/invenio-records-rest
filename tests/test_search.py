@@ -228,7 +228,7 @@ def test_search_default_aggregation_serialization(app, user_factory):
             }
         },
         'RECORDS_REST_FACETS': {
-            'invenio_records_rest_test_index': {
+            'testrecords-testrecord-v1.0.0': {
                 'aggs': {
                     'stars': {'terms': {'field': 'stars'}}
                 },

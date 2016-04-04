@@ -71,8 +71,6 @@ def xml_search(*args, **kwargs):
                 'pid_type': 'recid',
                 'pid_minter': 'recid',
                 'pid_fetcher': 'recid',
-                'search_index': 'invenio_records_rest_test_index',
-                'search_type': 'record',
                 'record_serializers': {
                     'application/json': 'test_serializers:json_record',
                     'application/xml': 'test_serializers.xml_record',

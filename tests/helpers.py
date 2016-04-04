@@ -38,24 +38,60 @@ test_data = {
     'title': 'Back to the Future',
     'year': 2015,
     'stars': 4,
+    'suggest_title': {
+        'input': ['Back to the Future'],
+    },
+    'suggest_byyear': {
+        'input': ['Back to the Future'],
+        'context': {
+            'year': [2015]
+        }
+    }
 }
 
 test_data2 = {
     'title': 'Back to the Past',
     'year': 2042,
     'stars': 3,
+    'suggest_title': {
+        'input': ['Back to the Past'],
+    },
+    'suggest_byyear': {
+        'input': ['Back to the Past'],
+        'context': {
+            'year': [2042]
+        }
+    }
 }
 
 test_data3 = {
     'title': 'The Hitchhiker\'s Guide to the Galaxy',
     'year': 1985,
     'stars': 4,
+    'suggest_title': {
+        'input': ['The Hitchhiker\'s Guide to the Galaxy'],
+    },
+    'suggest_byyear': {
+        'input': ['The Hitchhiker\'s Guide to the Galaxy'],
+        'context': {
+            'year': [1985]
+        }
+    }
 }
 
 test_data4 = {
     'title': 'Unknown film',
     'year': 4242,
     'stars': 5,
+    'suggest_title': {
+        'input': ['Unknown film'],
+    },
+    'suggest_byyear': {
+        'input': ['Unknown film'],
+        'context': {
+            'year': [4242]
+        }
+    }
 }
 
 test_patch = [

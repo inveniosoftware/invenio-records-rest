@@ -34,6 +34,7 @@ Run example development server:
     $ cd examples
     $ flask -a app.py db init
     $ flask -a app.py db create
+    $ flask -a app.py index init
     $ flask -a app.py fixtures records
     $ flask -a app.py --debug run
 
@@ -69,6 +70,10 @@ Aggregations and filtering (post filter + filter):
 View options about the endpoint:
 
     $ curl -v -XGET 'http://localhost:5000/records/_options'
+
+See suggestions:
+
+    $ curl -v -XGET 'http://localhost:5000/records/_suggestions?text=Reg'
 """
 
 from __future__ import absolute_import, print_function
@@ -84,7 +89,7 @@ from invenio_indexer.api import RecordIndexer
 from invenio_pidstore import InvenioPIDStore
 from invenio_records import InvenioRecords
 from invenio_rest import InvenioREST
-from invenio_search import InvenioSearch, current_search_client
+from invenio_search import InvenioSearch
 
 from invenio_records_rest import InvenioRecordsREST
 from invenio_records_rest.config import RECORDS_REST_ENDPOINTS
@@ -97,7 +102,7 @@ if not os.path.exists(instance_dir):
     os.makedirs(instance_dir)
 
 # Create Flask application
-index_name = 'records-rest-example-app'
+index_name = 'testrecords-testrecord-v1.0.0'
 app = Flask(__name__, instance_path=instance_dir)
 app.config.update(
     CELERY_ALWAYS_EAGER=True,
@@ -111,6 +116,9 @@ app.config.update(
     RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY=None,
     SQLALCHEMY_TRACK_MODIFICATIONS=True,
     INDEXER_DEFAULT_INDEX=index_name,
+    INDEXER_DEFAULT_DOC_TYPE='testrecord-v1.0.0',
+    SQLALCHEMY_DATABASE_URI=os.getenv('SQLALCHEMY_DATABASE_URI',
+                                      'sqlite:///app.db'),
 )
 app.config['RECORDS_REST_ENDPOINTS'] = RECORDS_REST_ENDPOINTS
 app.config['RECORDS_REST_ENDPOINTS']['recid']['search_index'] = index_name
@@ -149,7 +157,8 @@ InvenioDB(app)
 InvenioREST(app)
 InvenioPIDStore(app)
 InvenioRecords(app)
-InvenioSearch(app)
+search = InvenioSearch(app)
+search.register_mappings('testrecords', 'data')
 InvenioIndexer(app)
 InvenioRecordsREST(app)
 
@@ -183,13 +192,6 @@ def records():
     from invenio_records.api import Record
     from invenio_pidstore.models import PersistentIdentifier, PIDStatus
 
-    current_search_client.indices.delete(
-        index=index_name,
-        ignore=[400, 404],
-    )
-    current_search_client.indices.create(
-        index=index_name,
-    )
     indexer = RecordIndexer()
     index_queue = []
 

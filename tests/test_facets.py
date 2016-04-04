@@ -28,7 +28,7 @@
 from __future__ import absolute_import, print_function
 
 from elasticsearch_dsl import Search
-from flask import Flask, current_app, request
+from flask import Flask
 from invenio_query_parser.contrib.elasticsearch import IQ
 from werkzeug.datastructures import MultiDict
 

@@ -27,6 +27,7 @@
 
 from __future__ import absolute_import, print_function
 
+import json
 import os
 import shutil
 import tempfile
@@ -67,6 +68,7 @@ class TestSearch(RecordsSearch):
 
     class Meta:
         """Test configuration."""
+
         index = ES_INDEX
         doc_types = None
         default_filter = DefaultFilter(filter_record_access_query_enhancer)
@@ -82,6 +84,7 @@ def app(request):
     """Flask application fixture."""
     instance_path = tempfile.mkdtemp()
     app = Flask('testapp', instance_path=instance_path)
+    es_index = 'testrecords-testrecord-v1.0.0'
     app.config.update(
         TESTING=True,
         SERVER_NAME='localhost:5000',
@@ -89,6 +92,8 @@ def app(request):
             'SQLALCHEMY_DATABASE_URI', 'sqlite:///test.db'
         ),
         SQLALCHEMY_TRACK_MODIFICATIONS=True,
+        INDEXER_DEFAULT_INDEX=es_index,
+        INDEXER_DEFAULT_DOC_TYPE='testrecord-v1.0.0',
         RECORDS_REST_ENDPOINTS=config.RECORDS_REST_ENDPOINTS,
         # No permission checking
         RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY=None,
@@ -115,7 +120,8 @@ def app(request):
     InvenioREST(app)
     InvenioRecords(app)
     InvenioPIDStore(app)
-    InvenioSearch(app)
+    search = InvenioSearch(app)
+    search.register_mappings('testrecords', 'data')
     InvenioAccess(app)
     InvenioRecordsREST(app)
 
@@ -126,21 +132,25 @@ def app(request):
             create_database(db.engine.url)
         db.drop_all()
         db.create_all()
-        if current_search_client.indices.exists(ES_INDEX):
-            current_search_client.indices.delete(ES_INDEX)
-            current_search_client.indices.create(ES_INDEX)
+        with open(search.mappings['testrecords-testrecord-v1.0.0'], 'r') as fp:
+            body = json.load(fp)
+        current_search_client.indices.create(ES_INDEX, body=body)
         prepare_indexing(app)
 
-    with app.app_context():
         # Yield app in request context
         with app.test_request_context():
             yield app
 
-    with app.app_context():
         # Teardown app
-        db.drop_all()
         if app.config['SQLALCHEMY_DATABASE_URI'] != 'sqlite://':
             drop_database(db.engine.url)
+        list(search.delete(ignore=[404]))
+        current_search_client.indices.delete(ES_INDEX)
+        test_index = 'testrecords-testrecord-v1.0.0'
+        if current_search_client.indices.exists(test_index):
+            current_search_client.indices.delete(test_index)
+        db.session.remove()
+        db.drop_all()
         shutil.rmtree(instance_path)
 
 

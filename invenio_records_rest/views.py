@@ -26,6 +26,7 @@
 
 from __future__ import absolute_import, print_function
 
+import copy
 import uuid
 from functools import partial, wraps
 
@@ -85,7 +86,8 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      search_index=None, search_type=None,
                      default_media_type=None,
                      max_result_window=None, use_options_view=True,
-                     search_factory_imp=None, links_factory_imp=None):
+                     search_factory_imp=None, links_factory_imp=None,
+                     suggesters=None):
     """Create Werkzeug URL rules.
 
     :param endpoint: Name of endpoint.
@@ -209,6 +211,18 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         dict(rule=list_route, view_func=list_view),
         dict(rule=item_route, view_func=item_view),
     ]
+
+    if suggesters:
+        suggest_view = SuggestResource.as_view(
+            SuggestResource.view_name.format(endpoint),
+            suggesters=suggesters,
+            search_class=search_class,
+        )
+
+        views.append(dict(
+            rule=list_route + '_suggest',
+            view_func=suggest_view
+        ))
 
     if use_options_view:
         options_view = RecordsListOptionsResource.as_view(
@@ -592,3 +606,59 @@ class RecordResource(ContentNegotiatedMethodView):
         db.session.commit()
         return self.make_response(pid, record,
                                   links_factory=self.links_factory)
+
+
+class SuggestResource(MethodView):
+    """Resource for records suggests."""
+
+    view_name = '{0}_suggest'
+
+    def __init__(self, suggesters, search_class=None, **kwargs):
+        """Constructor."""
+        self.suggesters = suggesters
+        self.search_class = search_class
+
+    def get(self, **kwargs):
+        """Get suggestions."""
+        completions = []
+        size = request.values.get('size', type=int)
+
+        for k in self.suggesters.keys():
+            val = request.values.get(k, type=str)
+            if val:
+                # Get completion suggestions
+                opts = copy.deepcopy(self.suggesters[k])
+
+                if 'context' in opts.get('completion', {}):
+                    ctx_field = opts['completion']['context']
+                    ctx_val = request.values.get(ctx_field, type=str)
+                    if not ctx_val:
+                        abort(400, 'Missing \'{0}\' context'.format(ctx_field))
+                    opts['completion']['context'] = {
+                        ctx_field: ctx_val
+                    }
+
+                if size:
+                    opts['completion']['size'] = size
+
+                completions.append((k, val, opts))
+
+        if not completions:
+            abort(
+                400,
+                'No completions requested (options: {0})'.format(
+                    ', '.join(sorted(self.suggesters.keys()))))
+
+        # Add completions
+        s = self.search_class()
+        for field, val, opts in completions:
+            s = s.suggest(field, val, **opts)
+
+        # Execute search
+        response = s.execute_suggest().to_dict()
+
+        result = dict()
+        for field, val, opts in completions:
+            result[field] = response[field]
+
+        return make_response(jsonify(result))
