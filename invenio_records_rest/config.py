@@ -26,7 +26,8 @@
 
 from __future__ import absolute_import, print_function
 
-from invenio_records_rest.facets import terms_filter
+from .facets import terms_filter
+from .utils import deny_all
 
 
 def _(x):
@@ -133,7 +134,7 @@ The structure of the dictionary is as follows::
     }
 """
 
-RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY = None
+RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY = deny_all
 RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY = None
-RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY = None
-RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY = None
+RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY = deny_all
+RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY = deny_all

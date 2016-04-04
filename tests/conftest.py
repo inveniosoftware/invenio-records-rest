@@ -37,6 +37,7 @@ from access_records import filter_record_access_query_enhancer, \
     prepare_indexing
 from flask import Flask, url_for
 from flask_cli import FlaskCLI
+from flask_login import LoginManager
 from flask_menu import Menu
 from flask_security.utils import encrypt_password
 from invenio_access import InvenioAccess
@@ -147,6 +148,18 @@ def accounts(app):
     app.register_blueprint(accounts_blueprint)
     InvenioAccess(app)
     return accounts
+
+
+@pytest.yield_fixture
+def default_permissions(app):
+    """Test default deny all permission."""
+    for key in ['RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY',
+                'RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY',
+                'RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY']:
+        app.config[key] = getattr(config, key)
+    LoginManager(app)
+    yield app
+    app.extensions['invenio-records-rest'].reset_permission_factories()
 
 
 @pytest.yield_fixture

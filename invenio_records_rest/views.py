@@ -46,13 +46,13 @@ from jsonpatch import JsonPatchException, JsonPointerException
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.local import LocalProxy
 from werkzeug.routing import BuildError
-from werkzeug.utils import import_string
 
 from .errors import MaxResultWindowRESTError
 from .facets import default_facets_factory
 from .links import default_links_factory
 from .query import default_query_factory
 from .sorter import default_sorter_factory
+from .utils import obj_or_import_string
 
 current_records_rest = LocalProxy(
     lambda: current_app.extensions['invenio-records-rest'])
@@ -124,22 +124,27 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     assert record_serializers
     assert search_index
 
-    read_permission_factory = import_string(read_permission_factory_imp) \
-        if read_permission_factory_imp else None
-    create_permission_factory = import_string(create_permission_factory_imp) \
-        if create_permission_factory_imp else None
-    update_permission_factory = import_string(update_permission_factory_imp) \
-        if update_permission_factory_imp else None
-    delete_permission_factory = import_string(delete_permission_factory_imp) \
-        if delete_permission_factory_imp else None
-    links_factory = import_string(links_factory_imp) \
-        if links_factory_imp else default_links_factory
+    read_permission_factory = obj_or_import_string(
+        read_permission_factory_imp
+    )
+    create_permission_factory = obj_or_import_string(
+        create_permission_factory_imp
+    )
+    update_permission_factory = obj_or_import_string(
+        update_permission_factory_imp
+    )
+    delete_permission_factory = obj_or_import_string(
+        delete_permission_factory_imp
+    )
+    links_factory = obj_or_import_string(
+        links_factory_imp, default=default_links_factory
+    )
 
     # import the serializers
-    record_serializers = {mime: import_string(func) for mime, func in
-                          record_serializers.items()}
-    search_serializers = {mime: import_string(func) for mime, func in
-                          search_serializers.items()}
+    record_serializers = {mime: obj_or_import_string(func)
+                          for mime, func in record_serializers.items()}
+    search_serializers = {mime: obj_or_import_string(func)
+                          for mime, func in search_serializers.items()}
 
     resolver = Resolver(pid_type=pid_type, object_type='rec',
                         getter=partial(Record.get_record, with_deleted=True))
@@ -158,15 +163,15 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         search_type=search_type,
         default_media_type=default_media_type,
         max_result_window=max_result_window,
-        facets_factory=(
-            import_string(facets_factory_imp) if facets_factory_imp
-            else default_facets_factory),
-        sorter_factory=(
-            import_string(sorter_factory_imp) if sorter_factory_imp
-            else default_sorter_factory),
-        query_factory=(
-            import_string(query_factory_imp) if query_factory_imp
-            else default_query_factory),
+        facets_factory=(obj_or_import_string(
+            facets_factory_imp, default=default_facets_factory
+        )),
+        sorter_factory=(obj_or_import_string(
+            sorter_factory_imp, default=default_sorter_factory
+        )),
+        query_factory=(obj_or_import_string(
+            query_factory_imp, default=default_query_factory
+        )),
         item_links_factory=links_factory,
     )
     item_view = RecordResource.as_view(
@@ -345,7 +350,8 @@ class RecordsListResource(ContentNegotiatedMethodView):
         self.minter = current_pidstore.minters[minter_name]
         self.pid_fetcher = current_pidstore.fetchers[pid_fetcher]
         self.read_permission_factory = read_permission_factory
-        self.create_permission_factory = create_permission_factory
+        self.create_permission_factory = create_permission_factory or \
+            current_records_rest.create_permission_factory
         self.search_index = search_index
         self.search_type = search_type
         self.max_result_window = max_result_window or 10000
@@ -430,11 +436,9 @@ class RecordsListResource(ContentNegotiatedMethodView):
             record = Record.create(data, id_=record_uuid)
 
             # Check permissions
-            permission_factory = self.create_permission_factory or \
-                current_records_rest.create_permission_factory
+            permission_factory = self.create_permission_factory
             if permission_factory:
                 verify_record_permission(permission_factory, record)
-
             db.session.commit()
         except SQLAlchemyError:
             db.session.rollback()

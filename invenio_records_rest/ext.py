@@ -26,9 +26,10 @@
 
 from __future__ import absolute_import, print_function
 
-from werkzeug.utils import cached_property, import_string
+from werkzeug.utils import cached_property
 
 from . import config
+from .utils import load_or_import_from_config
 from .views import create_blueprint
 
 
@@ -38,49 +39,41 @@ class _RecordRESTState(object):
     def __init__(self, app):
         """Initialize state."""
         self.app = app
-        self._read_permission_factory = None
-        self._create_permission_factory = None
-        self._update_permission_factory = None
-        self._delete_permission_factory = None
 
     @cached_property
     def read_permission_factory(self):
         """Load default read permission factory."""
-        if self._read_permission_factory is None:
-            imp = self.app.config.get(
-                'RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY')
-            self._read_permission_factory = import_string(imp) if imp else None
-        return self._read_permission_factory
+        return load_or_import_from_config(
+            'RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY', app=self.app
+        )
 
     @cached_property
     def create_permission_factory(self):
         """Load default create permission factory."""
-        if self._create_permission_factory is None:
-            imp = self.app.config.get(
-                'RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY')
-            self._create_permission_factory = import_string(imp) \
-                if imp else None
-        return self._create_permission_factory
+        return load_or_import_from_config(
+            'RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY', app=self.app
+        )
 
     @cached_property
     def update_permission_factory(self):
         """Load default update permission factory."""
-        if self._update_permission_factory is None:
-            imp = self.app.config.get(
-                'RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY')
-            self._update_permission_factory = import_string(imp) \
-                if imp else None
-        return self._update_permission_factory
+        return load_or_import_from_config(
+            'RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY', app=self.app
+        )
 
     @cached_property
     def delete_permission_factory(self):
         """Load default delete permission factory."""
-        if self._delete_permission_factory is None:
-            imp = self.app.config.get(
-                'RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY')
-            self._delete_permission_factory = import_string(imp) \
-                if imp else None
-        return self._delete_permission_factory
+        return load_or_import_from_config(
+            'RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY', app=self.app
+        )
+
+    def reset_permission_factories(self):
+        """Remove cached permission factories."""
+        for key in ('read', 'create', 'update', 'delete'):
+            full_key = '{0}_permission_factory'.format(key)
+            if full_key in self.__dict__:
+                del self.__dict__[full_key]
 
 
 class InvenioRecordsREST(object):

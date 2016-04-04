@@ -247,3 +247,19 @@ def test_delete_one_permissions(app, user_factory, resolver):
                                         pid_value=pid.pid_value),
                                 headers=headers)
             assert res.status_code == 204
+
+
+def test_default_permissions(default_permissions):
+    """Test default permissions."""
+    app = default_permissions
+    with app.app_context():
+        pid, internal_record = create_record(test_data)
+        headers = [('Content-Type', 'application/json')]
+        fixtures = {'delete': 401, 'get': 200, 'post': 405, 'put': 401}
+        with app.test_client() as client:
+            for action, code in fixtures.items():
+                request = getattr(client, action)
+                res = request(url_for('invenio_records_rest.recid_item',
+                                      pid_value=pid.pid_value),
+                              headers=headers)
+                assert code == res.status_code, action
