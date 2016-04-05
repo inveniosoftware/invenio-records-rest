@@ -26,19 +26,26 @@
 
 from __future__ import absolute_import, print_function
 
+import copy
+
 import pytz
 
 
 class PreprocessorMixin(object):
     """Base class for serializers."""
 
-    @staticmethod
-    def preprocess_record(pid, record, links_factory=None):
+    def __init__(self, replace_refs=False):
+        """."""
+        self.replace_refs = replace_refs
+
+    def preprocess_record(self, pid, record, links_factory=None):
         """Prepare a record and persistent identifier for serialization."""
         links_factory = links_factory or (lambda x: dict())
+        metadata = copy.deepcopy(record.replace_refs()) if self.replace_refs \
+            else record.dumps()
         return dict(
             pid=pid,
-            metadata=record.dumps(),
+            metadata=metadata,
             links=links_factory(pid),
             revision=record.revision_id,
             created=(pytz.utc.localize(record.created).isoformat()

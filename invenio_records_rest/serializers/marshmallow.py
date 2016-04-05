@@ -32,9 +32,11 @@ from .base import PreprocessorMixin
 class MarshmallowSerializer(PreprocessorMixin):
     """Base class for marshmallow serializers."""
 
-    def __init__(self, schema_class):
+    def __init__(self, schema_class, replace_refs=False):
         """Initialize record."""
         self.schema_class = schema_class
+        super(MarshmallowSerializer, self).__init__(
+            replace_refs=replace_refs)
 
     def dump(self, obj):
         """Serialize object with schema."""

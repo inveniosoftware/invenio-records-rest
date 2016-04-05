@@ -42,25 +42,28 @@ def test_preprocessor_mixin_record(app):
     """Test preprocessor mixin."""
     with db.session.begin_nested():
         recuuid = uuid.uuid4()
-        record = Record.create({'title': 'test'}, id_=recuuid)
+        record = Record.create({
+            'title': 'test', 'aref': {'$ref': '#/title'}}, id_=recuuid)
         record.model.created = datetime(2015, 10, 1, 11, 11, 11, 1)
         pid = PersistentIdentifier.create(
             'recid', '1', object_type='rec', object_uuid=recuuid,
             status=PIDStatus.REGISTERED)
     db.session.commit()
 
-    data = PreprocessorMixin.preprocess_record(pid, record)
+    data = PreprocessorMixin().preprocess_record(pid, record)
     for k in keys:
         assert k in data
 
     assert data['metadata']['title'] == 'test'
+    assert data['metadata']['aref'] == {'$ref': '#/title'}
     assert data['created'] == '2015-10-01T11:11:11.000001+00:00'
     assert data['revision'] == 1
 
-    data = PreprocessorMixin.preprocess_record(pid,
-                                               Record({'title': 'test2'}))
+    data = PreprocessorMixin(replace_refs=True).preprocess_record(
+        pid, Record({'title': 'test2', 'aref': {'$ref': '#/title'}}))
     assert data['created'] is None
     assert data['updated'] is None
+    assert data['metadata']['aref'] == 'test2'
 
 
 def test_preprocessor_mixin_searchhit():
