@@ -29,7 +29,7 @@ from flask import url_for
 
 def default_links_factory(pid):
     """Factory for record links generation."""
-    endpoint = 'invenio_records_rest.{0}_item'.format(pid.pid_type)
+    endpoint = '.{0}_item'.format(pid.pid_type)
     links = dict(self=url_for(endpoint, pid_value=pid.pid_value,
                  _external=True))
     return links

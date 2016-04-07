@@ -228,8 +228,7 @@ def pass_record(f):
         except PIDRedirectedError as e:
             try:
                 location = url_for(
-                    'invenio_records_rest.{0}_item'.format(
-                        e.destination_pid.pid_type),
+                    '.{0}_item'.format(e.destination_pid.pid_type),
                     pid_value=e.destination_pid.pid_value)
                 data = dict(
                     status=301,
@@ -408,7 +407,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
             q=request.values.get('q', ''),
             _external=True,
         )
-        endpoint = 'invenio_records_rest.{0}_list'.format(self.pid_type)
+        endpoint = '.{0}_list'.format(self.pid_type)
         links = dict(self=url_for(endpoint, page=page, **urlkwargs))
         if page > 1:
             links['prev'] = url_for(endpoint, page=page-1, **urlkwargs)
@@ -455,7 +454,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         response = self.make_response(pid, record, 201,
                                       links_factory=self.item_links_factory)
 
-        endpoint = 'invenio_records_rest.{0}_item'.format(pid.pid_type)
+        endpoint = '.{0}_item'.format(pid.pid_type)
         location = url_for(endpoint, pid_value=pid.pid_value, _external=True)
         response.headers.extend(dict(location=location))
         return response
