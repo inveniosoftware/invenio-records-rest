@@ -79,6 +79,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      create_permission_factory_imp=None,
                      update_permission_factory_imp=None,
                      delete_permission_factory_imp=None,
+                     record_class=None,
                      record_serializers=None,
                      record_loaders=None,
                      search_serializers=None,
@@ -106,6 +107,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         delete permission object for a given record.
     :param search_index: Name of the search index used when searching records.
     :param search_type: Name of the search type used when searching records.
+    :param record_class: Name of the record API class.
     :param record_serializers: serializers used for records.
     :param search_serializers: serializers used for search results.
     :param default_media_type: default media type for both records and search.
@@ -141,6 +143,9 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     links_factory = obj_or_import_string(
         links_factory_imp, default=default_links_factory
     )
+    record_class = obj_or_import_string(
+        record_class, default=Record
+    )
 
     if record_loaders:
         record_loaders = {mime: obj_or_import_string(func)
@@ -151,7 +156,8 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                           for mime, func in search_serializers.items()}
 
     resolver = Resolver(pid_type=pid_type, object_type='rec',
-                        getter=partial(Record.get_record, with_deleted=True))
+                        getter=partial(record_class.get_record,
+                                       with_deleted=True))
 
     list_view = RecordsListResource.as_view(
         RecordsListResource.view_name.format(endpoint),
@@ -178,6 +184,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
             query_factory_imp, default=default_query_factory
         )),
         item_links_factory=links_factory,
+        record_class=record_class,
     )
     item_view = RecordResource.as_view(
         RecordResource.view_name.format(endpoint),
@@ -338,7 +345,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
                  search_serializers=None, default_media_type=None,
                  max_result_window=None, facets_factory=None,
                  sorter_factory=None, query_factory=None,
-                 item_links_factory=None, **kwargs):
+                 item_links_factory=None, record_class=None, **kwargs):
         """Constructor."""
         super(RecordsListResource, self).__init__(
             method_serializers={
@@ -367,6 +374,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         self.item_links_factory = item_links_factory
         self.loaders = record_loaders or \
             current_records_rest.loaders
+        self.record_class = record_class or Record
 
     def get(self, **kwargs):
         """Search records.
@@ -440,7 +448,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
             # Create persistent identifier
             pid = self.minter(record_uuid, data=data)
             # Create record
-            record = Record.create(data, id_=record_uuid)
+            record = self.record_class.create(data, id_=record_uuid)
 
             # Check permissions
             permission_factory = self.create_permission_factory
