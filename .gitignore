@@ -58,3 +58,4 @@ target/
 
 # Examples instance directories
 examples/*_instance
+examples/*.db

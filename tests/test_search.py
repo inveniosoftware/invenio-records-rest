@@ -70,6 +70,9 @@ def test_valid_search(app, user_factory):
                                             force=True,
                                             index=es_index)
 
+        from time import sleep
+        sleep(5)
+
         with app.test_client() as client:
             forbidden_login(client)
             headers = [('Accept', 'application/json')]
@@ -214,8 +217,8 @@ def test_search_default_aggregation_serialization(app, user_factory):
                 'pid_type': 'recid',
                 'pid_minter': 'recid',
                 'pid_fetcher': 'recid',
-                'search_index': 'invenio_records_rest_test_index',
-                'search_type': 'record',
+                'search_index': 'testrecords-testrecord-v1.0.0',
+                'search_type': 'testrecord-v1.0.0',
                 'record_serializers': {
                     'application/json': 'invenio_records_rest.serializers'
                     ':json_v1_response',
@@ -229,7 +232,7 @@ def test_search_default_aggregation_serialization(app, user_factory):
             }
         },
         'RECORDS_REST_FACETS': {
-            'invenio_records_rest_test_index': {
+            'testrecords-testrecord-v1.0.0': {
                 'aggs': {
                     'stars': {'terms': {'field': 'stars'}}
                 },

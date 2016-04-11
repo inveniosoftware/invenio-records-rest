@@ -34,8 +34,8 @@ from flask import url_for
 
 def test_options_view(app, user_factory):
     """Test default sorter factory."""
-    app.config["RECORDS_REST_SORT_OPTIONS"] = dict(
-        invenio_records_rest_test_index=dict(
+    app.config["RECORDS_REST_SORT_OPTIONS"] = {
+        "testrecords-testrecord-v1.0.0": dict(
             myfield=dict(
                 fields=['field1:asc'],
                 title='My Field',
@@ -48,7 +48,7 @@ def test_options_view(app, user_factory):
                 order=1,
             )
         )
-    )
+    }
 
     with app.app_context():
         with app.test_client() as client:
@@ -78,8 +78,8 @@ def test_options_view(app, user_factory):
                 'pid_type': 'recid',
                 'pid_minter': 'recid',
                 'pid_fetcher': 'recid',
-                'search_index': 'invenio_records_rest_test_index',
-                'search_type': 'record',
+                'search_index': 'testrecords-testrecord-v1.0.0',
+                'search_type': 'testrecord-v1.0.0',
                 'record_serializers': {
                     'application/json': 'invenio_records_rest.serializers'
                     ':json_v1_response',
