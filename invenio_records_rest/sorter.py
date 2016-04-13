@@ -117,7 +117,7 @@ def eval_field(field, asc):
         return {key: {'order': 'asc' if key_asc else 'desc'}}
 
 
-def default_sorter_factory(query, index):
+def default_sorter_factory(search, index):
     """Sort a query.
 
     :param query: Search query.
@@ -140,10 +140,10 @@ def default_sorter_factory(query, index):
     sort_options = current_app.config['RECORDS_REST_SORT_OPTIONS'].get(
         index, {}).get(key)
     if sort_options is None:
-        return (query, {})
+        return (search, {})
 
     # Get fields to sort query by
-    return (
-        query.sort(*[eval_field(f, asc) for f in sort_options['fields']]),
-        {sort_arg_name: urlfield}
+    search = search.sort(
+        *[eval_field(f, asc) for f in sort_options['fields']]
     )
+    return (search, {sort_arg_name: urlfield})

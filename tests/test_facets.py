@@ -27,8 +27,9 @@
 
 from __future__ import absolute_import, print_function
 
-from flask import Flask
-from invenio_search.api import Query
+from elasticsearch_dsl import Search
+from flask import Flask, current_app, request
+from invenio_query_parser.contrib.elasticsearch import IQ
 from werkzeug.datastructures import MultiDict
 
 from invenio_records_rest.facets import _aggregations, _create_filter_dsl, \
@@ -37,8 +38,8 @@ from invenio_records_rest.facets import _aggregations, _create_filter_dsl, \
 
 def test_terms_filter():
     """Test terms filter."""
-    f = terms_filter("test")
-    assert f(['a', 'b']) == dict(terms={'test': ['a', 'b']})
+    f = terms_filter('test')
+    assert f(['a', 'b']).to_dict() == dict(terms={'test': ['a', 'b']})
 
 
 def test_create_filter_dsl():
@@ -50,9 +51,9 @@ def test_create_filter_dsl():
         subtype=terms_filter('type.subtype'),
     )
 
-    with app.test_request_context("?type=a&type=b&subtype=c"):
-        query, args = _create_filter_dsl(kwargs, defs)
-        assert len(query['bool']['filter']) == 2
+    with app.test_request_context('?type=a&type=b&subtype=c'):
+        filters, args = _create_filter_dsl(kwargs, defs)
+        assert len(filters) == 2
         assert args == MultiDict([
             ('a', '1'),
             ('type', 'a'),
@@ -61,9 +62,9 @@ def test_create_filter_dsl():
         ])
 
     kwargs = MultiDict([('a', '1')])
-    with app.test_request_context("?atype=a&atype=b"):
-        query, args = _create_filter_dsl(kwargs, defs)
-        assert query is None
+    with app.test_request_context('?atype=a&atype=b'):
+        filters, args = _create_filter_dsl(kwargs, defs)
+        assert not filters
         assert args == kwargs
 
 
@@ -75,21 +76,19 @@ def test_post_filter(app, user_factory):
         subtype=terms_filter('subtype'),
     )
 
-    with app.test_request_context("?type=test"):
-        q = Query("value")
-        query, args = _post_filter(q, urlargs, defs)
-        assert 'post_filter' in query.body
-        assert query.body['post_filter'] == dict(
-            bool=dict(
-                filter=[dict(terms=dict(type=['test']))]
-            ),
+    with app.test_request_context('?type=test'):
+        search = Search().query(IQ('value'))
+        search, args = _post_filter(search, urlargs, defs)
+        assert 'post_filter' in search.to_dict()
+        assert search.to_dict()['post_filter'] == dict(
+            terms=dict(type=['test'])
         )
         assert args['type'] == 'test'
 
-    with app.test_request_context("?anotertype=test"):
-        q = Query("value")
-        query, args = _post_filter(q, urlargs, defs)
-        assert 'post_filter' not in query.body
+    with app.test_request_context('?anotertype=test'):
+        search = Search().query(IQ('value'))
+        search, args = _post_filter(search, urlargs, defs)
+        assert 'post_filter' not in search.to_dict()
 
 
 def test_query_filter(app, user_factory):
@@ -100,40 +99,37 @@ def test_query_filter(app, user_factory):
         subtype=terms_filter('subtype'),
     )
 
-    with app.test_request_context("?type=test"):
-        q = Query("value")
-        body = q.body['query']
-        query, args = _query_filter(q, urlargs, defs)
-        assert 'post_filter' not in query.body
-        assert query.body['query']['filtered']['query'] == body
-        assert query.body['query']['filtered']['filter'] == \
-            dict(
-                bool=dict(
-                    filter=[dict(terms=dict(type=['test']))]
-                ),
-            )
+    with app.test_request_context('?type=test'):
+        search = Search().query(IQ('value'))
+        body = search.to_dict()
+        search, args = _query_filter(search, urlargs, defs)
+        assert 'post_filter' not in search.to_dict()
+        assert search.to_dict()['query']['bool']['must'][0] == body['query']
+        assert search.to_dict()['query']['bool']['filter'] == [
+            dict(terms=dict(type=['test']))
+        ]
         assert args['type'] == 'test'
 
-    with app.test_request_context("?anotertype=test"):
-        q = Query("value")
-        body = q.body['query']
-        query, args = _query_filter(q, urlargs, defs)
-        assert query.body['query'] == body
+    with app.test_request_context('?anotertype=test'):
+        search = Search().query(IQ('value'))
+        body = search.to_dict()
+        query, args = _query_filter(search, urlargs, defs)
+        assert query.to_dict() == body
 
 
 def test_aggregations(app, user_factory):
     """Test aggregations."""
-    with app.test_request_context(""):
-        q = Query("value")
+    with app.test_request_context(''):
+        search = Search().query(IQ('value'))
         defs = dict(
             type=dict(
-                terms=dict(field="upload_type"),
+                terms=dict(field='upload_type'),
             ),
             subtype=dict(
-                terms=dict(field="subtype"),
+                terms=dict(field='subtype'),
             )
         )
-        assert _aggregations(q, defs).body['aggs'] == defs
+        assert _aggregations(search, defs).to_dict()['aggs'] == defs
 
 
 def test_default_facets_factory(app, user_factory):
@@ -141,10 +137,10 @@ def test_default_facets_factory(app, user_factory):
     defs = dict(
         aggs=dict(
             type=dict(
-                terms=dict(field="upload_type"),
+                terms=dict(field='upload_type'),
             ),
             subtype=dict(
-                terms=dict(field="subtype"),
+                terms=dict(field='subtype'),
             )
         ),
         filters=dict(
@@ -156,15 +152,16 @@ def test_default_facets_factory(app, user_factory):
     )
     app.config['RECORDS_REST_FACETS']['testidx'] = defs
 
-    with app.test_request_context("?type=a&subtype=b"):
-        q = Query("value")
-        query, urlkwargs = default_facets_factory(q, 'testidx')
-        assert query.body['aggs'] == defs['aggs']
-        assert 'post_filter' in query.body
-        assert 'filtered' in query.body['query']
+    with app.test_request_context('?type=a&subtype=b'):
+        search = Search().query(IQ('value'))
+        search, urlkwargs = default_facets_factory(search, 'testidx')
+        assert search.to_dict()['aggs'] == defs['aggs']
+        assert 'post_filter' in search.to_dict()
+        assert search.to_dict(
+            )['query']['bool']['filter'][0]['terms']['subtype']
 
-        q = Query("value")
-        query, urlkwargs = default_facets_factory(q, 'anotheridx')
-        assert 'aggs' not in query.body
-        assert 'post_filter' not in query.body
-        assert 'filtered' not in query.body['query']
+        search = Search().query(IQ('value'))
+        search, urlkwargs = default_facets_factory(search, 'anotheridx')
+        assert 'aggs' not in search.to_dict()
+        assert 'post_filter' not in search.to_dict()
+        assert 'bool' not in search.to_dict()['query']

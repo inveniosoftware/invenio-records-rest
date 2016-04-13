@@ -59,6 +59,15 @@ from sqlalchemy_utils.functions import create_database, database_exists, \
 from invenio_records_rest import InvenioRecordsREST, config
 
 
+def access_search_factory(self, search):
+    """Enhance query with an aggregation."""
+    from invenio_records_rest.query import default_query_factory
+    search, kwargs = default_query_factory(self, search)
+    search = search.extra(**{'_source': {'exclude': ['_access']}})
+    # search.update_from_dict({'aggs': {'stars': {'terms': {'field': 'stars'}}}})
+    return search, kwargs
+
+
 @pytest.yield_fixture()
 def app(request):
     """Flask application fixture."""
@@ -86,9 +95,12 @@ def app(request):
                 )
             )
         },
-        SEARCH_QUERY_ENHANCERS=[filter_record_access_query_enhancer],
     )
     app.config['RECORDS_REST_ENDPOINTS']['recid']['search_index'] = es_index
+    app.config['RECORDS_REST_ENDPOINTS']['recid']['search_factory_imp'] = \
+        access_search_factory
+    app.config['RECORDS_REST_ENDPOINTS']['recid']['record_filter'] = \
+        filter_record_access_query_enhancer
 
     # update the application with the configuration provided by the test
     if hasattr(request, 'param') and 'config' in request.param:

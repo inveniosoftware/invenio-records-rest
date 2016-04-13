@@ -29,6 +29,7 @@ from __future__ import absolute_import, print_function
 import uuid
 from functools import partial, wraps
 
+from elasticsearch_dsl import Search
 from flask import Blueprint, abort, current_app, jsonify, make_response, \
     request, url_for
 from flask.views import MethodView
@@ -48,10 +49,8 @@ from werkzeug.local import LocalProxy
 from werkzeug.routing import BuildError
 
 from .errors import MaxResultWindowRESTError
-from .facets import default_facets_factory
 from .links import default_links_factory
 from .query import default_query_factory
-from .sorter import default_sorter_factory
 from .utils import obj_or_import_string
 
 current_records_rest = LocalProxy(
@@ -82,12 +81,12 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      record_class=None,
                      record_serializers=None,
                      record_loaders=None,
+                     record_filter=None,
                      search_serializers=None,
                      search_index=None, search_type=None,
                      default_media_type=None,
                      max_result_window=None, use_options_view=True,
-                     facets_factory_imp=None, sorter_factory_imp=None,
-                     query_factory_imp=None, links_factory_imp=None):
+                     search_factory_imp=None, links_factory_imp=None):
     """Create Werkzeug URL rules.
 
     :param endpoint: Name of endpoint.
@@ -169,19 +168,14 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         create_permission_factory=create_permission_factory,
         record_serializers=record_serializers,
         record_loaders=record_loaders,
+        record_filter=record_filter,
         search_serializers=search_serializers,
         search_index=search_index,
         search_type=search_type,
         default_media_type=default_media_type,
         max_result_window=max_result_window,
-        facets_factory=(obj_or_import_string(
-            facets_factory_imp, default=default_facets_factory
-        )),
-        sorter_factory=(obj_or_import_string(
-            sorter_factory_imp, default=default_sorter_factory
-        )),
-        query_factory=(obj_or_import_string(
-            query_factory_imp, default=default_query_factory
+        search_factory=(obj_or_import_string(
+            search_factory_imp, default=default_query_factory
         )),
         item_links_factory=links_factory,
         record_class=record_class,
@@ -194,6 +188,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         delete_permission_factory=delete_permission_factory,
         serializers=record_serializers,
         loaders=record_loaders,
+        record_filter=record_filter,
         links_factory=links_factory,
         default_media_type=default_media_type)
 
@@ -341,10 +336,9 @@ class RecordsListResource(ContentNegotiatedMethodView):
                  pid_fetcher=None, read_permission_factory=None,
                  create_permission_factory=None, search_index=None,
                  search_type=None, record_serializers=None,
-                 record_loaders=None,
+                 record_loaders=None, record_filter=None,
                  search_serializers=None, default_media_type=None,
-                 max_result_window=None, facets_factory=None,
-                 sorter_factory=None, query_factory=None,
+                 max_result_window=None, search_factory=None,
                  item_links_factory=None, record_class=None, **kwargs):
         """Constructor."""
         super(RecordsListResource, self).__init__(
@@ -368,9 +362,8 @@ class RecordsListResource(ContentNegotiatedMethodView):
         self.search_index = search_index
         self.search_type = search_type
         self.max_result_window = max_result_window or 10000
-        self.facets_factory = facets_factory
-        self.sorter_factory = sorter_factory
-        self.query_factory = query_factory
+        self.record_filter = record_filter
+        self.search_factory = partial(search_factory, self)
         self.item_links_factory = item_links_factory
         self.loaders = record_loaders or \
             current_records_rest.loaders
@@ -389,43 +382,35 @@ class RecordsListResource(ContentNegotiatedMethodView):
 
         # Arguments that must be added in prev/next links
         urlkwargs = dict()
+        search = Search(
+            using=current_search_client,
+            index=self.search_index,
+            doc_type=self.search_type,
+        ).params(version=True)
+        search = search[(page-1)*size:page*size]
 
-        query, qs_kwargs = self.query_factory(self.search_index, page, size)
-        urlkwargs.update(qs_kwargs)
-
-        # Facets
-        query, qs_kwargs = self.facets_factory(query, self.search_index)
-        urlkwargs.update(qs_kwargs)
-
-        # Sort
-        query, qs_kwargs = self.sorter_factory(query, self.search_index)
+        search, qs_kwargs = self.search_factory(search)
         urlkwargs.update(qs_kwargs)
 
         # Execute search
-        search_result = current_search_client.search(
-            index=self.search_index,
-            doc_type=self.search_type,
-            body=query.body,
-            version=True,
-        )
+        search_result = search.execute()
 
         # Generate links for prev/next
         urlkwargs.update(
             size=size,
-            q=request.values.get('q', ''),
             _external=True,
         )
         endpoint = '.{0}_list'.format(self.pid_type)
         links = dict(self=url_for(endpoint, page=page, **urlkwargs))
         if page > 1:
             links['prev'] = url_for(endpoint, page=page-1, **urlkwargs)
-        if size * page < int(search_result['hits']['total']) and \
+        if size * page < search_result.hits.total and \
                 size * page < self.max_result_window:
             links['next'] = url_for(endpoint, page=page+1, **urlkwargs)
 
         return self.make_response(
             pid_fetcher=self.pid_fetcher,
-            search_result=search_result,
+            search_result=search_result.to_dict(),
             links=links,
             item_links_factory=self.item_links_factory,
         )
@@ -477,7 +462,7 @@ class RecordResource(ContentNegotiatedMethodView):
                  update_permission_factory=None,
                  delete_permission_factory=None, default_media_type=None,
                  links_factory=None,
-                 loaders=None,
+                 loaders=None, record_filter=None,
                  **kwargs):
         """Constructor.
 
@@ -496,6 +481,7 @@ class RecordResource(ContentNegotiatedMethodView):
             default_media_type=default_media_type,
             **kwargs)
         self.resolver = resolver
+        self.record_filter = record_filter
         self.read_permission_factory = read_permission_factory
         self.update_permission_factory = update_permission_factory
         self.delete_permission_factory = delete_permission_factory

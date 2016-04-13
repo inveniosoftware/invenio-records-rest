@@ -26,6 +26,7 @@
 
 from __future__ import absolute_import, print_function
 
+from elasticsearch_dsl import Q
 from flask import current_app, request
 from werkzeug.datastructures import MultiDict
 
@@ -33,7 +34,7 @@ from werkzeug.datastructures import MultiDict
 def terms_filter(field):
     """Create a term filter."""
     def inner(values):
-        return {"terms": {field: values}}
+        return Q('terms', **{field: values})
     return inner
 
 
@@ -47,61 +48,52 @@ def _create_filter_dsl(urlkwargs, definitions):
             for v in values:
                 urlkwargs.add(name, v)
 
-    if filters:
-        return ({"bool": {"filter": filters}}, urlkwargs)
-    return (None, urlkwargs)
+    return (filters, urlkwargs)
 
 
-def _post_filter(query, urlkwargs, definitions):
+def _post_filter(search, urlkwargs, definitions):
     """Ingest post filter in query."""
     filters, urlkwargs = _create_filter_dsl(urlkwargs, definitions)
 
-    if filters:
-        query.body["post_filter"] = filters
+    for filter_ in filters:
+        search = search.post_filter(filter_)
 
-    return (query, urlkwargs)
+    return (search, urlkwargs)
 
 
-def _query_filter(query, urlkwargs, definitions):
+def _query_filter(search, urlkwargs, definitions):
     """Ingest query filter in query."""
     filters, urlkwargs = _create_filter_dsl(urlkwargs, definitions)
 
-    if filters:
-        query.body["query"] = {
-            "filtered": {
-                "query": query.body["query"],
-                "filter": filters,
-            }
-        }
+    for filter_ in filters:
+        search = search.filter(filter_)
 
-    return (query, urlkwargs)
+    return (search, urlkwargs)
 
 
-def _aggregations(query, definitions):
+def _aggregations(search, definitions):
     """Add aggregations to query."""
     if definitions:
-        query.body["aggs"] = definitions
-    return query
+        search.update_from_dict({'aggs': definitions})
+    return search
 
 
-def default_facets_factory(query, index):
+def default_facets_factory(search, index):
     """Add facets to query."""
-    facets = current_app.config['RECORDS_REST_FACETS'].get(index)
-
-    if facets is None:
-        return query, {}
-
     urlkwargs = MultiDict()
 
-    # Aggregations.
-    query = _aggregations(query, facets.get("aggs", {}))
+    facets = current_app.config['RECORDS_REST_FACETS'].get(index)
 
-    # Query filter
-    query, urlkwargs = _query_filter(
-        query, urlkwargs, facets.get("filters", {}))
+    if facets is not None:
+        # Aggregations.
+        search = _aggregations(search, facets.get("aggs", {}))
 
-    # Post filter
-    query, urlkwargs = _post_filter(
-        query, urlkwargs, facets.get("post_filters", {}))
+        # Query filter
+        search, urlkwargs = _query_filter(
+            search, urlkwargs, facets.get("filters", {}))
 
-    return (query, urlkwargs)
+        # Post filter
+        search, urlkwargs = _post_filter(
+            search, urlkwargs, facets.get("post_filters", {}))
+
+    return (search, urlkwargs)

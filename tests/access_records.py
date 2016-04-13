@@ -28,6 +28,7 @@ from collections import namedtuple
 
 import flask
 import pytz
+from elasticsearch_dsl import Q
 from flask_security import current_user
 from flask_sqlalchemy import before_models_committed, models_committed
 from invenio_access.models import ActionUsers
@@ -115,24 +116,15 @@ def index_record_modification(sender, changes):
     flask.g.invenio_search_records_to_delete = set()
 
 
-def filter_record_access_query_enhancer(query, **kwargs):
+def filter_record_access_query_enhancer():
     """Enhance query with user authentication rules."""
-    query.body['_source'] = {'exclude': ['_access']}
     if not current_user.is_authenticated:
-        query.query = AndOp(
-            KeywordOp(Keyword('_access.public'), DoubleQuotedValue(1)),
-            query.query
-        )
-    else:
-        query.query = AndOp(
-            AndOp(
-                KeywordOp(Keyword('_access.include_users'),
-                          DoubleQuotedValue(current_user.id)),
-                NotOp(KeywordOp(Keyword('_access.exclude_users'),
-                                DoubleQuotedValue(current_user.id)))
-            ),
-            query.query
-        )
+        return Q('match', **{'_access.public': 1})
+    return Q(
+        'match', **{'_access.include_users': current_user.id}
+    ) & ~Q(
+        'match', **{'_access.exclude_users': current_user.id}
+    )
 
 
 def prepare_indexing(app):

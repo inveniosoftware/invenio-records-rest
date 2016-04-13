@@ -32,18 +32,21 @@ from invenio_search import Query
 from .errors import InvalidQueryRESTError
 
 
-def default_query_factory(index, page, size):
-    """Parse and slice query using Invenio-Query-Parser.
+def default_query_factory(self, search):
+    """Parse query using Invenio-Query-Parser.
 
-    :param index: Index to search in.
-    :param page: Requested page.
-    :param size: Request results size.
-    :returns: Tuple of (query, URL arguments).
+    :param self: REST view.
+    :param search: Elastic search DSL search instance.
+    :returns: Tuple with search instance and URL arguments.
     """
+    from invenio_query_parser.contrib.elasticsearch import IQ
+    from .facets import default_facets_factory
+    from .sorter import default_sorter_factory
+
     query_string = request.values.get('q', '')
 
     try:
-        query = Query(query_string)[(page-1)*size:page*size]
+        search = search.query(IQ(query_string))
     except SyntaxError:
         current_app.logger.debug(
             "Failed parsing query: {0}".format(
@@ -51,7 +54,20 @@ def default_query_factory(index, page, size):
             exc_info=True)
         raise InvalidQueryRESTError()
 
-    return (query, {'q': query_string})
+    search, urlkwargs = default_facets_factory(search, self.search_index)
+    search, sortkwargs = default_sorter_factory(search, self.search_index)
+    for key, value in sortkwargs.items():
+        urlkwargs.add(key, value)
+
+    if self.record_filter is not None:
+        if callable(self.record_filter):
+            record_filter = self.record_filter()
+        else:
+            record_filter = IQ(self.record_filter)
+        search = search.filter(record_filter)
+
+    urlkwargs.add('q', query_string)
+    return search, urlkwargs
 
 
 def es_query_factory(index, page, size):

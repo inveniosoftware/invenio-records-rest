@@ -70,6 +70,7 @@ setup_requires = [
 
 install_requires = [
     'Flask-CLI>=0.2.1',
+    'elasticsearch-dsl>=2.0.0',
     'invenio-pidstore>=1.0.0a7',
     'invenio-records>=1.0.0a7',
     'invenio-rest>=1.0.0a4',

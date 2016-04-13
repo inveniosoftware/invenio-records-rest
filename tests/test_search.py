@@ -224,6 +224,7 @@ def test_search_default_aggregation_serialization(app, user_factory):
                     'application/json': 'invenio_records_rest.serializers'
                     ':json_v1_search'
                 },
+                'search_factory_imp': 'conftest:access_search_factory',
                 'list_route': '/records/',
                 'item_route': '/records/<pid_value>',
             }
@@ -270,20 +271,20 @@ def subtest_search_aggregation_serialization(app, user_factory, expected):
             allowed_login = allowed_user.login_function()
         db.session.commit()
 
+        app.config['RECORDS_REST_FACETS'] = {
+            'invenio_records_rest_test_index': {
+                'aggs': {
+                    'stars': {'terms': {'field': 'stars'}}
+                },
+                'post_filters': {
+                    'type': terms_filter('type'),
+                }
+            }
+        }
         es_index = app.config["RECORDS_REST_DEFAULT_SEARCH_INDEX"]
         current_search_client.indices.flush(wait_if_ongoing=True,
                                             force=True,
                                             index=es_index)
-
-        def aggregation_query_enhancer(query, **kwargs):
-            """Enhance query with an aggregation."""
-            query.body['aggs'] = {'stars': {'terms': {'field': 'stars'}}}
-
-        enhancers = app.config.get('SEARCH_QUERY_ENHANCERS', [])
-        enhancers.append(aggregation_query_enhancer)
-        app.config.update(
-            SEARCH_QUERY_ENHANCERS=enhancers,
-        )
 
         with app.test_client() as client:
             allowed_login(client)
@@ -335,8 +336,7 @@ def normalise_url(url):
 def subtest_expected_hits(hits, expected, client):
     """Check that returned search hits are as expected."""
     assert len(hits) == len(expected)
-    for idx in range(len(hits)):
-        record_data = hits[idx]
+    for idx, record_data in enumerate(hits):
         expected_id = expected[idx][0]
         expected_data = expected[idx][1]
         # check that the returned self link returns the same data
