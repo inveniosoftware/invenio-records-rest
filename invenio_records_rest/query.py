@@ -27,12 +27,11 @@
 from __future__ import absolute_import, print_function
 
 from flask import current_app, request
-from invenio_search import Query
 
 from .errors import InvalidQueryRESTError
 
 
-def default_query_factory(self, search):
+def default_query_factory(self, search, query_parser=None):
     """Parse query using Invenio-Query-Parser.
 
     :param self: REST view.
@@ -43,10 +42,11 @@ def default_query_factory(self, search):
     from .facets import default_facets_factory
     from .sorter import default_sorter_factory
 
+    query_parser = query_parser or IQ
     query_string = request.values.get('q', '')
 
     try:
-        search = search.query(IQ(query_string))
+        search = search.query(query_parser(query_string))
     except SyntaxError:
         current_app.logger.debug(
             "Failed parsing query: {0}".format(
@@ -54,8 +54,9 @@ def default_query_factory(self, search):
             exc_info=True)
         raise InvalidQueryRESTError()
 
-    search, urlkwargs = default_facets_factory(search, self.search_index)
-    search, sortkwargs = default_sorter_factory(search, self.search_index)
+    search_index = search._index[0]
+    search, urlkwargs = default_facets_factory(search, search_index)
+    search, sortkwargs = default_sorter_factory(search, search_index)
     for key, value in sortkwargs.items():
         urlkwargs.add(key, value)
 
@@ -68,35 +69,3 @@ def default_query_factory(self, search):
 
     urlkwargs.add('q', query_string)
     return search, urlkwargs
-
-
-def es_query_factory(index, page, size):
-    """Send query directly as query string query to Elasticsearch.
-
-    .. warning:
-
-       All fields in a record that a user can access are searchable! This means
-       that if a user can access a record, you cannot include confidential
-       information into the record (or you must remove it when indexing).
-       Otherwise a user is able to search for the information.
-
-       The reason is that the query string is passed directly to Elasticsearch,
-       which takes care of parsing the string.
-
-    :param index: Index to search in.
-    :param page: Requested page.
-    :param size: Request results size.
-    :returns: Tuple of (query, URL arguments).
-    """
-    query_string = request.values.get('q', '')
-
-    query = Query()
-    if query_string.strip():
-        query.body['query'] = dict(
-            query_string=dict(
-                query=query_string,
-                allow_leading_wildcard=False,
-            )
-        )
-    query = query[(page-1)*size:page*size]
-    return (query, {'q': query_string})

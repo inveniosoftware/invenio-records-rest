@@ -74,7 +74,8 @@ def _query_filter(search, urlkwargs, definitions):
 def _aggregations(search, definitions):
     """Add aggregations to query."""
     if definitions:
-        search.update_from_dict({'aggs': definitions})
+        for name, agg in definitions.items():
+            search.aggs[name] = agg
     return search
 
 

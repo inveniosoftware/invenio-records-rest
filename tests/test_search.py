@@ -214,8 +214,7 @@ def test_search_default_aggregation_serialization(app, user_factory):
                 'pid_type': 'recid',
                 'pid_minter': 'recid',
                 'pid_fetcher': 'recid',
-                'search_index': 'invenio_records_rest_test_index',
-                'search_type': 'record',
+                'search_class': 'conftest:TestSearch',
                 'record_serializers': {
                     'application/json': 'invenio_records_rest.serializers'
                     ':json_v1_response',
@@ -224,7 +223,6 @@ def test_search_default_aggregation_serialization(app, user_factory):
                     'application/json': 'invenio_records_rest.serializers'
                     ':json_v1_search'
                 },
-                'search_factory_imp': 'conftest:access_search_factory',
                 'list_route': '/records/',
                 'item_route': '/records/<pid_value>',
             }

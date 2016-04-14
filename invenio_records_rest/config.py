@@ -28,6 +28,8 @@ from __future__ import absolute_import, print_function
 
 from flask import request
 
+from invenio_search import RecordsSearch
+
 from .facets import terms_filter
 from .utils import deny_all
 
@@ -40,7 +42,8 @@ RECORDS_REST_ENDPOINTS = dict(
         pid_type='recid',
         pid_minter='recid',
         pid_fetcher='recid',
-        search_index='records',
+        search_class=RecordsSearch,
+        search_index=None,
         search_type=None,
         record_serializers={
             'application/json': ('invenio_records_rest.serializers'

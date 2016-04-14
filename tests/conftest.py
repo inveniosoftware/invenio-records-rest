@@ -51,6 +51,8 @@ from invenio_records import InvenioRecords
 from invenio_records.api import Record
 from invenio_rest import InvenioREST
 from invenio_search import InvenioSearch, current_search_client
+from invenio_search import RecordsSearch
+from invenio_search.api import DefaultFilter
 from permissions import records_create_all, records_delete_all, \
     records_read_all, records_update_all
 from sqlalchemy_utils.functions import create_database, database_exists, \
@@ -58,13 +60,26 @@ from sqlalchemy_utils.functions import create_database, database_exists, \
 
 from invenio_records_rest import InvenioRecordsREST, config
 
+ES_INDEX = 'invenio_records_rest_test_index'
+
+
+class TestSearch(RecordsSearch):
+    """Test record search."""
+
+    class Meta:
+        """Test configuration."""
+        index = ES_INDEX
+        doc_types = ['_all']
+        default_filter = DefaultFilter(filter_record_access_query_enhancer)
+
 
 def access_search_factory(self, search):
     """Enhance query with an aggregation."""
     from invenio_records_rest.query import default_query_factory
     search, kwargs = default_query_factory(self, search)
     search = search.extra(**{'_source': {'exclude': ['_access']}})
-    # search.update_from_dict({'aggs': {'stars': {'terms': {'field': 'stars'}}}})
+    # search.update_from_dict(
+    # {'aggs': {'stars': {'terms': {'field': 'stars'}}}})
     return search, kwargs
 
 
@@ -73,7 +88,6 @@ def app(request):
     """Flask application fixture."""
     instance_path = tempfile.mkdtemp()
     app = Flask('testapp', instance_path=instance_path)
-    es_index = 'invenio_records_rest_test_index'
     app.config.update(
         TESTING=True,
         SERVER_NAME='localhost:5000',
@@ -87,20 +101,18 @@ def app(request):
         RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY=None,
         RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY=None,
         RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY=None,
-        RECORDS_REST_DEFAULT_SEARCH_INDEX=es_index,
+        RECORDS_REST_DEFAULT_SEARCH_INDEX=ES_INDEX,
         RECORDS_REST_SORT_OPTIONS={
-            es_index: dict(
+            ES_INDEX: dict(
                 year=dict(
                     fields=['year'],
                 )
             )
         },
     )
-    app.config['RECORDS_REST_ENDPOINTS']['recid']['search_index'] = es_index
     app.config['RECORDS_REST_ENDPOINTS']['recid']['search_factory_imp'] = \
         access_search_factory
-    app.config['RECORDS_REST_ENDPOINTS']['recid']['record_filter'] = \
-        filter_record_access_query_enhancer
+    app.config['RECORDS_REST_ENDPOINTS']['recid']['search_class'] = TestSearch
 
     # update the application with the configuration provided by the test
     if hasattr(request, 'param') and 'config' in request.param:
@@ -122,9 +134,9 @@ def app(request):
             create_database(db.engine.url)
         db.drop_all()
         db.create_all()
-        if current_search_client.indices.exists(es_index):
-            current_search_client.indices.delete(es_index)
-            current_search_client.indices.create(es_index)
+        if current_search_client.indices.exists(ES_INDEX):
+            current_search_client.indices.delete(ES_INDEX)
+            current_search_client.indices.create(ES_INDEX)
         prepare_indexing(app)
 
     with app.app_context():

@@ -42,7 +42,7 @@ from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
 from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.decorators import require_content_types
-from invenio_search import current_search_client
+from invenio_search import RecordsSearch, current_search_client
 from jsonpatch import JsonPatchException, JsonPointerException
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.local import LocalProxy
@@ -82,6 +82,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      record_serializers=None,
                      record_loaders=None,
                      record_filter=None,
+                     search_class=None,
                      search_serializers=None,
                      search_index=None, search_type=None,
                      default_media_type=None,
@@ -125,7 +126,6 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     assert pid_type
     assert search_serializers
     assert record_serializers
-    assert search_index
 
     read_permission_factory = obj_or_import_string(
         read_permission_factory_imp
@@ -145,6 +145,23 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     record_class = obj_or_import_string(
         record_class, default=Record
     )
+    search_class = obj_or_import_string(
+        search_class, default=RecordsSearch
+    )
+
+    search_class_kwargs = {}
+    if search_index:
+        search_class_kwargs['index'] = search_index
+    else:
+        search_index = search_class.Meta.index
+
+    if search_type:
+        search_class_kwargs['doc_type'] = search_type
+    else:
+        search_type = search_class.Meta.doc_types
+
+    if search_class_kwargs:
+        search_class = partial(search_class, **search_class_kwargs)
 
     if record_loaders:
         record_loaders = {mime: obj_or_import_string(func)
@@ -170,8 +187,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         record_loaders=record_loaders,
         record_filter=record_filter,
         search_serializers=search_serializers,
-        search_index=search_index,
-        search_type=search_type,
+        search_class=search_class,
         default_media_type=default_media_type,
         max_result_window=max_result_window,
         search_factory=(obj_or_import_string(
@@ -334,8 +350,8 @@ class RecordsListResource(ContentNegotiatedMethodView):
 
     def __init__(self, resolver=None, minter_name=None, pid_type=None,
                  pid_fetcher=None, read_permission_factory=None,
-                 create_permission_factory=None, search_index=None,
-                 search_type=None, record_serializers=None,
+                 create_permission_factory=None, search_class=None,
+                 record_serializers=None,
                  record_loaders=None, record_filter=None,
                  search_serializers=None, default_media_type=None,
                  max_result_window=None, search_factory=None,
@@ -359,8 +375,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         self.read_permission_factory = read_permission_factory
         self.create_permission_factory = create_permission_factory or \
             current_records_rest.create_permission_factory
-        self.search_index = search_index
-        self.search_type = search_type
+        self.search_class = search_class
         self.max_result_window = max_result_window or 10000
         self.record_filter = record_filter
         self.search_factory = partial(search_factory, self)
@@ -382,11 +397,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
 
         # Arguments that must be added in prev/next links
         urlkwargs = dict()
-        search = Search(
-            using=current_search_client,
-            index=self.search_index,
-            doc_type=self.search_type,
-        ).params(version=True)
+        search = self.search_class().params(version=True)
         search = search[(page-1)*size:page*size]
 
         search, qs_kwargs = self.search_factory(search)
