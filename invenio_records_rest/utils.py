@@ -26,7 +26,7 @@
 
 import six
 
-from flask import current_app
+from flask import current_app, request
 from werkzeug.utils import import_string
 
 
@@ -46,6 +46,22 @@ def load_or_import_from_config(key, app=None, default=None):
     return obj_or_import_string(imp, default=default)
 
 
+def allow_all(*args, **kwargs):
+    """Return permission that always allow an access."""
+    return type('Allow', (), {'can': lambda self: True})()
+
+
 def deny_all(*args, **kwargs):
     """Return permission that always deny an access."""
     return type('Deny', (), {'can': lambda self: False})()
+
+
+def check_elasticsearch(record, *args, **kwargs):
+    """Return permission that check if the record exists in ES index."""
+    def can(self):
+        """Try to search for given record."""
+        search = request._methodview.search_class()
+        search = search.get_record(str(record.id))
+        return search.count() == 1
+
+    return type('CheckES', (), {'can': can})()

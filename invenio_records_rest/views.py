@@ -50,7 +50,7 @@ from werkzeug.routing import BuildError
 
 from .errors import MaxResultWindowRESTError
 from .links import default_links_factory
-from .query import default_query_factory
+from .query import default_search_factory
 from .utils import obj_or_import_string
 
 current_records_rest = LocalProxy(
@@ -81,7 +81,6 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      record_class=None,
                      record_serializers=None,
                      record_loaders=None,
-                     record_filter=None,
                      search_class=None,
                      search_serializers=None,
                      search_index=None, search_type=None,
@@ -185,13 +184,12 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         create_permission_factory=create_permission_factory,
         record_serializers=record_serializers,
         record_loaders=record_loaders,
-        record_filter=record_filter,
         search_serializers=search_serializers,
         search_class=search_class,
         default_media_type=default_media_type,
         max_result_window=max_result_window,
         search_factory=(obj_or_import_string(
-            search_factory_imp, default=default_query_factory
+            search_factory_imp, default=default_search_factory
         )),
         item_links_factory=links_factory,
         record_class=record_class,
@@ -204,7 +202,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         delete_permission_factory=delete_permission_factory,
         serializers=record_serializers,
         loaders=record_loaders,
-        record_filter=record_filter,
+        search_class=search_class,
         links_factory=links_factory,
         default_media_type=default_media_type)
 
@@ -298,6 +296,10 @@ def need_record_permission(factory_name):
                 getattr(self, factory_name) or
                 getattr(current_records_rest, factory_name)
             )
+
+            # FIXME use context instead
+            request._methodview = self
+
             if permission_factory:
                 verify_record_permission(permission_factory, record)
             return f(self, record=record, *args, **kwargs)
@@ -352,7 +354,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
                  pid_fetcher=None, read_permission_factory=None,
                  create_permission_factory=None, search_class=None,
                  record_serializers=None,
-                 record_loaders=None, record_filter=None,
+                 record_loaders=None,
                  search_serializers=None, default_media_type=None,
                  max_result_window=None, search_factory=None,
                  item_links_factory=None, record_class=None, **kwargs):
@@ -377,7 +379,6 @@ class RecordsListResource(ContentNegotiatedMethodView):
             current_records_rest.create_permission_factory
         self.search_class = search_class
         self.max_result_window = max_result_window or 10000
-        self.record_filter = record_filter
         self.search_factory = partial(search_factory, self)
         self.item_links_factory = item_links_factory
         self.loaders = record_loaders or \
@@ -473,7 +474,7 @@ class RecordResource(ContentNegotiatedMethodView):
                  update_permission_factory=None,
                  delete_permission_factory=None, default_media_type=None,
                  links_factory=None,
-                 loaders=None, record_filter=None,
+                 loaders=None, search_class=None,
                  **kwargs):
         """Constructor.
 
@@ -492,7 +493,7 @@ class RecordResource(ContentNegotiatedMethodView):
             default_media_type=default_media_type,
             **kwargs)
         self.resolver = resolver
-        self.record_filter = record_filter
+        self.search_class = search_class
         self.read_permission_factory = read_permission_factory
         self.update_permission_factory = update_permission_factory
         self.delete_permission_factory = delete_permission_factory

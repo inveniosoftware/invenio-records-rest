@@ -50,8 +50,7 @@ from invenio_pidstore.resolver import Resolver
 from invenio_records import InvenioRecords
 from invenio_records.api import Record
 from invenio_rest import InvenioREST
-from invenio_search import InvenioSearch, current_search_client
-from invenio_search import RecordsSearch
+from invenio_search import InvenioSearch, RecordsSearch, current_search_client
 from invenio_search.api import DefaultFilter
 from permissions import records_create_all, records_delete_all, \
     records_read_all, records_update_all
@@ -69,18 +68,13 @@ class TestSearch(RecordsSearch):
     class Meta:
         """Test configuration."""
         index = ES_INDEX
-        doc_types = ['_all']
+        doc_types = None
         default_filter = DefaultFilter(filter_record_access_query_enhancer)
 
-
-def access_search_factory(self, search):
-    """Enhance query with an aggregation."""
-    from invenio_records_rest.query import default_query_factory
-    search, kwargs = default_query_factory(self, search)
-    search = search.extra(**{'_source': {'exclude': ['_access']}})
-    # search.update_from_dict(
-    # {'aggs': {'stars': {'terms': {'field': 'stars'}}}})
-    return search, kwargs
+    def __init__(self, **kwargs):
+        """Add extra options."""
+        super(TestSearch, self).__init__(**kwargs)
+        self._extra.update(**{'_source': {'exclude': ['_access']}})
 
 
 @pytest.yield_fixture()
@@ -110,8 +104,6 @@ def app(request):
             )
         },
     )
-    app.config['RECORDS_REST_ENDPOINTS']['recid']['search_factory_imp'] = \
-        access_search_factory
     app.config['RECORDS_REST_ENDPOINTS']['recid']['search_class'] = TestSearch
 
     # update the application with the configuration provided by the test
