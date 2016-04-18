@@ -26,6 +26,9 @@
 
 from __future__ import absolute_import, print_function
 
+from functools import partial
+
+from elasticsearch_dsl.query import Q
 from flask import current_app, request
 
 from .errors import InvalidQueryRESTError
@@ -62,3 +65,9 @@ def default_search_factory(self, search, query_parser=None):
 
     urlkwargs.add('q', query_string)
     return search, urlkwargs
+
+
+es_search_factory = partial(
+    default_search_factory,
+    query_parser=lambda qstr: Q('query_string', query=qstr) if qstr else Q()
+)

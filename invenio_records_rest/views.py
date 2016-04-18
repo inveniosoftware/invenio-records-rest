@@ -29,7 +29,6 @@ from __future__ import absolute_import, print_function
 import uuid
 from functools import partial, wraps
 
-from elasticsearch_dsl import Search
 from flask import Blueprint, abort, current_app, jsonify, make_response, \
     request, url_for
 from flask.views import MethodView
@@ -42,7 +41,7 @@ from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
 from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.decorators import require_content_types
-from invenio_search import RecordsSearch, current_search_client
+from invenio_search import RecordsSearch
 from jsonpatch import JsonPatchException, JsonPointerException
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.local import LocalProxy
