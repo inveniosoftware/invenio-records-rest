@@ -35,7 +35,7 @@ from marshmallow import Schema, fields
 from invenio_records_rest.serializers.json import JSONSerializer
 
 
-def test_serialize(app):
+def test_serialize():
     """Test JSON serialize."""
     class TestSchema(Schema):
         title = fields.Str(attribute='metadata.mytitle')
@@ -49,7 +49,7 @@ def test_serialize(app):
     assert data['id'] == '2'
 
 
-def test_serialize_search(app):
+def test_serialize_search():
     """Test JSON serialize."""
     class TestSchema(Schema):
         title = fields.Str(attribute='metadata.mytitle')
@@ -95,9 +95,11 @@ def test_serialize_pretty(app):
     rec = Record({'title': 'test'})
 
     app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
-    assert JSONSerializer(TestSchema).serialize(pid, rec) == \
-        '{"title":"test"}'
+    with app.test_request_context():
+        assert JSONSerializer(TestSchema).serialize(pid, rec) == \
+            '{"title":"test"}'
 
     app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
-    assert JSONSerializer(TestSchema).serialize(pid, rec) == \
-        '{\n  "title": "test"\n}'
+    with app.test_request_context():
+        assert JSONSerializer(TestSchema).serialize(pid, rec) == \
+            '{\n  "title": "test"\n}'

@@ -44,6 +44,7 @@ def record_responsify(serializer, mimetype):
             mimetype=mimetype)
         response.status_code = code
         response.set_etag(str(record.revision_id))
+        response.last_modified = record.updated
         if headers is not None:
             response.headers.extend(headers)
         return response

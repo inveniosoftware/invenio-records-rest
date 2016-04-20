@@ -1,6 +1,6 @@
 {
   "mappings": {
-    "testrecord-v1.0.0": {
+    "testrecord": {
       "properties": {
         "control_number": {
           "type": "string"

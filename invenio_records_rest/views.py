@@ -278,7 +278,10 @@ def pass_record(f):
                     })
                 abort(500)
 
-        return f(self, pid=pid, record=record, *args, **kwargs)
+        try:
+            return f(self, pid=pid, record=record, *args, **kwargs)
+        except SQLAlchemyError:
+            abort(500)
     return inner
 
 
@@ -412,7 +415,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         # Arguments that must be added in prev/next links
         urlkwargs = dict()
         search = self.search_class().params(version=True)
-        search = search[(page-1)*size:page*size]
+        search = search[(page - 1) * size:page * size]
 
         search, qs_kwargs = self.search_factory(search)
         urlkwargs.update(qs_kwargs)
@@ -428,10 +431,10 @@ class RecordsListResource(ContentNegotiatedMethodView):
         endpoint = '.{0}_list'.format(self.pid_type)
         links = dict(self=url_for(endpoint, page=page, **urlkwargs))
         if page > 1:
-            links['prev'] = url_for(endpoint, page=page-1, **urlkwargs)
+            links['prev'] = url_for(endpoint, page=page - 1, **urlkwargs)
         if size * page < search_result.hits.total and \
                 size * page < self.max_result_window:
-            links['next'] = url_for(endpoint, page=page+1, **urlkwargs)
+            links['next'] = url_for(endpoint, page=page + 1, **urlkwargs)
 
         return self.make_response(
             pid_fetcher=self.pid_fetcher,
@@ -452,26 +455,24 @@ class RecordsListResource(ContentNegotiatedMethodView):
         if data is None:
             abort(400)
 
-        try:
-            # Create uuid for record
-            record_uuid = uuid.uuid4()
-            # Create persistent identifier
-            pid = self.minter(record_uuid, data=data)
-            # Create record
-            record = self.record_class.create(data, id_=record_uuid)
+        # Create uuid for record
+        record_uuid = uuid.uuid4()
+        # Create persistent identifier
+        pid = self.minter(record_uuid, data=data)
+        # Create record
+        record = self.record_class.create(data, id_=record_uuid)
 
-            # Check permissions
-            permission_factory = self.create_permission_factory
-            if permission_factory:
-                verify_record_permission(permission_factory, record)
-            db.session.commit()
-        except SQLAlchemyError:
-            db.session.rollback()
-            current_app.logger.exception('Failed to create record.')
-            abort(500)
-        response = self.make_response(pid, record, 201,
-                                      links_factory=self.item_links_factory)
+        # Check permissions
+        permission_factory = self.create_permission_factory
+        if permission_factory:
+            verify_record_permission(permission_factory, record)
 
+        db.session.commit()
+
+        response = self.make_response(
+            pid, record, 201, links_factory=self.item_links_factory)
+
+        # Add location headers
         endpoint = '.{0}_item'.format(pid.pid_type)
         location = url_for(endpoint, pid_value=pid.pid_value, _external=True)
         response.headers.extend(dict(location=location))
@@ -523,21 +524,17 @@ class RecordResource(ContentNegotiatedMethodView):
         """
         self.check_etag(str(record.model.version_id))
 
-        try:
-            record.delete()
-            # mark all PIDs as DELETED
-            all_pids = PersistentIdentifier.query.filter(
-                PersistentIdentifier.object_type == pid.object_type,
-                PersistentIdentifier.object_uuid == pid.object_uuid,
-            ).all()
-            for rec_pid in all_pids:
-                if not rec_pid.is_deleted():
-                    rec_pid.delete()
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            current_app.logger.exception('Failed to delete record.')
-            abort(500)
+        record.delete()
+        # mark all PIDs as DELETED
+        all_pids = PersistentIdentifier.query.filter(
+            PersistentIdentifier.object_type == pid.object_type,
+            PersistentIdentifier.object_uuid == pid.object_uuid,
+        ).all()
+        for rec_pid in all_pids:
+            if not rec_pid.is_deleted():
+                rec_pid.delete()
+        db.session.commit()
+
         return '', 204
 
     @pass_record
@@ -549,10 +546,13 @@ class RecordResource(ContentNegotiatedMethodView):
         :param record: Record object.
         :returns: The requested record.
         """
+        etag = str(record.revision_id)
         self.check_etag(str(record.revision_id))
+        self.check_if_modified_since(record.updated, etag=etag)
 
-        return self.make_response(pid, record,
-                                  links_factory=self.links_factory)
+        return self.make_response(
+            pid, record, links_factory=self.links_factory
+        )
 
     @require_content_types('application/json-patch+json')
     @pass_record
@@ -578,8 +578,9 @@ class RecordResource(ContentNegotiatedMethodView):
 
         record.commit()
         db.session.commit()
-        return self.make_response(pid, record,
-                                  links_factory=self.links_factory)
+
+        return self.make_response(
+            pid, record, links_factory=self.links_factory)
 
     @pass_record
     @need_record_permission('update_permission_factory')
@@ -599,13 +600,15 @@ class RecordResource(ContentNegotiatedMethodView):
         data = self.loaders[request.content_type]()
         if data is None:
             abort(400)
+
         self.check_etag(str(record.revision_id))
+
         record.clear()
         record.update(data)
         record.commit()
         db.session.commit()
-        return self.make_response(pid, record,
-                                  links_factory=self.links_factory)
+        return self.make_response(
+            pid, record, links_factory=self.links_factory)
 
 
 class SuggestResource(MethodView):

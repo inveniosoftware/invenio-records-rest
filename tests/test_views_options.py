@@ -32,10 +32,10 @@ import pytest
 from flask import url_for
 
 
-def test_options_view(app, user_factory):
+def test_options_view(app, search_class):
     """Test default sorter factory."""
     app.config["RECORDS_REST_SORT_OPTIONS"] = {
-        'invenio_records_rest_test_index': dict(
+        search_class.Meta.index: dict(
             myfield=dict(
                 fields=['field1:asc'],
                 title='My Field',
@@ -50,51 +50,33 @@ def test_options_view(app, user_factory):
         )
     }
 
-    with app.app_context():
-        with app.test_client() as client:
-            res = client.get(
-                url_for('invenio_records_rest.recid_list_options'))
-            data = json.loads(res.get_data(as_text=True))
-            assert data['max_result_window'] == 10000
-            assert data['default_media_type'] == 'application/json'
-            assert data['item_media_types'] == ['application/json']
-            assert data['search_media_types'] == ['application/json']
-            assert data['sort_fields'] == [
-                {'anotherfield': {
-                    'title': 'My Field',
-                    'default_order': 'desc'
-                }},
-                {'myfield': {
-                    'title': 'My Field',
-                    'default_order': 'asc'
-                }}
-            ]
+    with app.test_client() as client:
+        res = client.get(
+            url_for('invenio_records_rest.recid_list_options'))
+        data = json.loads(res.get_data(as_text=True))
+        assert data['max_result_window'] == 10000
+        assert data['default_media_type'] == 'application/json'
+        assert data['item_media_types'] == ['application/json']
+        assert data['search_media_types'] == ['application/json']
+        assert data['sort_fields'] == [
+            {'anotherfield': {
+                'title': 'My Field',
+                'default_order': 'desc'
+            }},
+            {'myfield': {
+                'title': 'My Field',
+                'default_order': 'asc'
+            }}
+        ]
 
 
-@pytest.mark.parametrize('app', [({
-    'config': {
-        'RECORDS_REST_ENDPOINTS': {
-            'recid': {
-                'pid_type': 'recid',
-                'pid_minter': 'recid',
-                'pid_fetcher': 'recid',
-                'record_serializers': {
-                    'application/json': 'invenio_records_rest.serializers'
-                    ':json_v1_response',
-                },
-                'search_serializers': {
-                    'application/json': 'invenio_records_rest.serializers'
-                    ':json_v1_search'
-                },
-                'list_route': '/records/',
-                'item_route': '/records/<pid_value>',
-                'use_options_view': False,
-            }
-        }
-    }
-})], indirect=['app'])
-def test_use_options(app, user_factory):
+@pytest.mark.parametrize('app', [dict(
+    endpoint=dict(use_options_view=False)
+)], indirect=['app'])
+def test_use_options(app, db):
     """Test extension initialization."""
+    # db fixture needed because _options will now be caught by the default
+    # records detail item endpoint which requires db access.
     with app.app_context():
         with app.test_client() as client:
             res = client.get('/records/_options')

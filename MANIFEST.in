@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2015, 2016 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -22,26 +22,23 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-# Check manifest will not automatically add these two files:
-include .dockerignore
-include .editorconfig
-include .tx/config
-recursive-include invenio_records_rest *.po
-recursive-include invenio_records_rest *.mo
-
-# added by check_manifest.py
 include *.rst
 include *.sh
 include *.txt
+include .dockerignore
+include .editorconfig
+include .tx/config
 include LICENSE
 include pytest.ini
 recursive-include docs *.bat
 recursive-include docs *.py
 recursive-include docs *.rst
 recursive-include docs Makefile
-recursive-include examples *.py
 recursive-include examples *.json
+recursive-include examples *.py
+recursive-include invenio_records_rest *.mo
+recursive-include invenio_records_rest *.po
 recursive-include misc *.py
 recursive-include misc *.rst
-recursive-include tests *.py
 recursive-include tests *.json
+recursive-include tests *.py

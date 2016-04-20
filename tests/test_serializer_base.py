@@ -26,11 +26,10 @@
 
 from __future__ import absolute_import, print_function
 
-import uuid
 from datetime import datetime
 
-from invenio_db import db
-from invenio_pidstore.models import PersistentIdentifier, PIDStatus
+from helpers import create_record
+from invenio_pidstore.models import PersistentIdentifier
 from invenio_records import Record
 
 from invenio_records_rest.serializers.base import PreprocessorMixin
@@ -38,16 +37,10 @@ from invenio_records_rest.serializers.base import PreprocessorMixin
 keys = ['pid', 'metadata', 'links', 'revision', 'created', 'updated']
 
 
-def test_preprocessor_mixin_record(app):
+def test_preprocessor_mixin_record(app, db):
     """Test preprocessor mixin."""
-    with db.session.begin_nested():
-        recuuid = uuid.uuid4()
-        record = Record.create({
-            'title': 'test', 'aref': {'$ref': '#/title'}}, id_=recuuid)
-        record.model.created = datetime(2015, 10, 1, 11, 11, 11, 1)
-        pid = PersistentIdentifier.create(
-            'recid', '1', object_type='rec', object_uuid=recuuid,
-            status=PIDStatus.REGISTERED)
+    pid, record = create_record({'title': 'test', 'aref': {'$ref': '#/title'}})
+    record.model.created = datetime(2015, 10, 1, 11, 11, 11, 1)
     db.session.commit()
 
     data = PreprocessorMixin().preprocess_record(pid, record)

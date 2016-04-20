@@ -22,7 +22,6 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-
 """Pytest configuration."""
 
 from __future__ import absolute_import, print_function
@@ -31,36 +30,26 @@ import json
 import os
 import shutil
 import tempfile
-from contextlib import contextmanager
+from os.path import dirname, join
 
 import pytest
-from access_records import filter_record_access_query_enhancer, \
-    prepare_indexing
+from elasticsearch.exceptions import RequestError
 from flask import Flask, url_for
 from flask_cli import FlaskCLI
-from flask_login import LoginManager
-from flask_menu import Menu
-from flask_security.utils import encrypt_password
-from invenio_access import InvenioAccess
-from invenio_access.models import ActionUsers
-from invenio_accounts import InvenioAccounts
-from invenio_accounts.views import blueprint as accounts_blueprint
-from invenio_db import InvenioDB, db
+from flask_login import LoginManager, UserMixin
+from helpers import create_record
+from invenio_db import db as db_
+from invenio_db import InvenioDB
+from invenio_indexer.api import RecordIndexer
 from invenio_pidstore import InvenioPIDStore
-from invenio_pidstore.resolver import Resolver
 from invenio_records import InvenioRecords
-from invenio_records.api import Record
 from invenio_rest import InvenioREST
-from invenio_search import InvenioSearch, RecordsSearch, current_search_client
-from invenio_search.api import DefaultFilter
-from permissions import records_create_all, records_delete_all, \
-    records_read_all, records_update_all
-from sqlalchemy_utils.functions import create_database, database_exists, \
-    drop_database
+from invenio_search import InvenioSearch, RecordsSearch, current_search, \
+    current_search_client
+from sqlalchemy_utils.functions import create_database, database_exists
 
 from invenio_records_rest import InvenioRecordsREST, config
-
-ES_INDEX = 'invenio_records_rest_test_index'
+from invenio_records_rest.facets import terms_filter
 
 
 class TestSearch(RecordsSearch):
@@ -69,9 +58,8 @@ class TestSearch(RecordsSearch):
     class Meta:
         """Test configuration."""
 
-        index = ES_INDEX
+        index = 'invenio-records-rest'
         doc_types = None
-        default_filter = DefaultFilter(filter_record_access_query_enhancer)
 
     def __init__(self, **kwargs):
         """Add extra options."""
@@ -79,41 +67,93 @@ class TestSearch(RecordsSearch):
         self._extra.update(**{'_source': {'exclude': ['_access']}})
 
 
+class IndexFlusher(object):
+    """Simple object to flush an index."""
+
+    def __init__(self, search_class):
+        """Initialize instance."""
+        self.search_class = search_class
+
+    def flush_and_wait(self):
+        """Flush index and wait until operation is fully done."""
+        current_search.flush_and_refresh(search_class.Meta.index)
+
+
+@pytest.yield_fixture(scope='session')
+def search_class():
+    """Search class."""
+    yield TestSearch
+
+
 @pytest.yield_fixture()
-def app(request):
-    """Flask application fixture."""
+def search_url():
+    """Search class."""
+    yield url_for('invenio_records_rest.recid_list')
+
+
+@pytest.yield_fixture()
+def app(request, search_class):
+    """Flask application fixture.
+
+    Note that RECORDS_REST_ENDPOINTS is used during application creation to
+    create blueprints on the fly, hence once you have this fixture in a test,
+    it's too late to customize the configuration variable. You can however
+    customize it using parameterized tests:
+
+    .. code-block:: python
+
+    @pytest.mark.parametrize('app', [dict(
+        endpoint=dict(
+            search_class='conftest:TestSearch',
+        )
+    def test_mytest(app, db, es):
+        # ...
+
+    This will parameterize the default 'recid' endpoint in
+    RECORDS_REST_ENDPOINTS.
+    """
     instance_path = tempfile.mkdtemp()
     app = Flask('testapp', instance_path=instance_path)
-    es_index = 'testrecords-testrecord-v1.0.0'
     app.config.update(
-        TESTING=True,
-        SERVER_NAME='localhost:5000',
-        SQLALCHEMY_DATABASE_URI=os.environ.get(
-            'SQLALCHEMY_DATABASE_URI', 'sqlite:///test.db'
-        ),
-        SQLALCHEMY_TRACK_MODIFICATIONS=True,
-        INDEXER_DEFAULT_INDEX=es_index,
-        INDEXER_DEFAULT_DOC_TYPE='testrecord-v1.0.0',
+        INDEXER_DEFAULT_DOC_TYPE='testrecord',
+        INDEXER_DEFAULT_INDEX=search_class.Meta.index,
         RECORDS_REST_ENDPOINTS=config.RECORDS_REST_ENDPOINTS,
-        # No permission checking
         RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY=None,
+        RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY=None,
         RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY=None,
         RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY=None,
-        RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY=None,
-        RECORDS_REST_DEFAULT_SEARCH_INDEX=ES_INDEX,
+        RECORDS_REST_DEFAULT_SEARCH_INDEX=search_class.Meta.index,
+        RECORDS_REST_FACETS={
+            search_class.Meta.index: {
+                'aggs': {
+                    'stars': {'terms': {'field': 'stars'}}
+                },
+                'post_filters': {
+                    'stars': terms_filter('stars'),
+                }
+            }
+        },
         RECORDS_REST_SORT_OPTIONS={
-            ES_INDEX: dict(
+            search_class.Meta.index: dict(
                 year=dict(
                     fields=['year'],
                 )
             )
         },
+        SERVER_NAME='localhost:5000',
+        SQLALCHEMY_DATABASE_URI=os.environ.get(
+            'SQLALCHEMY_DATABASE_URI', 'sqlite:///test.db'),
+        SQLALCHEMY_TRACK_MODIFICATIONS=True,
+        TESTING=True,
     )
-    app.config['RECORDS_REST_ENDPOINTS']['recid']['search_class'] = TestSearch
+    app.config['RECORDS_REST_ENDPOINTS']['recid']['search_class'] = \
+        search_class
 
-    # update the application with the configuration provided by the test
-    if hasattr(request, 'param') and 'config' in request.param:
-        app.config.update(**request.param['config'])
+    # Parameterize application.
+    if hasattr(request, 'param'):
+        if 'endpoint' in request.param:
+            app.config['RECORDS_REST_ENDPOINTS']['recid'].update(
+                request.param['endpoint'])
 
     FlaskCLI(app)
     InvenioDB(app)
@@ -121,59 +161,80 @@ def app(request):
     InvenioRecords(app)
     InvenioPIDStore(app)
     search = InvenioSearch(app)
-    search.register_mappings('testrecords', 'data')
-    InvenioAccess(app)
+    search.register_mappings(search_class.Meta.index, 'mappings')
     InvenioRecordsREST(app)
 
     with app.app_context():
-        # Setup app
-        if not database_exists(str(db.engine.url)) and \
-           app.config['SQLALCHEMY_DATABASE_URI'] != 'sqlite://':
-            create_database(db.engine.url)
-        db.drop_all()
-        db.create_all()
-        with open(search.mappings['testrecords-testrecord-v1.0.0'], 'r') as fp:
-            body = json.load(fp)
-        current_search_client.indices.create(ES_INDEX, body=body)
-        prepare_indexing(app)
+        yield app
 
-        # Yield app in request context
-        with app.test_request_context():
-            yield app
-
-        # Teardown app
-        if app.config['SQLALCHEMY_DATABASE_URI'] != 'sqlite://':
-            drop_database(db.engine.url)
-        list(search.delete(ignore=[404]))
-        current_search_client.indices.delete(ES_INDEX)
-        test_index = 'testrecords-testrecord-v1.0.0'
-        if current_search_client.indices.exists(test_index):
-            current_search_client.indices.delete(test_index)
-        db.session.remove()
-        db.drop_all()
-        shutil.rmtree(instance_path)
+    # Teardown instance path.
+    shutil.rmtree(instance_path)
 
 
-@pytest.fixture()
-def accounts(app):
-    """Accounts."""
-    app.config.update(
-        WTF_CSRF_ENABLED=False,
-        SECRET_KEY='CHANGEME',
-        SECURITY_PASSWORD_SALT='CHANGEME',
-        # conftest switches off permission checking, so re-enable it for this
-        # app.
-        RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY='permissions:create_permission_factory',  # noqa
-        RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY='permissions:read_permission_factory',  # noqa
-        RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY='permissions:update_permission_factory',  # noqa
-        RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY='permissions:delete_permission_factory',  # noqa
-    )
-    # FIXME: use OAuth authentication instead of UI authentication
-    Menu(app)
-    accounts = InvenioAccounts(app)
-    app.register_blueprint(accounts_blueprint)
-    InvenioAccess(app)
-    return accounts
+@pytest.yield_fixture()
+def db(app):
+    """Database fixture."""
+    if not database_exists(str(db_.engine.url)) and \
+            app.config['SQLALCHEMY_DATABASE_URI'] != 'sqlite://':
+        create_database(db_.engine.url)
+    db_.create_all()
+
+    yield db_
+
+    db_.session.remove()
+    db_.drop_all()
+
+
+@pytest.yield_fixture()
+def es(app):
+    """Elasticsearch fixture."""
+    try:
+        list(current_search.create())
+    except RequestError:
+        list(current_search.delete(ignore=[404]))
+        list(current_search.create(ignore=[400]))
+    current_search_client.indices.refresh()
+    yield current_search_client
+    list(current_search.delete(ignore=[404]))
+
+
+@pytest.yield_fixture()
+def indexer(app, es):
+    """Create a record indexer."""
+    yield RecordIndexer()
+
+
+@pytest.yield_fixture(scope='session')
+def test_data():
+    """Load test records."""
+    with open(join(dirname(__file__), 'data/testrecords.json')) as fp:
+        records = json.load(fp)
+    yield records
+
+
+@pytest.yield_fixture()
+def test_records(db, test_data):
+    """Load test records."""
+    result = []
+    for r in test_data:
+        result.append(create_record(r))
+    db.session.commit()
+    yield result
+
+
+@pytest.yield_fixture()
+def indexed_records(search_class, indexer, test_records):
+    """Get a function to wait for records to be flushed to index."""
+    for pid, record in test_records:
+        indexer.index_by_id(record.id)
+    current_search.flush_and_refresh(index=search_class.Meta.index)
+    yield test_records
+
+
+@pytest.yield_fixture(scope='session')
+def test_patch():
+    """A JSON patch."""
+    yield [{'op': 'replace', 'path': '/year', 'value': 1985}]
 
 
 @pytest.yield_fixture
@@ -181,70 +242,24 @@ def default_permissions(app):
     """Test default deny all permission."""
     for key in ['RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY',
                 'RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY',
-                'RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY']:
+                'RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY',
+                'RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY']:
         app.config[key] = getattr(config, key)
-    LoginManager(app)
+
+    lm = LoginManager(app)
+
+    # Allow easy login for tests purposes :-)
+    class User(UserMixin):
+        def __init__(self, id):
+            self.id = id
+
+    @lm.request_loader
+    def load_user(request):
+        uid = request.args.get('user', type=int)
+        if uid:
+            return User(uid)
+        return None
+
     yield app
+
     app.extensions['invenio-records-rest'].reset_permission_factories()
-
-
-@pytest.yield_fixture
-def user_factory(app, accounts):
-    """Create a user which has all permissions on every records."""
-    password = '123456'
-
-    with app.test_request_context():
-        login_url = url_for('security.login')
-
-    @contextmanager
-    def create_user(name):
-        """Create a user.
-
-        Should be called in application context.
-        """
-        class UserConfig(object):
-            def __init__(self, name):
-                self.email = '{}@invenio-software.org'.format(name)
-                self.user = accounts.datastore.create_user(
-                    email=self.email,
-                    password=encrypt_password(password),
-                    active=True,
-                )
-
-            def login_function(self):
-                def login(client):
-                    res = client.post(login_url, data={
-                        'email': self.email, 'password': password})
-                    assert res.status_code == 302
-                return login
-
-            def create_access(self, allow, record_id=None):
-                db.session.add(ActionUsers(
-                    action=records_create_all.value, argument=record_id,
-                    user=self.user, exclude=not allow))
-
-            def read_access(self, allow, record_id=None):
-                db.session.add(ActionUsers(
-                    action=records_read_all.value, argument=record_id,
-                    user=self.user, exclude=not allow))
-
-            def update_access(self, allow, record_id=None):
-                db.session.add(ActionUsers(
-                    action=records_update_all.value, argument=record_id,
-                    user=self.user, exclude=not allow))
-
-            def delete_access(self, allow, record_id=None):
-                db.session.add(ActionUsers(
-                    action=records_delete_all.value, argument=record_id,
-                    user=self.user, exclude=not allow))
-
-        yield UserConfig(name)
-
-    yield create_user
-
-
-@pytest.fixture(scope='session')
-def resolver():
-    """Create a persistent identifier resolver."""
-    return Resolver(pid_type='recid', object_type='rec',
-                    getter=Record.get_record)

@@ -31,9 +31,6 @@ import json
 
 import pytest
 from flask import current_app
-from helpers import create_record, test_data, test_data2
-from invenio_db import db
-from invenio_search import current_search_client
 
 
 def json_record(*args, **kwargs):
@@ -53,7 +50,7 @@ def xml_record(*args, **kwargs):
 def json_search(pid_fetcher, search_result, **kwargs):
     """Test serializer."""
     return current_app.response_class(
-        json.dumps([{'test': 'test'}]*search_result['hits']['total']),
+        json.dumps([{'test': 'test'}], search_result['hits']['total']),
         content_type='application/json')
 
 
@@ -64,40 +61,22 @@ def xml_search(*args, **kwargs):
         content_type='application/xml')
 
 
-@pytest.mark.parametrize('app', [({
-    'config': {
-        'RECORDS_REST_ENDPOINTS': {
-            'recid': {
-                'pid_type': 'recid',
-                'pid_minter': 'recid',
-                'pid_fetcher': 'recid',
-                'record_serializers': {
-                    'application/json': 'test_serializers:json_record',
-                    'application/xml': 'test_serializers.xml_record',
-                },
-                'search_serializers': {
-                    'application/json': 'test_serializers:json_search',
-                    'application/xml': 'test_serializers.xml_search',
-                },
-                'list_route': '/records/',
-                'item_route': '/records/<pid_value>',
-                'default_media_type': 'application/xml',
-            }
-        }
-    }
-})], indirect=['app'])
-def test_default_serializer(app, user_factory):
+@pytest.mark.parametrize('app', [dict(
+    endpoint=dict(
+        record_serializers={
+            'application/json': 'test_views_serializers:json_record',
+            'application/xml': 'test_views_serializers.xml_record',
+        },
+        search_serializers={
+            'application/json': 'test_views_serializers:json_search',
+            'application/xml': 'test_views_serializers.xml_search',
+        },
+        default_media_type='application/xml',
+    ),
+)], indirect=['app'], scope='function')
+def test_default_serializer(app, db, es, indexed_records):
     """Test default serializer."""
-    with app.app_context():
-        # create the record using the internal API
-        pid1, record1 = create_record(test_data)
-        pid2, record2 = create_record(test_data2)
-        db.session.commit()
-
-        es_index = app.config["RECORDS_REST_DEFAULT_SEARCH_INDEX"]
-        current_search_client.indices.flush(
-            wait_if_ongoing=True, force=True, index=es_index)
-
+    # Create records
     accept_json = [('Accept', 'application/json')]
     accept_xml = [('Accept', 'application/xml')]
 

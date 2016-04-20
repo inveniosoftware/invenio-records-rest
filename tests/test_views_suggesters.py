@@ -28,73 +28,61 @@
 from __future__ import absolute_import, print_function
 
 import json
-from time import sleep
 
 import pytest
 from flask import url_for
-from helpers import create_record, test_data
-from invenio_db import db
-from invenio_indexer.api import RecordIndexer
 
 
-@pytest.mark.parametrize('app', [({
-    'config': {
-        'RECORDS_REST_ENDPOINTS': {
-            'recid': {
-                'pid_type': 'recid',
-                'pid_minter': 'recid',
-                'pid_fetcher': 'recid',
-                'search_class': 'conftest:TestSearch',
-                'record_serializers': {
-                    'application/json': 'invenio_records_rest.serializers'
-                    ':json_v1_response',
-                },
-                'search_serializers': {
-                    'application/json': 'invenio_records_rest.serializers'
-                    ':json_v1_search'
-                },
-                'list_route': '/records/',
-                'item_route': '/records/<pid_value>',
-                'suggesters': {
-                    'suggest_title': {
-                        'completion': {
-                            'field': 'suggest_title'
-                        }
-                    },
-                    'suggest_byyear': {
-                        'completion': {
-                            'field': 'suggest_byyear',
-                            'context': 'year'
-                        }
-                    }
-                }
-            }
-        }
-    }
-})], indirect=['app'])
-def test_valid_suggest(app):
+@pytest.mark.parametrize('app', [dict(
+    endpoint=dict(
+        suggesters=dict(
+            text=dict(completion=dict(
+                field='suggest_title')),
+            text_byyear=dict(completion=dict(
+                field='suggest_byyear',
+                context='year'))
+        )
+    )
+)], indirect=['app'])
+def test_valid_suggest(app, db, es, indexed_records):
     """Test VALID record creation request (POST .../records/)."""
-    pid, record = create_record(test_data)
-    db.session.commit()
-    indexer = RecordIndexer()
-    indexer.index_by_id(record.id)
-    sleep(3)
-
     with app.test_client() as client:
-        headers = [('Content-Type', 'application/json'),
-                   ('Accept', 'application/json')]
+        # Valid simple completion suggester
         res = client.get(
-            url_for(
-                'invenio_records_rest.recid_suggest', suggest_title="Back"),
-            headers=headers
+            url_for('invenio_records_rest.recid_suggest'),
+            query_string={'text': 'Back'}
         )
         assert res.status_code == 200
+        data = json.loads(res.get_data(as_text=True))
+        assert len(data['text'][0]['options']) == 2
 
-        # check that the returned record matches the given data
-        response_data = json.loads(res.get_data(as_text=True))
+        # Valid simple completion suggester with size
+        res = client.get(
+            url_for('invenio_records_rest.recid_suggest'),
+            query_string={'text': 'Back', 'size': 1}
+        )
+        data = json.loads(res.get_data(as_text=True))
+        assert len(data['text'][0]['options']) == 1
 
-        assert len(response_data['suggest_title']) == 1
+        # Valid context suggester
+        res = client.get(
+            url_for('invenio_records_rest.recid_suggest'),
+            query_string={'text_byyear': 'Back', 'year': '2015'}
+        )
+        assert res.status_code == 200
+        data = json.loads(res.get_data(as_text=True))
+        assert len(data['text_byyear'][0]['options']) == 1
 
-        title = response_data['suggest_title'][0]['options'][0]['text']
-        # note that recid ingests the control_number.
-        assert title == record['title']
+        # Missing context for context suggester
+        res = client.get(
+            url_for('invenio_records_rest.recid_suggest'),
+            query_string={'text_byyear': 'Back'}
+        )
+        assert res.status_code == 400
+
+        # Missing missing and invalid suggester
+        res = client.get(
+            url_for('invenio_records_rest.recid_suggest'),
+            query_string={'invalid': 'Back'}
+        )
+        assert res.status_code == 400

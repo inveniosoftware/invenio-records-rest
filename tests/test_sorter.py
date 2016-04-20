@@ -95,7 +95,7 @@ def test_geolocation_sort(app):
         }
 
 
-def test_default_sorter_factory(app, user_factory):
+def test_default_sorter_factory(app):
     """Test default sorter factory."""
     app.config["RECORDS_REST_SORT_OPTIONS"] = dict(
         myindex=dict(

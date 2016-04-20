@@ -47,7 +47,7 @@ class SimpleSchema(Schema):
     identifier = fields.Nested(DOISchema, attribute='metadata')
 
 
-def test_serialize(app):
+def test_serialize():
     """Test JSON serialize."""
     pid = PersistentIdentifier(pid_type='recid', pid_value='2')
     record = Record({'doi': '10.1234/foo'})
@@ -67,7 +67,7 @@ def test_serialize(app):
     assert len(tree.xpath('/oai_datacite/datacentreSymbol')) == 1
 
 
-def test_serialize_search(app):
+def test_serialize_search():
     """Test JSON serialize."""
     def fetcher(obj_uuid, data):
         assert obj_uuid in ['a', 'b']

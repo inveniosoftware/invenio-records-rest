@@ -68,7 +68,7 @@ def test_create_filter_dsl():
         assert args == kwargs
 
 
-def test_post_filter(app, user_factory):
+def test_post_filter(app):
     """Test post filter."""
     urlargs = MultiDict()
     defs = dict(
@@ -91,7 +91,7 @@ def test_post_filter(app, user_factory):
         assert 'post_filter' not in search.to_dict()
 
 
-def test_query_filter(app, user_factory):
+def test_query_filter(app):
     """Test post filter."""
     urlargs = MultiDict()
     defs = dict(
@@ -117,7 +117,7 @@ def test_query_filter(app, user_factory):
         assert query.to_dict() == body
 
 
-def test_aggregations(app, user_factory):
+def test_aggregations(app):
     """Test aggregations."""
     with app.test_request_context(''):
         search = Search().query(IQ('value'))
@@ -132,7 +132,7 @@ def test_aggregations(app, user_factory):
         assert _aggregations(search, defs).to_dict()['aggs'] == defs
 
 
-def test_default_facets_factory(app, user_factory):
+def test_default_facets_factory(app):
     """Test aggregations."""
     defs = dict(
         aggs=dict(

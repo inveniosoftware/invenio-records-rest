@@ -70,7 +70,7 @@ def test_search_responsify(app):
     def fetcher():
         pass
 
-    result = ['a']*5
+    result = ['a'] * 5
 
     resp = search_serializer(fetcher, result)
     assert resp.status_code == 200

@@ -39,7 +39,7 @@ class SimpleSchema(Schema):
     titles = fields.Raw(attribute='metadata.titles')
 
 
-def test_serialize(app):
+def test_serialize():
     """Test JSON serialize."""
     pid = PersistentIdentifier(pid_type='recid', pid_value='2')
     record = Record({'titles': ['DC test']})
@@ -53,7 +53,7 @@ def test_serialize(app):
     assert len(tree) == 1
 
 
-def test_serialize_search(app):
+def test_serialize_search():
     """Test JSON serialize."""
     def fetcher(obj_uuid, data):
         assert obj_uuid in ['a', 'b']

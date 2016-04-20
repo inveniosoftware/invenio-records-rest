@@ -28,77 +28,16 @@ import copy
 import json
 import uuid
 
+from flask import url_for
 from invenio_db import db
 from invenio_pidstore import current_pidstore
 from invenio_records import Record
-from jsonpatch import apply_patch
-from six import string_types
+from six.moves.urllib.parse import parse_qs, urlparse
 
-test_data = {
-    'title': 'Back to the Future',
-    'year': 2015,
-    'stars': 4,
-    'suggest_title': {
-        'input': ['Back to the Future'],
-    },
-    'suggest_byyear': {
-        'input': ['Back to the Future'],
-        'context': {
-            'year': [2015]
-        }
-    }
-}
 
-test_data2 = {
-    'title': 'Back to the Past',
-    'year': 2042,
-    'stars': 3,
-    'suggest_title': {
-        'input': ['Back to the Past'],
-    },
-    'suggest_byyear': {
-        'input': ['Back to the Past'],
-        'context': {
-            'year': [2042]
-        }
-    }
-}
-
-test_data3 = {
-    'title': 'The Hitchhiker\'s Guide to the Galaxy',
-    'year': 1985,
-    'stars': 4,
-    'suggest_title': {
-        'input': ['The Hitchhiker\'s Guide to the Galaxy'],
-    },
-    'suggest_byyear': {
-        'input': ['The Hitchhiker\'s Guide to the Galaxy'],
-        'context': {
-            'year': [1985]
-        }
-    }
-}
-
-test_data4 = {
-    'title': 'Unknown film',
-    'year': 4242,
-    'stars': 5,
-    'suggest_title': {
-        'input': ['Unknown film'],
-    },
-    'suggest_byyear': {
-        'input': ['Unknown film'],
-        'context': {
-            'year': [4242]
-        }
-    }
-}
-
-test_patch = [
-    {'op': 'replace', 'path': '/year', 'value': 1985},
-]
-
-test_data_patched = apply_patch(test_data, test_patch)
+def get_json(response):
+    """Get JSON from response."""
+    return json.loads(response.get_data(as_text=True))
 
 
 def create_record(data):
@@ -111,28 +50,45 @@ def create_record(data):
     return pid, record
 
 
-def control_num(data, cn=1):
-    """Inject a control number in data."""
-    data = copy.deepcopy(data)
-    data['control_number'] = str(cn)
-    return data
+def assert_hits_len(res, hit_length):
+    """Assert number of hits."""
+    assert res.status_code == 200
+    assert len(get_json(res)['hits']['hits']) == hit_length
 
 
-def subtest_self_link(response_data, response_headers, client):
-    """Check that the returned self link returns the same data.
+def parse_url(url):
+    """Build a comparable dict from the given url.
 
-    Also, check that headers have the same link as 'Location'.
+    The resulting dict can be comparend even when url's query parameters
+    are in a different order.
     """
-    assert 'links' in response_data.keys() \
-        and isinstance(response_data['links'], dict)
-    assert 'self' in response_data['links'].keys() \
-        and isinstance(response_data['links']['self'], string_types)
-    headers = [('Accept', 'application/json')]
-    self_response = client.get(response_data['links']['self'],
-                               headers=headers)
+    parsed = urlparse(url)
+    return {
+        'scheme': parsed.scheme,
+        'netloc': parsed.netloc,
+        'path': parsed.path,
+        'qs': parse_qs(parsed.query),
+    }
 
-    assert self_response.status_code == 200
-    self_data = json.loads(self_response.get_data(as_text=True))
-    assert self_data == response_data
-    if response_headers:
-        assert response_headers['ETag'] == self_response.headers['ETag']
+
+def to_relative_url(url):
+    """Build relative URL from external URL.
+
+    This is needed because the test client discards query parameters on
+    external urls.
+    """
+    parsed = urlparse(url)
+    return parsed.path + '?' + '&'.join([
+        '{0}={1}'.format(param, val[0]) for
+        param, val in parse_qs(parsed.query).items()
+    ])
+
+
+def record_url(pid):
+    """Get URL to a record."""
+    if hasattr(pid, 'pid_value'):
+        val = pid.pid_value
+    else:
+        val = pid
+
+    return url_for('invenio_records_rest.recid_item', pid_value=val)
