@@ -113,6 +113,7 @@ from invenio_search import InvenioSearch
 from invenio_records_rest import InvenioRecordsREST
 from invenio_records_rest.config import RECORDS_REST_ENDPOINTS
 from invenio_records_rest.facets import terms_filter
+from invenio_records_rest.memento import MementoRecord
 from invenio_records_rest.utils import PIDConverter
 
 # create application's instance directory. Needed for this example only.
@@ -152,6 +153,7 @@ app.config['RECORDS_REST_ENDPOINTS']['recid']['suggesters'] = {
         }
     }
 }
+app.config['RECORDS_REST_ENDPOINTS']['recid']['record_class'] = MementoRecord
 # Sort options
 app.config['RECORDS_REST_SORT_OPTIONS'] = {
     index_name: {

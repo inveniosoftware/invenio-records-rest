@@ -62,6 +62,9 @@ extras_require = {
     'dublincore': [
         'dcxml>=0.1.0',
     ],
+    'memento': [
+        'LinkHeader>=0.4.3',
+    ],
     'tests': tests_require,
 }
 
