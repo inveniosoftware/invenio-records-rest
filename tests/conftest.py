@@ -40,6 +40,7 @@ from flask_login import LoginManager, UserMixin
 from helpers import create_record
 from invenio_db import db as db_
 from invenio_db import InvenioDB
+from invenio_indexer import InvenioIndexer
 from invenio_indexer.api import RecordIndexer
 from invenio_pidstore import InvenioPIDStore
 from invenio_records import InvenioRecords
@@ -142,7 +143,7 @@ def app(request, search_class):
         },
         SERVER_NAME='localhost:5000',
         SQLALCHEMY_DATABASE_URI=os.environ.get(
-            'SQLALCHEMY_DATABASE_URI', 'sqlite:///test.db'),
+            'SQLALCHEMY_DATABASE_URI', 'sqlite://'),
         SQLALCHEMY_TRACK_MODIFICATIONS=True,
         TESTING=True,
     )
@@ -201,6 +202,7 @@ def es(app):
 @pytest.yield_fixture()
 def indexer(app, es):
     """Create a record indexer."""
+    InvenioIndexer(app)
     yield RecordIndexer()
 
 
