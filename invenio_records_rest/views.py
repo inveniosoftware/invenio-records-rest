@@ -143,7 +143,8 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         links_factory_imp, default=default_links_factory
     )
     record_class = obj_or_import_string(
-        record_class, default=Record
+        record_class,
+        default=Record
     )
     search_class = obj_or_import_string(
         search_class, default=RecordsSearch
@@ -293,7 +294,7 @@ def verify_record_permission(permission_factory, record):
     """
     # Note, cannot be done in one line due overloading of boolean
     # operations permission object.
-    if not permission_factory(record).can():
+    if not permission_factory(record=record).can():
         from flask_login import current_user
         if not current_user.is_authenticated:
             abort(401)
@@ -307,7 +308,8 @@ def need_record_permission(factory_name):
     """
     def need_record_permission_builder(f):
         @wraps(f)
-        def need_record_permission_decorator(self, record, *args, **kwargs):
+        def need_record_permission_decorator(self, record=None,
+                                             *args, **kwargs):
             permission_factory = (
                 getattr(self, factory_name) or
                 getattr(current_records_rest, factory_name)
@@ -399,7 +401,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         self.item_links_factory = item_links_factory
         self.loaders = record_loaders or \
             current_records_rest.loaders
-        self.record_class = record_class or Record
+        self.record_class = record_class
 
     def get(self, **kwargs):
         """Search records.
@@ -443,6 +445,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
             item_links_factory=self.item_links_factory,
         )
 
+    @need_record_permission('create_permission_factory')
     def post(self, **kwargs):
         """Create a record.
 
@@ -455,17 +458,17 @@ class RecordsListResource(ContentNegotiatedMethodView):
         if data is None:
             abort(400)
 
+        # Check permissions
+        permission_factory = self.create_permission_factory
+        if permission_factory:
+            verify_record_permission(permission_factory, data)
+
         # Create uuid for record
         record_uuid = uuid.uuid4()
         # Create persistent identifier
         pid = self.minter(record_uuid, data=data)
         # Create record
         record = self.record_class.create(data, id_=record_uuid)
-
-        # Check permissions
-        permission_factory = self.create_permission_factory
-        if permission_factory:
-            verify_record_permission(permission_factory, record)
 
         db.session.commit()
 

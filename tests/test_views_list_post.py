@@ -39,7 +39,7 @@ HEADERS = [
 ]
 
 
-def test_valid_create(app, db, test_data, search_url):
+def test_valid_create(app, db, indexer, test_data, search_url):
     """Test VALID record creation request (POST .../records/)."""
     with app.test_client() as client:
         # Create record
@@ -72,7 +72,7 @@ def test_valid_create(app, db, test_data, search_url):
         # assert_hits_len(res, 1)
 
 
-def test_invalid_create(app, db, test_data, search_url):
+def test_invalid_create(app, db, indexer, test_data, search_url):
     """Test INVALID record creation request (POST .../records/)."""
     with app.test_client() as client:
         # Invalid accept type

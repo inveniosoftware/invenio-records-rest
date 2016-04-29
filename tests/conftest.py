@@ -31,6 +31,7 @@ import os
 import shutil
 import tempfile
 from os.path import dirname, join
+from time import sleep
 
 import pytest
 from elasticsearch.exceptions import RequestError
@@ -40,9 +41,11 @@ from flask_login import LoginManager, UserMixin
 from helpers import create_record
 from invenio_db import db as db_
 from invenio_db import InvenioDB
+from invenio_indexer import InvenioIndexer
 from invenio_indexer.api import RecordIndexer
 from invenio_pidstore import InvenioPIDStore
 from invenio_records import InvenioRecords
+from invenio_records.api import Record
 from invenio_rest import InvenioREST
 from invenio_search import InvenioSearch, RecordsSearch, current_search, \
     current_search_client
@@ -50,6 +53,35 @@ from sqlalchemy_utils.functions import create_database, database_exists
 
 from invenio_records_rest import InvenioRecordsREST, config
 from invenio_records_rest.facets import terms_filter
+from invenio_records_rest.utils import allow_all, deny_all
+
+
+def deny_record(*args, **kwargs):
+    """Return permission that always deny an access."""
+    if 'record' in kwargs and kwargs['record']:
+        return type('Deny', (), {'can': lambda self: False})()
+    else:
+        return type('Allow', (), {'can': lambda self: True})()
+
+
+def deny_login(*args, **kwargs):
+    """Return permission that deny access simulating required_login."""
+    if 'record' in kwargs and kwargs['record']:
+        return type('Deny', (), {'can': lambda self: True})()
+    else:
+        return type('Allow', (), {'can': lambda self: False})()
+
+
+class IndexingRecord(Record):
+
+    @classmethod
+    def create(cls, data, id_=None):
+        """Create."""
+        indexer = RecordIndexer()
+        record = Record.create(data, id_)
+        indexer.index(record)
+        sleep(2)
+        return record
 
 
 class TestSearch(RecordsSearch):
@@ -142,7 +174,7 @@ def app(request, search_class):
         },
         SERVER_NAME='localhost:5000',
         SQLALCHEMY_DATABASE_URI=os.environ.get(
-            'SQLALCHEMY_DATABASE_URI', 'sqlite:///test.db'),
+            'SQLALCHEMY_DATABASE_URI', 'sqlite://'),
         SQLALCHEMY_TRACK_MODIFICATIONS=True,
         TESTING=True,
     )
@@ -198,9 +230,17 @@ def es(app):
     list(current_search.delete(ignore=[404]))
 
 
+@pytest.fixture()
+def es_record(app, indexer):
+    """Create record and index it."""
+    app.config['RECORDS_REST_ENDPOINTS']['recid']['record_class'] = \
+        IndexingRecord
+
+
 @pytest.yield_fixture()
 def indexer(app, es):
     """Create a record indexer."""
+    InvenioIndexer(app)
     yield RecordIndexer()
 
 
@@ -245,6 +285,115 @@ def default_permissions(app):
                 'RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY',
                 'RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY']:
         app.config[key] = getattr(config, key)
+
+    lm = LoginManager(app)
+
+    # Allow easy login for tests purposes :-)
+    class User(UserMixin):
+        def __init__(self, id):
+            self.id = id
+
+    @lm.request_loader
+    def load_user(request):
+        uid = request.args.get('user', type=int)
+        if uid:
+            return User(uid)
+        return None
+
+    yield app
+
+    app.extensions['invenio-records-rest'].reset_permission_factories()
+
+
+@pytest.yield_fixture
+def deny_all_permissions(app):
+    """Test default deny all permission."""
+    for key in ['RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY',
+                'RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY',
+                'RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY',
+                'RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY']:
+        app.config[key] = deny_all
+
+    lm = LoginManager(app)
+
+    # Allow easy login for tests purposes :-)
+    class User(UserMixin):
+        def __init__(self, id):
+            self.id = id
+
+    @lm.request_loader
+    def load_user(request):
+        uid = request.args.get('user', type=int)
+        if uid:
+            return User(uid)
+        return None
+
+    yield app
+
+    app.extensions['invenio-records-rest'].reset_permission_factories()
+
+
+@pytest.yield_fixture
+def deny_record_permissions(app):
+    """Test default deny all permission."""
+    app.config['RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY'] = deny_record
+    app.config['RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY'] = deny_all
+    app.config['RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY'] = deny_all
+    app.config['RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY'] = deny_all
+
+    lm = LoginManager(app)
+
+    # Allow easy login for tests purposes :-)
+    class User(UserMixin):
+        def __init__(self, id):
+            self.id = id
+
+    @lm.request_loader
+    def load_user(request):
+        uid = request.args.get('user', type=int)
+        if uid:
+            return User(uid)
+        return None
+
+    yield app
+
+    app.extensions['invenio-records-rest'].reset_permission_factories()
+
+
+@pytest.yield_fixture
+def deny_login_permissions(app):
+    """Test default deny all permission."""
+    app.config['RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY'] = deny_login
+    app.config['RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY'] = deny_all
+    app.config['RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY'] = deny_all
+    app.config['RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY'] = deny_all
+
+    lm = LoginManager(app)
+
+    # Allow easy login for tests purposes :-)
+    class User(UserMixin):
+        def __init__(self, id):
+            self.id = id
+
+    @lm.request_loader
+    def load_user(request):
+        uid = request.args.get('user', type=int)
+        if uid:
+            return User(uid)
+        return None
+
+    yield app
+
+    app.extensions['invenio-records-rest'].reset_permission_factories()
+
+
+@pytest.yield_fixture
+def allow_all_permissions(app):
+    """Test default deny all permission."""
+    app.config['RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY'] = allow_all
+    app.config['RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY'] = allow_all
+    app.config['RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY'] = allow_all
+    app.config['RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY'] = allow_all
 
     lm = LoginManager(app)
 
