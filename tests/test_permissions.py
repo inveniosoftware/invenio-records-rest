@@ -30,6 +30,92 @@ from __future__ import absolute_import, print_function
 import json
 
 from helpers import record_url
+from invenio_pidstore.models import PersistentIdentifier
+from invenio_records.models import RecordMetadata
+from invenio_search.api import RecordsSearch
+
+HEADERS = [
+    ('Content-Type', 'application/json'),
+    ('Accept', 'application/json')
+]
+
+
+def test_valid_create_with_permission2(app, deny_all_permissions,
+                                       db, es, es_record, test_data,
+                                       search_url):
+    """Test valida record create with respect of permissions."""
+    with app.test_request_context():
+        with app.test_client() as client:
+            # Create record
+            res = client.post(
+                search_url, data=json.dumps(test_data[0]), headers=HEADERS)
+            assert res.status_code == 401
+            assert len(RecordMetadata.query.all()) == 0
+            assert len(PersistentIdentifier.query.all()) == 0
+            results = RecordsSearch().query({
+                "match_all": {}
+            }).execute().to_dict()
+            assert len(results['hits']['hits']) == 0
+
+
+def test_valid_create_with_permission_deny_record(
+        app, deny_record_permissions, db, es, es_record, test_data,
+        search_url):
+    """Test valida record create with respect of permissions.
+
+    Simulate the case of user logged-in but record passed from input is
+    malformed.
+    """
+    with app.test_request_context():
+        with app.test_client() as client:
+            # Create record
+            res = client.post(
+                search_url, data=json.dumps(test_data[0]), headers=HEADERS)
+            assert res.status_code == 401
+            assert len(RecordMetadata.query.all()) == 0
+            assert len(PersistentIdentifier.query.all()) == 0
+            results = RecordsSearch().query({
+                "match_all": {}
+            }).execute().to_dict()
+            assert len(results['hits']['hits']) == 0
+
+
+def test_valid_create_deny_login(app, deny_login_permissions,
+                                 db, es, es_record, test_data, search_url):
+    """Test valida record create with respect of permissions.
+
+    This test simulate a user that is trying to create a record without login
+    but with a valid record data.
+    """
+    with app.test_request_context():
+        with app.test_client() as client:
+            # Create record
+            res = client.post(
+                search_url, data=json.dumps(test_data[0]), headers=HEADERS)
+            assert res.status_code == 401
+            assert len(RecordMetadata.query.all()) == 0
+            assert len(PersistentIdentifier.query.all()) == 0
+            results = RecordsSearch().query({
+                "match_all": {}
+            }).execute().to_dict()
+            assert len(results['hits']['hits']) == 0
+
+
+def test_valid_create(app, allow_all_permissions,
+                      db, es, es_record, test_data, search_url):
+    """Test valida record create with respect of permissions."""
+    with app.test_request_context():
+        with app.test_client() as client:
+            # Create record
+            res = client.post(
+                search_url, data=json.dumps(test_data[0]), headers=HEADERS)
+            assert res.status_code == 201
+            assert len(RecordMetadata.query.all()) == 1
+            assert len(PersistentIdentifier.query.all()) == 1
+            results = RecordsSearch().query({
+                "match_all": {}
+            }).execute().to_dict()
+            assert len(results['hits']['hits']) == 1
 
 
 def test_default_permissions(app, default_permissions, test_data, search_url,
