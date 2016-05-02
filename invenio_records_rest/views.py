@@ -244,41 +244,7 @@ def pass_record(f):
     @wraps(f)
     def inner(self, pid_value, *args, **kwargs):
         try:
-            pid, record = self.resolver.resolve(pid_value)
-        except (PIDDoesNotExistError, PIDUnregistered):
-            abort(404)
-        except PIDDeletedError:
-            abort(410)
-        except PIDMissingObjectError as e:
-            current_app.logger.exception(
-                'No object assigned to {0}.'.format(e.pid),
-                extra={'pid': e.pid})
-            abort(500)
-        except PIDRedirectedError as e:
-            try:
-                location = url_for(
-                    '.{0}_item'.format(e.destination_pid.pid_type),
-                    pid_value=e.destination_pid.pid_value)
-                data = dict(
-                    status=301,
-                    message='Moved Permanently',
-                    location=location,
-                )
-                response = make_response(jsonify(data), data['status'])
-                response.headers['Location'] = location
-                return response
-            except BuildError:
-                current_app.logger.exception(
-                    'Invalid redirect - pid_type "{0}" '
-                    'endpoint missing.'.format(
-                        e.destination_pid.pid_type),
-                    extra={
-                        'pid': e.pid,
-                        'destination_pid': e.destination_pid,
-                    })
-                abort(500)
-
-        try:
+            pid, record = request.view_args['pid_value']
             return f(self, pid=pid, record=record, *args, **kwargs)
         except SQLAlchemyError:
             abort(500)

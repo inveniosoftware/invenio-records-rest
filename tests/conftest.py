@@ -51,6 +51,7 @@ from sqlalchemy_utils.functions import create_database, database_exists
 
 from invenio_records_rest import InvenioRecordsREST, config
 from invenio_records_rest.facets import terms_filter
+from invenio_records_rest.utils import PIDConverter
 
 
 class TestSearch(RecordsSearch):
@@ -156,6 +157,8 @@ def app(request, search_class):
         if 'endpoint' in request.param:
             app.config['RECORDS_REST_ENDPOINTS']['recid'].update(
                 request.param['endpoint'])
+
+    app.url_map.converters['pid'] = PIDConverter
 
     FlaskCLI(app)
     InvenioDB(app)
