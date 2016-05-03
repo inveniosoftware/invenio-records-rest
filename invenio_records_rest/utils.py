@@ -76,11 +76,12 @@ def check_elasticsearch(record, *args, **kwargs):
 class PIDConverter(BaseConverter):
     """Resolve PID value."""
 
-    def __init__(self, url_map, pid_type, getter=None):
+    def __init__(self, url_map, pid_type, getter=None, record_class=None):
         """Initialize PID resolver."""
         super(PIDConverter, self).__init__(url_map)
         getter = obj_or_import_string(getter, default=partial(
-            Record.get_record, with_deleted=True
+            obj_or_import_string(record_class, default=Record).get_record,
+            with_deleted=True
         ))
         self.resolver = Resolver(pid_type=pid_type, object_type='rec',
                                  getter=getter)
