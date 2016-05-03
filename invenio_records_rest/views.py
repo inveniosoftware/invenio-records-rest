@@ -245,6 +245,10 @@ def pass_record(f):
     def inner(self, pid_value, *args, **kwargs):
         try:
             pid, record = request.view_args['pid_value']
+            # NOTE we must add the record model and PID to the session
+            # since they were obtained in different session scope before
+            # the request context has been pushed.
+            db.session.add_all([record.model, pid])
             return f(self, pid=pid, record=record, *args, **kwargs)
         except SQLAlchemyError:
             abort(500)
