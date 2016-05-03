@@ -104,7 +104,13 @@ setup(
     entry_points={
         'invenio_base.api_apps': [
             'invenio_records_rest = invenio_records_rest:InvenioRecordsREST',
-        ]
+        ],
+        'invenio_base.converters': [
+            'pid = invenio_records_rest.utils:PIDConverter',
+        ],
+        'invenio_base.api_converters': [
+            'pid = invenio_records_rest.utils:PIDConverter',
+        ],
     },
     extras_require=extras_require,
     install_requires=install_requires,
