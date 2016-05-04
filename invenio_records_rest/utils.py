@@ -33,7 +33,7 @@ from invenio_pidstore.errors import PIDDeletedError, PIDDoesNotExistError, \
 from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
 from werkzeug.routing import BaseConverter, BuildError
-from werkzeug.utils import import_string
+from werkzeug.utils import cached_property, import_string
 
 
 def obj_or_import_string(value, default=None):
@@ -73,6 +73,53 @@ def check_elasticsearch(record, *args, **kwargs):
     return type('CheckES', (), {'can': can})()
 
 
+class LazyPIDValue(object):
+    """Lazy resolver for PID value."""
+
+    def __init__(self, resolver, value):
+        """Initialize with resolver and URL value."""
+        self.resolver = resolver
+        self.value = value
+
+    @cached_property
+    def data(self):
+        """Resolve PID value and return tuple with PID and record."""
+        try:
+            return self.resolver.resolve(self.value)
+        except (PIDDoesNotExistError, PIDUnregistered):
+            abort(404)
+        except PIDDeletedError:
+            abort(410)
+        except PIDMissingObjectError as e:
+            current_app.logger.exception(
+                'No object assigned to {0}.'.format(e.pid),
+                extra={'pid': e.pid})
+            abort(500)
+        except PIDRedirectedError as e:
+            try:
+                location = url_for(
+                    '.{0}_item'.format(e.destination_pid.pid_type),
+                    pid_value=e.destination_pid.pid_value)
+                data = dict(
+                    status=301,
+                    message='Moved Permanently',
+                    location=location,
+                )
+                response = make_response(jsonify(data), data['status'])
+                response.headers['Location'] = location
+                abort(response)
+            except BuildError:
+                current_app.logger.exception(
+                    'Invalid redirect - pid_type "{0}" '
+                    'endpoint missing.'.format(
+                        e.destination_pid.pid_type),
+                    extra={
+                        'pid': e.pid,
+                        'destination_pid': e.destination_pid,
+                    })
+                abort(500)
+
+
 class PIDConverter(BaseConverter):
     """Resolve PID value."""
 
@@ -88,43 +135,4 @@ class PIDConverter(BaseConverter):
 
     def to_python(self, value):
         """Resolve PID value."""
-        try:
-            return self.resolver.resolve(value)
-        except (PIDDoesNotExistError, PIDUnregistered):
-            abort(404)
-        except PIDDeletedError:
-            abort(410)
-        except PIDMissingObjectError as e:
-            current_app.logger.exception(
-                'No object assigned to {0}.'.format(e.pid),
-                extra={'pid': e.pid})
-            abort(500)
-        except PIDRedirectedError as e:
-            try:
-                prefix = ''
-                for rule in self.map.iter_rules():
-                    if '.' in rule.endpoint:
-                        prefix = rule.endpoint.split('.')[0] + '.'
-                        break
-
-                location = url_for(
-                    '{0}{1}_item'.format(prefix, e.destination_pid.pid_type),
-                    pid_value=e.destination_pid.pid_value)
-                data = dict(
-                    status=301,
-                    message='Moved Permanently',
-                    location=location,
-                )
-                response = make_response(jsonify(data), data['status'])
-                response.headers['Location'] = location
-                return abort(response)
-            except BuildError:
-                current_app.logger.exception(
-                    'Invalid redirect - pid_type "{0}" '
-                    'endpoint missing.'.format(
-                        e.destination_pid.pid_type),
-                    extra={
-                        'pid': e.pid,
-                        'destination_pid': e.destination_pid,
-                    })
-                abort(500)
+        return LazyPIDValue(self.resolver, value)
