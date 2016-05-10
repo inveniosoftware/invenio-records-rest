@@ -26,6 +26,8 @@
 
 from __future__ import absolute_import, print_function
 
+import re
+
 import pytest
 from helpers import assert_hits_len, get_json, parse_url, to_relative_url
 
@@ -91,6 +93,48 @@ def test_pagination(app, indexed_records, search_url):
         assert data['links']['self'] == next_url
         assert 'next' in data['links']
         assert 'prev' in data['links']
+
+
+def test_page_links(app, indexed_records, search_url):
+    """Test Link HTTP header on multi-page searches."""
+    with app.test_client() as client:
+        # Limit records
+        res = client.get(search_url, query_string=dict(size=1, page=1))
+        assert_hits_len(res, 1)
+
+        def parse_link_header(response):
+            """Parses the links from a REST response's HTTP header."""
+            return {
+                k: v for (k, v) in
+                map(lambda s: re.findall(r'<(.*)>; rel="(.*)"', s)[0][::-1],
+                    [x for x in res.headers['Link'].split(', ')])
+            }
+
+        links = parse_link_header(res)
+        data = get_json(res)['links']
+        assert 'self' in data \
+               and 'self' in links \
+               and data['self'] == links['self']
+        assert 'next' in data \
+               and 'next' in links \
+               and data['next'] == links['next']
+        assert 'prev' not in data \
+               and 'prev' not in links
+
+        # Assert next URL before calling it
+        first_url = links['self']
+        next_url = links['next']
+        parsed_url = parse_url(next_url)
+        assert parsed_url['qs']['size'] == ['1']
+        assert parsed_url['qs']['page'] == ['2']
+
+        # Access next URL
+        res = client.get(to_relative_url(next_url))
+        assert_hits_len(res, 1)
+        links = parse_link_header(res)
+        assert links['self'] == next_url
+        assert 'next' in links
+        assert 'prev' in links and links['prev'] == first_url
 
 
 def test_query(app, indexed_records, search_url):

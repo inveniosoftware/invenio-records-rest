@@ -47,7 +47,12 @@ def record_responsify(serializer, mimetype):
         response.last_modified = record.updated
         if headers is not None:
             response.headers.extend(headers)
+
+        if links_factory is not None:
+            add_link_header(response, links_factory(pid))
+
         return response
+
     return view
 
 
@@ -67,5 +72,23 @@ def search_responsify(serializer, mimetype):
         response.status_code = code
         if headers is not None:
             response.headers.extend(headers)
+
+        if links is not None:
+            add_link_header(response, links)
+
         return response
+
     return view
+
+
+def add_link_header(response, links):
+    """Add a Link HTTP header to a REST response.
+
+    :param response: REST response instance
+    :param links: Dictionary of links
+    """
+    if links is not None:
+        response.headers.extend({
+            'Link': ', '.join([
+                  '<{0}>; rel="{1}"'.format(l, r) for r, l in links.items()])
+        })
