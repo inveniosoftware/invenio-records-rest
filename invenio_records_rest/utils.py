@@ -66,6 +66,8 @@ def check_elasticsearch(record, *args, **kwargs):
     """Return permission that check if the record exists in ES index."""
     def can(self):
         """Try to search for given record."""
+        if not record:
+            return True
         search = request._methodview.search_class()
         search = search.get_record(str(record.id))
         return search.count() == 1

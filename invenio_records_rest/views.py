@@ -368,6 +368,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
             current_records_rest.loaders
         self.record_class = record_class or Record
 
+    @need_record_permission('read_permission_factory')
     def get(self, **kwargs):
         """Search records.
 
