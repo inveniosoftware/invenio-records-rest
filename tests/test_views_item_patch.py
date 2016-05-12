@@ -28,7 +28,8 @@ from __future__ import absolute_import, print_function
 
 import json
 
-from helpers import get_json, record_url
+import mock
+from helpers import _mock_validate_fail, get_json, record_url
 
 HEADERS = [
     ('Content-Type', 'application/json-patch+json'),
@@ -115,3 +116,21 @@ def test_invalid_patch(app, test_records, test_patch):
             }
         )
         assert res.status_code == 412
+
+
+@mock.patch('invenio_records.api.Record.validate', _mock_validate_fail)
+def test_validation_error(app, test_records, test_patch):
+    """Test VALID record patch request (PATCH .../records/<record_id>)."""
+    pid, record = test_records[0]
+
+    # Check that
+    assert record.patch(test_patch)
+
+    with app.test_client() as client:
+        # Check that patch and record is not the same value for year.
+        url = record_url(pid)
+        previous_year = get_json(client.get(url))['metadata']['year']
+
+        # Patch record
+        res = client.patch(url, data=json.dumps(test_patch), headers=HEADERS)
+        assert res.status_code == 400

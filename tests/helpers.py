@@ -32,6 +32,7 @@ from flask import url_for
 from invenio_db import db
 from invenio_pidstore import current_pidstore
 from invenio_records import Record
+from jsonschema.exceptions import ValidationError
 from six.moves.urllib.parse import parse_qs, urlparse
 
 
@@ -92,3 +93,8 @@ def record_url(pid):
         val = pid
 
     return url_for('invenio_records_rest.recid_item', pid_value=val)
+
+
+def _mock_validate_fail(self):
+    """Simulate a validation fail."""
+    raise ValidationError("")

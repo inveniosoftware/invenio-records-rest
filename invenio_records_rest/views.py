@@ -35,18 +35,17 @@ from flask import Blueprint, abort, current_app, jsonify, make_response, \
 from flask.views import MethodView
 from invenio_db import db
 from invenio_pidstore import current_pidstore
-from invenio_pidstore.errors import PIDDeletedError, PIDDoesNotExistError, \
-    PIDMissingObjectError, PIDRedirectedError, PIDUnregistered
 from invenio_pidstore.models import PersistentIdentifier
 from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
 from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.decorators import require_content_types
+from invenio_rest.errors import RESTValidationError
 from invenio_search import RecordsSearch
 from jsonpatch import JsonPatchException, JsonPointerException
+from jsonschema.exceptions import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.local import LocalProxy
-from werkzeug.routing import BuildError
 
 from .errors import MaxResultWindowRESTError
 from .links import default_links_factory
@@ -68,6 +67,12 @@ def create_blueprint(endpoints):
     for endpoint, options in (endpoints or {}).items():
         for rule in create_url_rules(endpoint, **options):
             blueprint.add_url_rule(**rule)
+
+    # catch record validation errors
+    @blueprint.errorhandler(ValidationError)
+    def validation_error(error):
+        """Catch validation errors."""
+        return RESTValidationError().get_response()
 
     return blueprint
 

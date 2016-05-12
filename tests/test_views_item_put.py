@@ -28,7 +28,8 @@ from __future__ import absolute_import, print_function
 
 import json
 
-from helpers import get_json, record_url
+import mock
+from helpers import _mock_validate_fail, get_json, record_url
 
 HEADERS = [
     ('Content-Type', 'application/json'),
@@ -125,3 +126,16 @@ def test_invalid_put(app, test_records):
             headers={'Content-Type': 'application/json', 'If-Match': '"2"'}
         )
         assert res.status_code == 412
+
+
+@mock.patch('invenio_records.api.Record.validate', _mock_validate_fail)
+def test_validation_error(app, test_records):
+    """Test when record validation fail."""
+    pid, record = test_records[0]
+
+    record['year'] = 1234
+
+    with app.test_client() as client:
+        url = record_url(pid)
+        res = client.put(url, data=json.dumps(record.dumps()), headers=HEADERS)
+        assert res.status_code == 400

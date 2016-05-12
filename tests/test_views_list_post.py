@@ -28,8 +28,9 @@ from __future__ import absolute_import, print_function
 
 import json
 
+import mock
 import pytest
-from helpers import get_json, record_url
+from helpers import _mock_validate_fail, get_json, record_url
 from mock import patch
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -109,3 +110,13 @@ def test_invalid_create(app, db, test_data, search_url):
                 SQLAlchemyError,
                 client.post, search_url, data=json.dumps(test_data[0]),
                 headers=HEADERS)
+
+
+@mock.patch('invenio_records.api.Record.validate', _mock_validate_fail)
+def test_validation_error(app, db, test_data, search_url):
+    """Test when record validation fail."""
+    with app.test_client() as client:
+        # Create record
+        res = client.post(
+            search_url, data=json.dumps(test_data[0]), headers=HEADERS)
+        assert res.status_code == 400
