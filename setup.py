@@ -46,6 +46,10 @@ tests_require = [
 ]
 
 extras_require = {
+    'citeproc': [
+        'citeproc-py>=0.3.0',
+        'citeproc-py-styles>=0.1.0',
+    ],
     'docs': [
         'Sphinx>=1.4',
     ],
@@ -82,6 +86,7 @@ install_requires = [
     'marshmallow>=2.5.0',
     'python-dateutil>=2.4.2',
     'six>=1.10',
+    'webargs>=1.3.2',
 ]
 
 packages = find_packages()

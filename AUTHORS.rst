@@ -31,3 +31,4 @@ REST API for invenio-records.
 - Lars Holm Nielsen <lars.holm.nielsen@cern.ch>
 - Tibor Simko <tibor.simko@cern.ch>
 - Jiri Kuncar <jiri.kuncar@cern.ch>
+- Alexander Ioannidis <a.ioannidis@cern.ch>
