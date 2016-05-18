@@ -27,7 +27,9 @@
 from __future__ import absolute_import, print_function
 
 from elasticsearch_dsl import Q
+from elasticsearch_dsl.query import Range
 from flask import current_app, request
+from invenio_rest.errors import FieldError, RESTValidationError
 from werkzeug.datastructures import MultiDict
 
 
@@ -35,6 +37,45 @@ def terms_filter(field):
     """Create a term filter."""
     def inner(values):
         return Q('terms', **{field: values})
+    return inner
+
+
+def range_filter(field, start_date_math=None, end_date_math=None, **kwargs):
+    """Create a range filter."""
+    def inner(values):
+        if len(values) != 1 or values[0].count('--') != 1 or values[0] == '--':
+            raise RESTValidationError(
+                errors=[FieldError(field, 'Invalid range format.')])
+
+        range_ends = values[0].split('--')
+        range_args = dict()
+
+        ineq_opers = [{'strict': 'gt', 'nonstrict': 'gte'},
+                      {'strict': 'lt', 'nonstrict': 'lte'}]
+        date_maths = [start_date_math, end_date_math]
+
+        # Add the proper values to the dict
+        for (range_end, strict, opers,
+             date_math) in zip(range_ends, ['>', '<'], ineq_opers, date_maths):
+
+            if range_end != '':
+                # If first char is '>' for start or '<' for end
+                if range_end[0] == strict:
+                    dict_key = opers['strict']
+                    range_end = range_end[1:]
+                else:
+                    dict_key = opers['nonstrict']
+
+                if date_math:
+                    range_end = '{0}||{1}'.format(range_end, date_math)
+
+                range_args[dict_key] = range_end
+
+        args = kwargs.copy()
+        args.update(range_args)
+
+        return Range(**{field: args})
+
     return inner
 
 
