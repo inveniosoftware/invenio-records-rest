@@ -27,19 +27,38 @@
 
 from __future__ import absolute_import, print_function
 
+import pytest
 from elasticsearch_dsl import Search
+from elasticsearch_dsl.query import Range
 from flask import Flask
 from invenio_query_parser.contrib.elasticsearch import IQ
+from invenio_rest.errors import RESTValidationError
 from werkzeug.datastructures import MultiDict
 
 from invenio_records_rest.facets import _aggregations, _create_filter_dsl, \
-    _post_filter, _query_filter, default_facets_factory, terms_filter
+    _post_filter, _query_filter, default_facets_factory, range_filter, \
+    terms_filter
 
 
 def test_terms_filter():
     """Test terms filter."""
     f = terms_filter('test')
     assert f(['a', 'b']).to_dict() == dict(terms={'test': ['a', 'b']})
+
+
+def test_range_filter():
+    """Test range filter."""
+    f = range_filter('test', start_date_math='startmath',
+                     end_date_math='endmath')
+    assert f(['1821--1940']) == Range(test={
+        'gte': '1821||startmath', 'lte': '1940||endmath',
+    })
+    assert f(['>1821--']) == Range(test={'gt': '1821||startmath'})
+    assert f(['1821--<1940']) == Range(test={'gte': '1821||startmath',
+                                             'lt': '1940||endmath'})
+
+    assert pytest.raises(RESTValidationError, f, ['2016'])
+    assert pytest.raises(RESTValidationError, f, ['--'])
 
 
 def test_create_filter_dsl():
