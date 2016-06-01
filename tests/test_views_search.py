@@ -210,3 +210,19 @@ def test_filters(app, indexed_records, search_url):
     with app.test_client() as client:
         res = client.get(search_url, query_string=dict(stars='4'))
         assert_hits_len(res, 2)
+
+
+def test_query_wrong(app, indexed_records, search_url):
+    """Test invalid accept header."""
+    with app.test_client() as client:
+        res = client.get(search_url, query_string={'q': 'test'})
+        assert res.status_code == 200
+
+        res = client.get(search_url, query_string={'q': 'test:a'})
+        assert res.status_code == 200
+
+        res = client.get(search_url, query_string={'q': 'test:'})
+        assert res.status_code == 400
+
+        res = client.get(search_url, query_string={'q': 'test;'})
+        assert res.status_code == 200

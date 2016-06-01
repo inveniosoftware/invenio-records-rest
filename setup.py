@@ -47,7 +47,7 @@ tests_require = [
 
 extras_require = {
     'docs': [
-        'Sphinx>=1.3',
+        'Sphinx>=1.4',
     ],
     'datacite': [
         'datacite>=0.2.1',
@@ -66,10 +66,12 @@ for reqs in extras_require.values():
     extras_require['all'].extend(reqs)
 
 setup_requires = [
+    'Babel>=1.3',
     'pytest-runner>=2.7.0'
 ]
 
 install_requires = [
+    'Flask-BabelEx>=0.9.2',
     'Flask-CLI>=0.2.1',
     'elasticsearch-dsl>=2.0.0',
     'invenio-pidstore>=1.0.0a7',

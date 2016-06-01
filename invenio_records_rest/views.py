@@ -30,9 +30,11 @@ import copy
 import uuid
 from functools import partial, wraps
 
+from elasticsearch.exceptions import RequestError
 from flask import Blueprint, abort, current_app, jsonify, make_response, \
     request, url_for
 from flask.views import MethodView
+from flask_babelex import gettext as _
 from invenio_db import db
 from invenio_pidstore import current_pidstore
 from invenio_pidstore.models import PersistentIdentifier
@@ -47,13 +49,25 @@ from jsonschema.exceptions import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.local import LocalProxy
 
-from .errors import MaxResultWindowRESTError
+from .errors import InvalidQueryRESTError, MaxResultWindowRESTError
 from .links import default_links_factory
 from .query import default_search_factory
 from .utils import obj_or_import_string
 
 current_records_rest = LocalProxy(
     lambda: current_app.extensions['invenio-records-rest'])
+
+
+def elasticsearch_query_parsing_exception_handler(error):
+    """Handle query parsing exceptions from ElasticSearch."""
+    description = _('The syntax of the search query is invalid.')
+    return InvalidQueryRESTError(description=description).get_response()
+
+
+elasticsearch_error_handlers = {
+    'query_parsing_exception': elasticsearch_query_parsing_exception_handler,
+}
+"""List of handlers for ElasticSearch errors."""
 
 
 def create_blueprint(endpoints):
@@ -73,6 +87,21 @@ def create_blueprint(endpoints):
     def validation_error(error):
         """Catch validation errors."""
         return RESTValidationError().get_response()
+
+    @blueprint.errorhandler(RequestError)
+    def elasticsearch_badrequest_error(error):
+        """Catch errors of ElasticSearch."""
+        def first(function, iterable, default=None):
+            """Return the first item from iterable which function is true."""
+            for item in iterable:
+                if function(item):
+                    return item
+            return default
+
+        handlers = map(lambda c: elasticsearch_error_handlers.get(c['type']),
+                       error.info['error']['root_cause'])
+        handler = first(lambda h: h, handlers, lambda h: h)
+        return handler(error)
 
     return blueprint
 
