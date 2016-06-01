@@ -31,7 +31,7 @@ import uuid
 from functools import partial, wraps
 
 from flask import Blueprint, abort, current_app, jsonify, make_response, \
-    request, url_for
+    request, url_for, _app_ctx_stack
 from flask.views import MethodView
 from invenio_db import db
 from invenio_pidstore import current_pidstore
@@ -45,15 +45,16 @@ from invenio_search import RecordsSearch
 from jsonpatch import JsonPatchException, JsonPointerException
 from jsonschema.exceptions import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
-from werkzeug.local import LocalProxy
+# from werkzeug.local import LocalProxy
 
 from .errors import MaxResultWindowRESTError
 from .links import default_links_factory
 from .query import default_search_factory
 from .utils import obj_or_import_string
+from .proxies import current_records_rest
 
-current_records_rest = LocalProxy(
-    lambda: current_app.extensions['invenio-records-rest'])
+# current_records_rest = LocalProxy(
+#     lambda: current_app.extensions['invenio-records-rest'])
 
 
 def create_blueprint(endpoints):
@@ -65,7 +66,9 @@ def create_blueprint(endpoints):
     )
 
     for endpoint, options in (endpoints or {}).items():
-        for rule in create_url_rules(endpoint, **options):
+        # current_records_rest.endpoints[endpoint] = \
+        #     EndpointConfig(options)
+        for rule in create_url_rules(endpoint, options):
             blueprint.add_url_rule(**rule)
 
     # catch record validation errors
@@ -77,171 +80,151 @@ def create_blueprint(endpoints):
     return blueprint
 
 
-def create_url_rules(endpoint, list_route=None, item_route=None,
-                     pid_type=None, pid_minter=None, pid_fetcher=None,
-                     read_permission_factory_imp=None,
-                     create_permission_factory_imp=None,
-                     update_permission_factory_imp=None,
-                     delete_permission_factory_imp=None,
-                     record_class=None,
-                     record_serializers=None,
-                     record_loaders=None,
-                     search_class=None,
-                     search_serializers=None,
-                     search_index=None, search_type=None,
-                     default_media_type=None,
-                     max_result_window=None, use_options_view=True,
-                     search_factory_imp=None, links_factory_imp=None,
-                     suggesters=None):
+def create_url_rules(endpoint, endpoint_config):
     """Create Werkzeug URL rules.
 
     :param endpoint: Name of endpoint.
-    :param list_route: record listing URL route . Required.
-    :param item_route: record URL route (must include ``<pid_value>`` pattern).
-        Required.
-    :param pid_type: Persistent identifier type for endpoint. Required.
-    :param template: Template to render. Defaults to
-        ``invenio_records_ui/detail.html``.
-    :param read_permission_factory_imp: Import path to factory that creates a
-        read permission object for a given record.
-    :param create_permission_factory_imp: Import path to factory that creates a
-        create permission object for a given record.
-    :param update_permission_factory_imp: Import path to factory that creates a
-        update permission object for a given record.
-    :param delete_permission_factory_imp: Import path to factory that creates a
-        delete permission object for a given record.
-    :param search_index: Name of the search index used when searching records.
-    :param search_type: Name of the search type used when searching records.
-    :param record_class: Name of the record API class.
-    :param record_serializers: serializers used for records.
-    :param search_serializers: serializers used for search results.
-    :param default_media_type: default media type for both records and search.
-    :param max_result_window: maximum number of results that Elasticsearch can
-        provide for the given search index without use of scroll. This value
-        should correspond to Elasticsearch ``index.max_result_window`` value
-        for the index.
-    :param use_options_view: Determines if a special option view should be
-        installed.
+    :param endpoint_config: configuration of this endpoint
 
     :returns: a list of dictionaries with can each be passed as keywords
         arguments to ``Blueprint.add_url_rule``.
     """
-    assert list_route
-    assert item_route
-    assert pid_type
-    assert search_serializers
-    assert record_serializers
+    # assert list_route
+    # assert item_route
+    # assert pid_type
+    # assert search_serializers
+    # assert record_serializers
 
-    read_permission_factory = obj_or_import_string(
-        read_permission_factory_imp
-    )
-    create_permission_factory = obj_or_import_string(
-        create_permission_factory_imp
-    )
-    update_permission_factory = obj_or_import_string(
-        update_permission_factory_imp
-    )
-    delete_permission_factory = obj_or_import_string(
-        delete_permission_factory_imp
-    )
-    links_factory = obj_or_import_string(
-        links_factory_imp, default=default_links_factory
-    )
-    record_class = obj_or_import_string(
-        record_class, default=Record
-    )
-    search_class = obj_or_import_string(
-        search_class, default=RecordsSearch
-    )
+    # read_permission_factory = obj_or_import_string(
+    #     read_permission_factory_imp
+    # )
+    # create_permission_factory = obj_or_import_string(
+    #     create_permission_factory_imp
+    # )
+    # update_permission_factory = obj_or_import_string(
+    #     update_permission_factory_imp
+    # )
+    # delete_permission_factory = obj_or_import_string(
+    #     delete_permission_factory_imp
+    # )
+    # links_factory = obj_or_import_string(
+    #     links_factory_imp, default=default_links_factory
+    # )
+    # record_class = obj_or_import_string(
+    #     record_class, default=Record
+    # )
+    # search_class = obj_or_import_string(
+    #     search_class, default=RecordsSearch
+    # )
 
-    search_class_kwargs = {}
-    if search_index:
-        search_class_kwargs['index'] = search_index
-    else:
-        search_index = search_class.Meta.index
+    # search_class_kwargs = {}
+    # if search_index:
+    #     search_class_kwargs['index'] = search_index
+    # else:
+    #     search_index = search_class.Meta.index
 
-    if search_type:
-        search_class_kwargs['doc_type'] = search_type
-    else:
-        search_type = search_class.Meta.doc_types
+    # if search_type:
+    #     search_class_kwargs['doc_type'] = search_type
+    # else:
+    #     search_type = search_class.Meta.doc_types
 
-    if search_class_kwargs:
-        search_class = partial(search_class, **search_class_kwargs)
+    # if search_class_kwargs:
+    #     search_class = partial(search_class, **search_class_kwargs)
 
-    if record_loaders:
-        record_loaders = {mime: obj_or_import_string(func)
-                          for mime, func in record_loaders.items()}
-    record_serializers = {mime: obj_or_import_string(func)
-                          for mime, func in record_serializers.items()}
-    search_serializers = {mime: obj_or_import_string(func)
-                          for mime, func in search_serializers.items()}
+    # if record_loaders:
+    #     record_loaders = {mime: obj_or_import_string(func)
+    #                       for mime, func in record_loaders.items()}
+    # record_serializers = {mime: obj_or_import_string(func)
+    #                       for mime, func in record_serializers.items()}
+    # search_serializers = {mime: obj_or_import_string(func)
+    #                       for mime, func in search_serializers.items()}
 
-    resolver = Resolver(pid_type=pid_type, object_type='rec',
-                        getter=partial(record_class.get_record,
-                                       with_deleted=True))
+    # resolver = Resolver(pid_type=pid_type, object_type='rec',
+    #                     getter=partial(record_class.get_record,
+    #                                    with_deleted=True))
 
     list_view = RecordsListResource.as_view(
         RecordsListResource.view_name.format(endpoint),
-        resolver=resolver,
-        minter_name=pid_minter,
-        pid_type=pid_type,
-        pid_fetcher=pid_fetcher,
-        read_permission_factory=read_permission_factory,
-        create_permission_factory=create_permission_factory,
-        record_serializers=record_serializers,
-        record_loaders=record_loaders,
-        search_serializers=search_serializers,
-        search_class=search_class,
-        default_media_type=default_media_type,
-        max_result_window=max_result_window,
-        search_factory=(obj_or_import_string(
-            search_factory_imp, default=default_search_factory
-        )),
-        item_links_factory=links_factory,
-        record_class=record_class,
+        endpoint_config
+        # resolver=resolver,
+        # minter_name=pid_minter,
+        # pid_type=pid_type,
+        # pid_fetcher=pid_fetcher,
+        # read_permission_factory=read_permission_factory,
+        # create_permission_factory=create_permission_factory,
+        # record_serializers=record_serializers,
+        # record_loaders=record_loaders,
+        # search_serializers=search_serializers,
+        # search_class=search_class,
+        # default_media_type=default_media_type,
+        # max_result_window=max_result_window,
+        # search_factory=(obj_or_import_string(
+        #     search_factory_imp, default=default_search_factory
+        # )),
+        # item_links_factory=links_factory,
+        # record_class=record_class,
     )
     item_view = RecordResource.as_view(
         RecordResource.view_name.format(endpoint),
-        resolver=resolver,
-        read_permission_factory=read_permission_factory,
-        update_permission_factory=update_permission_factory,
-        delete_permission_factory=delete_permission_factory,
-        serializers=record_serializers,
-        loaders=record_loaders,
-        search_class=search_class,
-        links_factory=links_factory,
-        default_media_type=default_media_type)
+        endpoint_config
+        # resolver=resolver,
+        # read_permission_factory=read_permission_factory,
+        # update_permission_factory=update_permission_factory,
+        # delete_permission_factory=delete_permission_factory,
+        # serializers=record_serializers,
+        # loaders=record_loaders,
+        # search_class=search_class,
+        # links_factory=links_factory,
+        # default_media_type=default_media_type)
+    )
 
     views = [
-        dict(rule=list_route, view_func=list_view),
-        dict(rule=item_route, view_func=item_view),
+        dict(rule=endpoint_config.list_route, view_func=list_view),
+        dict(rule=endpoint_config.item_route, view_func=item_view),
     ]
 
-    if suggesters:
+    if endpoint_config.suggesters:
         suggest_view = SuggestResource.as_view(
             SuggestResource.view_name.format(endpoint),
-            suggesters=suggesters,
-            search_class=search_class,
+            # suggesters=suggesters,
+            # search_class=search_class,
+            endpoint_config
         )
 
         views.append(dict(
-            rule=list_route + '_suggest',
+            rule=endpoint_config.list_route + '_suggest',
             view_func=suggest_view
         ))
 
-    if use_options_view:
+    if endpoint_config.use_options_view:
         options_view = RecordsListOptionsResource.as_view(
             RecordsListOptionsResource.view_name.format(endpoint),
-            search_index=search_index,
-            max_result_window=max_result_window,
-            default_media_type=default_media_type,
-            search_media_types=search_serializers.keys(),
-            item_media_types=record_serializers.keys(),
+            # search_index=search_index,
+            # max_result_window=max_result_window,
+            # default_media_type=default_media_type,
+            # search_media_types=search_serializers.keys(),
+            # item_media_types=record_serializers.keys(),
+            endpoint_config
         )
         return [
-            dict(rule="{0}_options".format(list_route), view_func=options_view)
+            dict(rule="{0}_options".format(endpoint_config.list_route),
+                 view_func=options_view)
         ] + views
     return views
+
+
+def with_endpoint_config(f):
+    """Decorator adding endpoint config to the application context.
+
+    This should be used on a class method which initializes
+    """
+    @wraps(f)
+    def wrapper(self, *args, **kwargs):
+        ctx = _app_ctx_stack.top()
+        ctx._invenio_records_rest_endpoint_config = self.endpoint_config
+        result = f(self, *args, **kwargs)
+        ctx._invenio_records_rest_endpoint_config = None
+        return result
 
 
 def pass_record(f):
@@ -300,16 +283,21 @@ class RecordsListOptionsResource(MethodView):
 
     view_name = '{0}_list_options'
 
-    def __init__(self, search_index=None, max_result_window=None,
-                 default_media_type=None, search_media_types=None,
-                 item_media_types=None):
+    def __init__(self,
+                 endpoint_config
+                 # search_index=None, max_result_window=None,
+                 # default_media_type=None, search_media_types=None,
+                 # item_media_types=None
+                 ):
         """Initialize method view."""
-        self.search_index = search_index
-        self.max_result_window = max_result_window or 10000
-        self.default_media_type = default_media_type
-        self.item_media_types = item_media_types
-        self.search_media_types = search_media_types
+        # self.search_index = search_index
+        # self.max_result_window = max_result_window or 10000
+        # self.default_media_type = default_media_type
+        # self.item_media_types = item_media_types
+        # self.search_media_types = search_media_types
+        self.endpoint_config = endpoint_config
 
+    @with_endpoint_config
     def get(self):
         """Get options."""
         opts = current_app.config['RECORDS_REST_SORT_OPTIONS'].get(
@@ -326,10 +314,14 @@ class RecordsListOptionsResource(MethodView):
 
         return jsonify(dict(
             sort_fields=sort_fields,
-            max_result_window=self.max_result_window,
-            default_media_type=self.default_media_type,
-            search_media_types=sorted(self.search_media_types),
-            item_media_types=sorted(self.item_media_types),
+            max_result_window=self.endpoint_config.max_result_window,
+            default_media_type=self.endpoint_config.default_media_type,
+            search_media_types=self.endpoint_config.search_media_types,
+            item_media_types=self.endpoint_config.item_media_types,
+            # max_result_window=self.max_result_window,
+            # default_media_type=self.default_media_type,
+            # search_media_types=sorted(self.search_media_types),
+            # item_media_types=sorted(self.item_media_types),
         ))
 
 
@@ -338,41 +330,46 @@ class RecordsListResource(ContentNegotiatedMethodView):
 
     view_name = '{0}_list'
 
-    def __init__(self, resolver=None, minter_name=None, pid_type=None,
-                 pid_fetcher=None, read_permission_factory=None,
-                 create_permission_factory=None, search_class=None,
-                 record_serializers=None,
-                 record_loaders=None,
-                 search_serializers=None, default_media_type=None,
-                 max_result_window=None, search_factory=None,
-                 item_links_factory=None, record_class=None, **kwargs):
+    def __init__(self,
+                 endpoint_config,
+                 # resolver=None, minter_name=None, pid_type=None,
+                 # pid_fetcher=None, read_permission_factory=None,
+                 # create_permission_factory=None, search_class=None,
+                 # record_serializers=None,
+                 # record_loaders=None,
+                 # search_serializers=None, default_media_type=None,
+                 # max_result_window=None, search_factory=None,
+                 # item_links_factory=None, record_class=None,
+                 **kwargs):
         """Constructor."""
         super(RecordsListResource, self).__init__(
             method_serializers={
-                'GET': search_serializers,
-                'POST': record_serializers,
+                'GET': endpoint_config.search_serializers,
+                'POST': endpoint_config.record_serializers,
             },
             default_method_media_type={
-                'GET': default_media_type,
-                'POST': default_media_type,
+                'GET': endpoint_config.default_media_type,
+                'POST': endpoint_config.default_media_type,
             },
-            default_media_type=default_media_type,
+            default_media_type=endpoint_config.default_media_type,
             **kwargs)
-        self.resolver = resolver
-        self.pid_type = pid_type
-        self.minter = current_pidstore.minters[minter_name]
-        self.pid_fetcher = current_pidstore.fetchers[pid_fetcher]
-        self.read_permission_factory = read_permission_factory
-        self.create_permission_factory = create_permission_factory or \
-            current_records_rest.create_permission_factory
-        self.search_class = search_class
-        self.max_result_window = max_result_window or 10000
-        self.search_factory = partial(search_factory, self)
-        self.item_links_factory = item_links_factory
-        self.loaders = record_loaders or \
-            current_records_rest.loaders
-        self.record_class = record_class or Record
+        self.endpoint_config = endpoint_config
+        # self.resolver = resolver
+        # self.pid_type = pid_type
+        # self.minter = current_pidstore.minters[minter_name]
+        # self.pid_fetcher = current_pidstore.fetchers[pid_fetcher]
+        # self.read_permission_factory = read_permission_factory
+        # self.create_permission_factory = create_permission_factory or \
+        #     current_records_rest.create_permission_factory
+        # self.search_class = search_class
+        # self.max_result_window = max_result_window or 10000
+        # self.search_factory = partial(search_factory, self)
+        # self.item_links_factory = item_links_factory
+        # self.loaders = record_loaders or \
+        #     current_records_rest.loaders
+        # self.record_class = record_class or Record
 
+    @with_endpoint_config
     def get(self, **kwargs):
         """Search records.
 
@@ -381,15 +378,15 @@ class RecordsListResource(ContentNegotiatedMethodView):
         """
         page = request.values.get('page', 1, type=int)
         size = request.values.get('size', 10, type=int)
-        if page * size >= self.max_result_window:
+        if page * size >= self.endpoint_config.max_result_window:
             raise MaxResultWindowRESTError()
 
         # Arguments that must be added in prev/next links
         urlkwargs = dict()
-        search = self.search_class().params(version=True)
+        search = self.endpoint_config.search_class().params(version=True)
         search = search[(page - 1) * size:page * size]
 
-        search, qs_kwargs = self.search_factory(search)
+        search, qs_kwargs = self.endpoint_config.search_factory(search)
         urlkwargs.update(qs_kwargs)
 
         # Execute search
@@ -405,45 +402,49 @@ class RecordsListResource(ContentNegotiatedMethodView):
         if page > 1:
             links['prev'] = url_for(endpoint, page=page - 1, **urlkwargs)
         if size * page < search_result.hits.total and \
-                size * page < self.max_result_window:
+                size * page < self.endpoint_config.max_result_window:
             links['next'] = url_for(endpoint, page=page + 1, **urlkwargs)
 
         return self.make_response(
-            pid_fetcher=self.pid_fetcher,
+            # pid_fetcher=self.pid_fetcher,
             search_result=search_result.to_dict(),
             links=links,
-            item_links_factory=self.item_links_factory,
+            # item_links_factory=self.item_links_factory,
         )
 
+    @with_endpoint_config
     @need_record_permission('create_permission_factory')
     def post(self, **kwargs):
         """Create a record.
 
         :returns: The created record.
         """
-        if request.content_type not in self.loaders:
+        if request.content_type not in self.endpoint_config.record_loaders:
             abort(415)
 
-        data = self.loaders[request.content_type]()
+        data = self.endpoint_config.record_loaders[request.content_type]()
         if data is None:
             abort(400)
 
         # Check permissions
-        permission_factory = self.create_permission_factory
+        permission_factory = self.endpoint_config.create_permission_factory
         if permission_factory:
             verify_record_permission(permission_factory, data)
 
         # Create uuid for record
         record_uuid = uuid.uuid4()
         # Create persistent identifier
-        pid = self.minter(record_uuid, data=data)
+        pid = self.endpoint_config.minter(record_uuid, data=data)
         # Create record
-        record = self.record_class.create(data, id_=record_uuid)
+        record = self.endpoint_config.record_class.create(data,
+                                                          id_=record_uuid)
 
         db.session.commit()
 
         response = self.make_response(
-            pid, record, 201, links_factory=self.item_links_factory)
+            pid, record, 201
+            # , links_factory=self.item_links_factory
+        )
 
         # Add location headers
         endpoint = '.{0}_item'.format(pid.pid_type)
@@ -457,11 +458,13 @@ class RecordResource(ContentNegotiatedMethodView):
 
     view_name = '{0}_item'
 
-    def __init__(self, resolver=None, read_permission_factory=None,
-                 update_permission_factory=None,
-                 delete_permission_factory=None, default_media_type=None,
-                 links_factory=None,
-                 loaders=None, search_class=None,
+    def __init__(self,
+                 endpoint_config,
+                 # resolver=None, read_permission_factory=None,
+                 # update_permission_factory=None,
+                 # delete_permission_factory=None, default_media_type=None,
+                 # links_factory=None,
+                 # loaders=None, search_class=None,
                  **kwargs):
         """Constructor.
 
@@ -472,21 +475,23 @@ class RecordResource(ContentNegotiatedMethodView):
                 'DELETE': {'*/*': lambda *args: make_response(*args), },
             },
             default_method_media_type={
-                'GET': default_media_type,
-                'PUT': default_media_type,
+                'GET': endpoint_config.default_media_type,
+                'PUT': endpoint_config.default_media_type,
                 'DELETE': '*/*',
-                'PATCH': default_media_type,
+                'PATCH': endpoint_config.default_media_type,
             },
-            default_media_type=default_media_type,
+            default_media_type=endpoint_config.default_media_type,
             **kwargs)
-        self.resolver = resolver
-        self.search_class = search_class
-        self.read_permission_factory = read_permission_factory
-        self.update_permission_factory = update_permission_factory
-        self.delete_permission_factory = delete_permission_factory
-        self.links_factory = links_factory
-        self.loaders = loaders or current_records_rest.loaders
+        self.endpoint_config = endpoint_config
+        # self.resolver = resolver
+        # self.search_class = search_class
+        # self.read_permission_factory = read_permission_factory
+        # self.update_permission_factory = update_permission_factory
+        # self.delete_permission_factory = delete_permission_factory
+        # self.links_factory = links_factory
+        # self.loaders = loaders or current_records_rest.loaders
 
+    @with_endpoint_config
     @pass_record
     @need_record_permission('delete_permission_factory')
     def delete(self, pid, record, **kwargs):
@@ -510,6 +515,7 @@ class RecordResource(ContentNegotiatedMethodView):
 
         return '', 204
 
+    @with_endpoint_config
     @pass_record
     @need_record_permission('read_permission_factory')
     def get(self, pid, record, **kwargs):
@@ -524,9 +530,11 @@ class RecordResource(ContentNegotiatedMethodView):
         self.check_if_modified_since(record.updated, etag=etag)
 
         return self.make_response(
-            pid, record, links_factory=self.links_factory
+            pid, record,
+            # links_factory=self.links_factory
         )
 
+    @with_endpoint_config
     @require_content_types('application/json-patch+json')
     @pass_record
     @need_record_permission('update_permission_factory')
@@ -539,7 +547,7 @@ class RecordResource(ContentNegotiatedMethodView):
         :param record: Record object.
         :returns: The modified record.
         """
-        data = self.loaders[request.content_type]()
+        data = self.endpoint_config.record_loaders[request.content_type]()
         if data is None:
             abort(400)
 
@@ -553,8 +561,11 @@ class RecordResource(ContentNegotiatedMethodView):
         db.session.commit()
 
         return self.make_response(
-            pid, record, links_factory=self.links_factory)
+            pid, record,
+            # links_factory=self.links_factory
+        )
 
+    @with_endpoint_config
     @pass_record
     @need_record_permission('update_permission_factory')
     def put(self, pid, record, **kwargs):
@@ -567,10 +578,10 @@ class RecordResource(ContentNegotiatedMethodView):
         :param record: Record object.
         :returns: The modified record.
         """
-        if request.content_type not in self.loaders:
+        if request.content_type not in self.endpoint_config.record_loaders:
             abort(415)
 
-        data = self.loaders[request.content_type]()
+        data = self.endpoint_config.record_loaders[request.content_type]()
         if data is None:
             abort(400)
 
@@ -581,7 +592,9 @@ class RecordResource(ContentNegotiatedMethodView):
         record.commit()
         db.session.commit()
         return self.make_response(
-            pid, record, links_factory=self.links_factory)
+            pid, record,
+            # links_factory=self.links_factory
+        )
 
 
 class SuggestResource(MethodView):
@@ -589,21 +602,25 @@ class SuggestResource(MethodView):
 
     view_name = '{0}_suggest'
 
-    def __init__(self, suggesters, search_class=None, **kwargs):
+    def __init__(self, endpoint_config,
+                 # suggesters, search_class=None,
+                 **kwargs):
         """Constructor."""
-        self.suggesters = suggesters
-        self.search_class = search_class
+        self.endpoint_config = endpoint_config
+        # self.suggesters = suggesters
+        # self.search_class = search_class
 
+    @with_endpoint_config
     def get(self, **kwargs):
         """Get suggestions."""
         completions = []
         size = request.values.get('size', type=int)
 
-        for k in self.suggesters.keys():
+        for k in self.endpoint_config.suggesters.keys():
             val = request.values.get(k, type=str)
             if val:
                 # Get completion suggestions
-                opts = copy.deepcopy(self.suggesters[k])
+                opts = copy.deepcopy(self.endpoints_config.suggesters[k])
 
                 if 'context' in opts.get('completion', {}):
                     ctx_field = opts['completion']['context']
@@ -623,10 +640,10 @@ class SuggestResource(MethodView):
             abort(
                 400,
                 'No completions requested (options: {0})'.format(
-                    ', '.join(sorted(self.suggesters.keys()))))
+                    ', '.join(sorted(self.endpoint_config.suggesters.keys()))))
 
         # Add completions
-        s = self.search_class()
+        s = self.endpoint_config.search_class()
         for field, val, opts in completions:
             s = s.suggest(field, val, **opts)
 

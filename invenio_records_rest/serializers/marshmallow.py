@@ -42,12 +42,10 @@ class MarshmallowSerializer(PreprocessorMixin):
         """Serialize object with schema."""
         return self.schema_class().dump(obj).data
 
-    def transform_record(self, pid, record, links_factory=None):
+    def transform_record(self, pid, record):
         """Transform record into an intermediate representation."""
-        return self.dump(self.preprocess_record(pid, record,
-                         links_factory=links_factory))
+        return self.dump(self.preprocess_record(pid, record))
 
-    def transform_search_hit(self, pid, record_hit, links_factory=None):
+    def transform_search_hit(self, pid, record_hit):
         """Transform search result hit into an intermediate representation."""
-        return self.dump(self.preprocess_search_hit(pid, record_hit,
-                         links_factory=links_factory))
+        return self.dump(self.preprocess_search_hit(pid, record_hit))

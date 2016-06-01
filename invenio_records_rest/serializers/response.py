@@ -31,6 +31,8 @@ from __future__ import absolute_import, print_function
 
 from flask import current_app
 
+from invenio_records_rest.config_loader import current_endpoint_config
+
 
 def record_responsify(serializer, mimetype):
     """Create a Records-REST response serializer.
@@ -38,9 +40,9 @@ def record_responsify(serializer, mimetype):
     :param serializer: Serializer instance.
     :param mimetype: MIME type of response.
     """
-    def view(pid, record, code=200, headers=None, links_factory=None):
+    def view(pid, record, code=200, headers=None):
         response = current_app.response_class(
-            serializer.serialize(pid, record, links_factory=links_factory),
+            serializer.serialize(pid, record),
             mimetype=mimetype)
         response.status_code = code
         response.set_etag(str(record.revision_id))
@@ -48,8 +50,10 @@ def record_responsify(serializer, mimetype):
         if headers is not None:
             response.headers.extend(headers)
 
-        if links_factory is not None:
-            add_link_header(response, links_factory(pid))
+
+        if current_endpoint_config.links_factory is not None:
+            add_link_header(response,
+                            current_endpoint_config.links_factory(pid))
 
         return response
 
@@ -62,12 +66,9 @@ def search_responsify(serializer, mimetype):
     :param serializer: Serializer instance.
     :param mimetype: MIME type of response.
     """
-    def view(pid_fetcher, search_result, code=200, headers=None, links=None,
-             item_links_factory=None):
+    def view(search_result, code=200, headers=None, links=None):
         response = current_app.response_class(
-            serializer.serialize_search(pid_fetcher, search_result,
-                                        links=links,
-                                        item_links_factory=item_links_factory),
+            serializer.serialize_search(search_result, links=links),
             mimetype=mimetype)
         response.status_code = code
         if headers is not None:

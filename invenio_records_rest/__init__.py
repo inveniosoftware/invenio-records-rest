@@ -27,6 +27,7 @@
 from __future__ import absolute_import, print_function
 
 from .ext import InvenioRecordsREST
+from .proxies import current_records_rest
 from .version import __version__
 
-__all__ = ('__version__', 'InvenioRecordsREST')
+__all__ = ('__version__', 'InvenioRecordsREST', 'current_records_rest')

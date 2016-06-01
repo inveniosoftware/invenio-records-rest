@@ -22,30 +22,12 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""Search errors."""
+"""Define records-rest proxies."""
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import
 
-from invenio_rest.errors import RESTException
+from flask import current_app
+from werkzeug.local import LocalProxy
 
-
-class MaxResultWindowRESTError(RESTException):
-    """Maximum number of results passed."""
-
-    code = 400
-    description = "Maximum number of results have been reached."
-
-
-class InvalidQueryRESTError(RESTException):
-    """Invalid query syntax."""
-
-    code = 400
-    description = "Invalid query syntax."
-
-
-class InvenioRecordsRestError(Exception):
-    """Invenio records REST error."""
-
-
-class InvalidEndpointConfigError(InvenioRecordsRestError):
-    """Exception raised when a REST endpoint's configuration is invalid."""
+current_records_rest = LocalProxy(
+    lambda: current_app.extensions['invenio-records-rest'])

@@ -30,6 +30,8 @@ import copy
 
 import pytz
 
+from invenio_records_rest.config_loader import current_endpoint_config
+
 
 class PreprocessorMixin(object):
     """Base class for serializers."""
@@ -38,9 +40,10 @@ class PreprocessorMixin(object):
         """."""
         self.replace_refs = replace_refs
 
-    def preprocess_record(self, pid, record, links_factory=None):
+    def preprocess_record(self, pid, record):
         """Prepare a record and persistent identifier for serialization."""
-        links_factory = links_factory or (lambda x: dict())
+        links_factory = current_endpoint_config.links_factory or (
+            lambda x: dict())
         metadata = copy.deepcopy(record.replace_refs()) if self.replace_refs \
             else record.dumps()
         return dict(
@@ -55,9 +58,10 @@ class PreprocessorMixin(object):
         )
 
     @staticmethod
-    def preprocess_search_hit(pid, record_hit, links_factory=None):
+    def preprocess_search_hit(pid, record_hit):
         """Prepare a record hit from Elasticsearch for serialization."""
-        links_factory = links_factory or (lambda x: dict())
+        links_factory = current_endpoint_config.links_factory or (
+            lambda x: dict())
         record = dict(
             pid=pid,
             metadata=record_hit['_source'],

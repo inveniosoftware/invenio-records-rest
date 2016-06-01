@@ -27,18 +27,22 @@
 from __future__ import absolute_import, print_function
 
 from werkzeug.utils import cached_property
+import six
 
 from . import config
+from .errors import InvalidEndpointConfigError
 from .utils import load_or_import_from_config
 from .views import create_blueprint
-
+from .config_loader import EndpointConfigSchema
+from .proxies import current_records_rest
 
 class _RecordRESTState(object):
     """Record REST state."""
 
-    def __init__(self, app):
+    def __init__(self, app, endpoints):
         """Initialize state."""
         self.app = app
+        self.endpoints = endpoints
 
     @cached_property
     def loaders(self):
@@ -94,11 +98,20 @@ class InvenioRecordsREST(object):
     def init_app(self, app):
         """Flask application initialization."""
         self.init_config(app)
+        endpoints = {}
+        for endpoint, conf in \
+                six.iteritems(app.config['RECORDS_REST_ENDPOINTS']):
+            endpoint_config, errors = EndpointConfigSchema().load(conf)
+            if errors:
+                raise InvalidEndpointConfigError(errors)
+            endpoints[endpoint] = endpoint_config
+
         # Register records API blueprints
         app.register_blueprint(
-            create_blueprint(app.config['RECORDS_REST_ENDPOINTS'])
+            create_blueprint(endpoints)
         )
-        app.extensions['invenio-records-rest'] = _RecordRESTState(app)
+        app.extensions['invenio-records-rest'] = _RecordRESTState(app,
+                                                                  endpoints)
 
     def init_config(self, app):
         """Initialize configuration."""

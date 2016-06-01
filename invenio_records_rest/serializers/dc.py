@@ -39,18 +39,16 @@ class DublinCoreSerializer(MarshmallowSerializer):
     records.
     """
 
-    def serialize(self, pid, record, links_factory=None):
+    def serialize(self, pid, record):
         """Serialize a single record and persistent identifier.
 
         :param pid: Persistent identifier instance.
         :param record: Record instance.
-        :param links_factory: Factory function for record links.
         """
         return simpledc.tostring(
-            self.transform_record(pid, record, links_factory))
+            self.transform_record(pid, record))
 
-    def serialize_search(self, pid_fetcher, search_result, links=None,
-                         item_links_factory=None):
+    def serialize_search(self, pid_fetcher, search_result, links=None):
         """Serialize a search result.
 
         :param pid_fetcher: Persistent identifier fetcher.
@@ -62,7 +60,6 @@ class DublinCoreSerializer(MarshmallowSerializer):
             records.append(simpledc.tostring(self.transform_search_hit(
                 pid_fetcher(hit['_id'], hit['_source']),
                 hit,
-                links_factory=item_links_factory,
             )))
 
         return "\n".join(records)
