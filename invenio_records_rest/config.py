@@ -71,7 +71,7 @@ This option can be overritten in each REST endpoint as follows::
         "recid": {
             ...
             "record_loaders": {
-                "aplication/json": "mypackage.utils:myloader"
+                "application/json": "mypackage.utils:myloader"
             },
             ...
         }
