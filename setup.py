@@ -117,9 +117,11 @@ setup(
         ],
         'invenio_base.converters': [
             'pid = invenio_records_rest.utils:PIDConverter',
+            'pidpath = invenio_records_rest.utils:PIDPathConverter',
         ],
         'invenio_base.api_converters': [
             'pid = invenio_records_rest.utils:PIDConverter',
+            'pidpath = invenio_records_rest.utils:PIDPathConverter',
         ],
     },
     extras_require=extras_require,

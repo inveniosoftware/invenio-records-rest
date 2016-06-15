@@ -32,7 +32,7 @@ from invenio_pidstore.errors import PIDDeletedError, PIDDoesNotExistError, \
     PIDMissingObjectError, PIDRedirectedError, PIDUnregistered
 from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
-from werkzeug.routing import BaseConverter, BuildError
+from werkzeug.routing import BaseConverter, BuildError, PathConverter
 from werkzeug.utils import cached_property, import_string
 
 
@@ -136,3 +136,7 @@ class PIDConverter(BaseConverter):
     def to_python(self, value):
         """Resolve PID value."""
         return LazyPIDValue(self.resolver, value)
+
+
+class PIDPathConverter(PIDConverter, PathConverter):
+    """Resolve PID path value."""
