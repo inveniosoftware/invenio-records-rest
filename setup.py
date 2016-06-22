@@ -51,7 +51,7 @@ extras_require = {
         'citeproc-py-styles>=0.1.0',
     ],
     'docs': [
-        'Sphinx>=1.4',
+        'Sphinx>=1.4.2',
     ],
     'datacite': [
         'datacite>=0.2.1',
