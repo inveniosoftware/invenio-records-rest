@@ -95,6 +95,8 @@ from invenio_records_rest import InvenioRecordsREST
 from invenio_records_rest.config import RECORDS_REST_ENDPOINTS
 from invenio_records_rest.facets import terms_filter
 from invenio_records_rest.memento import MementoRecord
+from invenio_records_rest.utils import PIDConverter
+
 
 # create application's instance directory. Needed for this example only.
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -153,6 +155,7 @@ app.config['RECORDS_REST_FACETS'] = {
         }
     }
 }
+app.url_map.converters['pid'] = PIDConverter
 FlaskCLI(app)
 FlaskCeleryExt(app)
 InvenioDB(app)
