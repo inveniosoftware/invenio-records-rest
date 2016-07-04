@@ -33,9 +33,11 @@ from citeproc import Citation, CitationItem, CitationStylesBibliography, \
     CitationStylesStyle, formatter
 from citeproc.source.bibtex import BibTeX
 from citeproc.source.json import CiteProcJSON
-from flask import abort, has_request_context, request
+from flask import has_request_context, request
 from webargs import fields
 from webargs.flaskparser import FlaskParser
+
+from ..errors import StyleNotFoundRESTError
 
 try:
     from citeproc_styles import get_style_filepath
@@ -110,7 +112,7 @@ class CiteprocSerializer(object):
             csl_args['style'] = get_style_filepath(csl_args['style'].lower())
         except StyleNotFoundError:
             if has_request_context():
-                abort(400)
+                raise StyleNotFoundRESTError(csl_args['style'])
             raise
         return csl_args
 

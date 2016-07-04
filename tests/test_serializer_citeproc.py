@@ -33,6 +33,7 @@ from invenio_pidstore.models import PersistentIdentifier
 from invenio_records import Record
 from werkzeug.exceptions import BadRequest
 
+from invenio_records_rest.errors import StyleNotFoundRESTError
 from invenio_records_rest.serializers.citeproc import CiteprocSerializer, \
     StyleNotFoundError
 
@@ -114,5 +115,5 @@ def test_serializer_in_request(app):
         assert '(2016)' in data
 
     with app.test_request_context(query_string={'style': 'non-existent'}):
-        with pytest.raises(BadRequest):
+        with pytest.raises(StyleNotFoundRESTError):
             serializer.serialize(pid, record, style='non-existent')

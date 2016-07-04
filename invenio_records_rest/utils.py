@@ -35,6 +35,10 @@ from invenio_records.api import Record
 from werkzeug.routing import BaseConverter, BuildError, PathConverter
 from werkzeug.utils import cached_property, import_string
 
+from .errors import PIDDeletedRESTError, PIDDoesNotExistRESTError, \
+    PIDMissingObjectRESTError, PIDRedirectedRESTError, \
+    PIDUnregisteredRESTError
+
 
 def obj_or_import_string(value, default=None):
     """Import string or return object."""
@@ -86,15 +90,17 @@ class LazyPIDValue(object):
         """Resolve PID value and return tuple with PID and record."""
         try:
             return self.resolver.resolve(self.value)
-        except (PIDDoesNotExistError, PIDUnregistered):
-            abort(404)
+        except PIDDoesNotExistError:
+            raise PIDDoesNotExistRESTError()
+        except PIDUnregistered:
+            raise PIDUnregisteredRESTError()
         except PIDDeletedError:
-            abort(410)
+            raise PIDDeletedRESTError()
         except PIDMissingObjectError as e:
             current_app.logger.exception(
                 'No object assigned to {0}.'.format(e.pid),
                 extra={'pid': e.pid})
-            abort(500)
+            raise PIDMissingObjectRESTError(e.pid)
         except PIDRedirectedError as e:
             try:
                 location = url_for(
@@ -117,7 +123,7 @@ class LazyPIDValue(object):
                         'pid': e.pid,
                         'destination_pid': e.destination_pid,
                     })
-                abort(500)
+                raise PIDRedirectedRESTError(e.destination_pid.pid_type)
 
 
 class PIDConverter(BaseConverter):

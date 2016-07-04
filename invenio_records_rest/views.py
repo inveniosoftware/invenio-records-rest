@@ -49,7 +49,10 @@ from jsonschema.exceptions import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.local import LocalProxy
 
-from .errors import InvalidQueryRESTError, MaxResultWindowRESTError
+from .errors import InvalidDataRESTError, InvalidQueryRESTError, \
+    MaxResultWindowRESTError, PatchJSONFailureRESTError, PIDResolveRESTError, \
+    SuggestMissingContextRESTError, SuggestNoCompletionsRESTError, \
+    UnsupportedMediaRESTError
 from .links import default_links_factory
 from .query import default_search_factory
 from .utils import obj_or_import_string
@@ -281,7 +284,7 @@ def pass_record(f):
             pid, record = request.view_args['pid_value'].data
             return f(self, pid=pid, record=record, *args, **kwargs)
         except SQLAlchemyError:
-            abort(500)
+            raise PIDResolveRESTError(pid)
     return inner
 
 
@@ -451,11 +454,11 @@ class RecordsListResource(ContentNegotiatedMethodView):
         :returns: The created record.
         """
         if request.content_type not in self.loaders:
-            abort(415)
+            raise UnsupportedMediaRESTError(request.content_type)
 
         data = self.loaders[request.content_type]()
         if data is None:
-            abort(400)
+            raise InvalidDataRESTError()
 
         # Check permissions
         permission_factory = self.create_permission_factory
@@ -570,13 +573,13 @@ class RecordResource(ContentNegotiatedMethodView):
         """
         data = self.loaders[request.content_type]()
         if data is None:
-            abort(400)
+            raise InvalidDataRESTError()
 
         self.check_etag(str(record.revision_id))
         try:
             record = record.patch(data)
         except (JsonPatchException, JsonPointerException):
-            abort(400)
+            raise PatchJSONFailureRESTError()
 
         record.commit()
         db.session.commit()
@@ -597,11 +600,11 @@ class RecordResource(ContentNegotiatedMethodView):
         :returns: The modified record.
         """
         if request.content_type not in self.loaders:
-            abort(415)
+            raise UnsupportedMediaRESTError(request.content_type)
 
         data = self.loaders[request.content_type]()
         if data is None:
-            abort(400)
+            raise InvalidDataRESTError()
 
         self.check_etag(str(record.revision_id))
 
@@ -638,7 +641,8 @@ class SuggestResource(MethodView):
                     ctx_field = opts['completion']['context']
                     ctx_val = request.values.get(ctx_field, type=str)
                     if not ctx_val:
-                        abort(400, 'Missing \'{0}\' context'.format(ctx_field))
+                        raise SuggestMissingContextRESTError
+                        # raise SuggestMissingContextRESTError(ctx_field)
                     opts['completion']['context'] = {
                         ctx_field: ctx_val
                     }
@@ -649,10 +653,9 @@ class SuggestResource(MethodView):
                 completions.append((k, val, opts))
 
         if not completions:
-            abort(
-                400,
-                'No completions requested (options: {0})'.format(
-                    ', '.join(sorted(self.suggesters.keys()))))
+            # raise SuggestNoCompletionsRESTError
+            raise SuggestNoCompletionsRESTError(
+                ', '.join(sorted(self.suggesters.keys())))
 
         # Add completions
         s = self.search_class()
