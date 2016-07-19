@@ -32,11 +32,13 @@ Run example development server:
 .. code-block:: console
 
     $ cd examples
-    $ flask -a app.py db init
-    $ flask -a app.py db create
-    $ flask -a app.py index init
-    $ flask -a app.py fixtures records
-    $ flask -a app.py --debug run
+    $ pip install -r requirements.txt
+    $ export FLASK_APP=app.py
+    $ flask db init
+    $ flask db create
+    $ flask index init
+    $ flask fixtures records
+    $ flask run --debugger
 
 Try to get some records:
 
