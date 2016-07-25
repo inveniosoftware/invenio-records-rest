@@ -51,6 +51,7 @@ def geolocation_sort(field_name, argument, unit, mode=None,
     :param unit: Distance unit (e.g. km).
     :param mode: Sort mode (avg, min, max).
     :param distance_type: Distance calculation mode.
+    :returns: Function that returns geolocation sort field.
     """
     def inner(asc):
         locations = request.values.getlist(argument, type=str)
@@ -73,7 +74,7 @@ def parse_sort_field(field_value):
     """Parse a URL field.
 
     :param field_value: Field value (e.g. 'key' or '-key').
-    :returns: Tuple of (field, ascending).
+    :returns: Tuple of (field, ascending) as string and boolean.
     """
     if field_value.startswith("-"):
         return (field_value[1:], False)
@@ -98,6 +99,7 @@ def eval_field(field, asc):
 
     :param field: Field definition (string, dict or callable).
     :param asc: ``True`` if order is ascending, ``False`` if descending.
+    :returns: Dictionary with the sort field query.
     """
     if isinstance(field, dict):
         if asc:
@@ -118,7 +120,7 @@ def eval_field(field, asc):
 
 
 def default_sorter_factory(search, index):
-    """Sort a query.
+    """Default sort query factory.
 
     :param query: Search query.
     :param index: Index to search in.

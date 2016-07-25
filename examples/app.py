@@ -99,7 +99,6 @@ from invenio_records_rest.facets import terms_filter
 from invenio_records_rest.memento import MementoRecord
 from invenio_records_rest.utils import PIDConverter
 
-
 # create application's instance directory. Needed for this example only.
 current_dir = os.path.dirname(os.path.realpath(__file__))
 instance_dir = os.path.join(current_dir, 'app_instance')

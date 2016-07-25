@@ -34,7 +34,7 @@ from invenio_rest.errors import RESTException
 # Search
 #
 class MaxResultWindowRESTError(RESTException):
-    """Maximum number of results passed."""
+    """Maximum number of results have been reached."""
 
     code = 400
     description = 'Maximum number of results have been reached.'

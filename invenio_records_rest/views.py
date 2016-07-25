@@ -47,7 +47,6 @@ from invenio_search import RecordsSearch
 from jsonpatch import JsonPatchException, JsonPointerException
 from jsonschema.exceptions import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
-from werkzeug.local import LocalProxy
 
 from .errors import InvalidDataRESTError, InvalidQueryRESTError, \
     MaxResultWindowRESTError, PatchJSONFailureRESTError, PIDResolveRESTError, \
@@ -74,7 +73,11 @@ elasticsearch_error_handlers = {
 
 
 def create_blueprint(endpoints):
-    """Create Invenio-Records-REST blueprint."""
+    """Create Invenio-Records-REST blueprint.
+
+    :params: Dictionary representing the endpoints configuration.
+    :returns: Configured blueprint.
+    """
     blueprint = Blueprint(
         'invenio_records_rest',
         __name__,
@@ -128,12 +131,12 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     """Create Werkzeug URL rules.
 
     :param endpoint: Name of endpoint.
-    :param list_route: record listing URL route . Required.
-    :param item_route: record URL route (must include ``<pid_value>`` pattern).
+    :param list_route: Record listing URL route. Required.
+    :param item_route: Record URL route (must include ``<pid_value>`` pattern).
         Required.
     :param pid_type: Persistent identifier type for endpoint. Required.
-    :param template: Template to render. Defaults to
-        ``invenio_records_ui/detail.html``.
+    :param pid_minter: It identifies the registered minter name.
+    :param pid_fetcher: It identifies the registered fetcher name.
     :param read_permission_factory_imp: Import path to factory that creates a
         read permission object for a given record.
     :param create_permission_factory_imp: Import path to factory that creates a
@@ -142,18 +145,28 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         update permission object for a given record.
     :param delete_permission_factory_imp: Import path to factory that creates a
         delete permission object for a given record.
+    :param record_class: A record API class or importable string.
+    :param record_serializers: Serializers used for records.
+    :param record_loaders: It contains the list of record deserializers for
+        supperted formats.
+    :param search_class: Import path or class object for the object in charge
+        of execute the search queries. The default search class is
+        :class:`invenio_search.api.RecordsSearch`.
+        For more information about resource loading, see the Search of
+        ElasticSearch DSL library.
+    :param search_serializers: Serializers used for search results.
     :param search_index: Name of the search index used when searching records.
     :param search_type: Name of the search type used when searching records.
-    :param record_class: Name of the record API class.
-    :param record_serializers: serializers used for records.
-    :param search_serializers: serializers used for search results.
-    :param default_media_type: default media type for both records and search.
-    :param max_result_window: maximum number of results that Elasticsearch can
+    :param default_media_type: Default media type for both records and search.
+    :param max_result_window: Maximum number of results that Elasticsearch can
         provide for the given search index without use of scroll. This value
         should correspond to Elasticsearch ``index.max_result_window`` value
         for the index.
     :param use_options_view: Determines if a special option view should be
         installed.
+    :param search_factory_imp: Factory to parse quieries.
+    :param links_factory_imp: Factory for record links generation.
+    :param suggesters: Suggester fields configuration.
 
     :returns: a list of dictionaries with can each be passed as keywords
         arguments to ``Blueprint.add_url_rule``.
@@ -290,6 +303,10 @@ def pass_record(f):
 
 def verify_record_permission(permission_factory, record):
     """Check that the current user has the required permissions on record.
+
+    In case the permission check fails, an Flask abort is launched.
+    If the user was previously logged-in, a HTTP error 403 is returned.
+    Otherwise, is returned a HTTP error 401.
 
     :param permission_factory: permission factory used to check permissions.
     :param record: record whose access is limited.
@@ -451,6 +468,23 @@ class RecordsListResource(ContentNegotiatedMethodView):
     def post(self, **kwargs):
         """Create a record.
 
+        Procedure description:
+
+        #. First of all, the `create_permission_factory` permissions are
+            checked.
+
+        #. Then, the record is deserialized by the proper loader.
+
+        #. A second call to the `create_permission_factory` factory is done:
+            it differs from the previous call because this time the record is
+            passed as parameter.
+
+        #. A `uuid` is generated for the record and the minter is called.
+
+        #. The record class is called to create the record.
+
+        #. The HTTP response is built with the help of the item link factory.
+
         :returns: The created record.
         """
         if request.content_type not in self.loaders:
@@ -524,6 +558,16 @@ class RecordResource(ContentNegotiatedMethodView):
     def delete(self, pid, record, **kwargs):
         """Delete a record.
 
+        Procedure description:
+
+        #. The record is resolved reading the pid value from the url.
+
+        #. The ETag is checked.
+
+        #. The record is deleted.
+
+        #. All PIDs are marked as DELETED.
+
         :param pid: Persistent identifier for record.
         :param record: Record object.
         """
@@ -547,6 +591,14 @@ class RecordResource(ContentNegotiatedMethodView):
     def get(self, pid, record, **kwargs):
         """Get a record.
 
+        Procedure description:
+
+        #. The record is resolved reading the pid value from the url.
+
+        #. The ETag and If-Modifed-Since is checked.
+
+        #. The HTTP response is built with the help of the link factory.
+
         :param pid: Persistent identifier for record.
         :param record: Record object.
         :returns: The requested record.
@@ -566,6 +618,16 @@ class RecordResource(ContentNegotiatedMethodView):
         """Modify a record.
 
         The data should be a JSON-patch, which will be applied to the record.
+
+        Procedure description:
+
+        #. The record is deserialized using the proper loader.
+
+        #. The ETag is checked.
+
+        #. The record is patched.
+
+        #. The HTTP response is built with the help of the link factory.
 
         :param pid: Persistent identifier for record.
         :param record: Record object.
@@ -594,6 +656,15 @@ class RecordResource(ContentNegotiatedMethodView):
 
         The body should be a JSON object, which will fully replace the current
         record metadata.
+
+        Procedure description:
+
+        #. The ETag is checked.
+
+        #. The record is updated by calling the record API `clear()`,
+           `update()` and then `commit()`.
+
+        #. The HTTP response is built with the help of the link factory.
 
         :param pid: Persistent identifier for record.
         :param record: Record object.

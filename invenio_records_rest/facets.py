@@ -34,14 +34,25 @@ from werkzeug.datastructures import MultiDict
 
 
 def terms_filter(field):
-    """Create a term filter."""
+    """Create a term filter.
+
+    :param field: Field name.
+    :returns: Function that returns the Terms query.
+    """
     def inner(values):
         return Q('terms', **{field: values})
     return inner
 
 
 def range_filter(field, start_date_math=None, end_date_math=None, **kwargs):
-    """Create a range filter."""
+    """Create a range filter.
+
+    :param field: Field name.
+    :param start_date_math: Starting date.
+    :param end_date_math: Ending date.
+    :param kwargs: Addition arguments passed to the Range query.
+    :returns: Function that returns the Range query.
+    """
     def inner(values):
         if len(values) != 1 or values[0].count('--') != 1 or values[0] == '--':
             raise RESTValidationError(
@@ -121,7 +132,13 @@ def _aggregations(search, definitions):
 
 
 def default_facets_factory(search, index):
-    """Add facets to query."""
+    """Add a default facets to query.
+
+    :param search: Basic search object.
+    :param index: Index name.
+    :returns: A tuple containing the new search object and a dictionary with
+        all fields and values used.
+    """
     urlkwargs = MultiDict()
 
     facets = current_app.config['RECORDS_REST_FACETS'].get(index)

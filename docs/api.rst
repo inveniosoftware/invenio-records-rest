@@ -25,6 +25,44 @@
 API Docs
 ========
 
-invenio_records_rest
------------------------
+.. automodule:: invenio_records_rest.ext
+   :members:
 
+Configuration
+-------------
+
+.. automodule:: invenio_records_rest.config
+   :members:
+
+.. automodule:: invenio_records_rest.facets
+   :members:
+
+.. automodule:: invenio_records_rest.sorter
+   :members:
+
+.. automodule:: invenio_records_rest.links
+   :members:
+
+.. automodule:: invenio_records_rest.query
+   :members:
+
+.. automodule:: invenio_records_rest.utils
+   :members:
+
+Errors
+------
+
+.. automodule:: invenio_records_rest.errors
+   :members:
+
+Views
+-----
+
+.. automodule:: invenio_records_rest.views
+   :members: create_url_rules
+
+Integrations
+------------
+
+.. automodule:: invenio_records_rest.memento
+   :members:

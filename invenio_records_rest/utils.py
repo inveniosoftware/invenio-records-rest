@@ -41,7 +41,12 @@ from .errors import PIDDeletedRESTError, PIDDoesNotExistRESTError, \
 
 
 def obj_or_import_string(value, default=None):
-    """Import string or return object."""
+    """Import string or return object.
+
+    :params value: Import path or class object to instantiate.
+    :params default: Default object to return if the import fails.
+    :returns: The imported object.
+    """
     if isinstance(value, six.string_types):
         return import_string(value)
     elif value:
@@ -50,24 +55,37 @@ def obj_or_import_string(value, default=None):
 
 
 def load_or_import_from_config(key, app=None, default=None):
-    """Load or import value from config."""
+    """Load or import value from config.
+
+    :returns: The loaded value.
+    """
     app = app or current_app
     imp = app.config.get(key)
     return obj_or_import_string(imp, default=default)
 
 
 def allow_all(*args, **kwargs):
-    """Return permission that always allow an access."""
+    """Return permission that always allow an access.
+
+    :returns: A object instance with a ``can()`` method.
+    """
     return type('Allow', (), {'can': lambda self: True})()
 
 
 def deny_all(*args, **kwargs):
-    """Return permission that always deny an access."""
+    """Return permission that always deny an access.
+
+    :returns: A object instance with a ``can()`` method.
+    """
     return type('Deny', (), {'can': lambda self: False})()
 
 
 def check_elasticsearch(record, *args, **kwargs):
-    """Return permission that check if the record exists in ES index."""
+    """Return permission that check if the record exists in ES index.
+
+    :params record: A record object.
+    :returns: A object instance with a ``can()`` method.
+    """
     def can(self):
         """Try to search for given record."""
         search = request._methodview.search_class()
@@ -81,13 +99,20 @@ class LazyPIDValue(object):
     """Lazy resolver for PID value."""
 
     def __init__(self, resolver, value):
-        """Initialize with resolver and URL value."""
+        """Initialize with resolver and URL value.
+
+        :params resolver: Used to resolve PID value and return a record.
+        :params value: PID value.
+        """
         self.resolver = resolver
         self.value = value
 
     @cached_property
     def data(self):
-        """Resolve PID value and return tuple with PID and record."""
+        """Resolve PID value and return tuple with PID and record.
+
+        :returns: A tuple with the PID and the record resolved.
+        """
         try:
             return self.resolver.resolve(self.value)
         except PIDDoesNotExistError:
