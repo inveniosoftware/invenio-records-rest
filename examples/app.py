@@ -75,7 +75,7 @@ View options about the endpoint:
 
 See suggestions:
 
-    $ curl -v -XGET 'http://localhost:5000/records/_suggestions?text=Reg'
+    $ curl -v -XGET 'http://localhost:5000/records/_suggest?title-complete=Reg'
 """
 
 from __future__ import absolute_import, print_function
@@ -128,6 +128,16 @@ app.config.update(
 app.config['RECORDS_REST_ENDPOINTS'] = RECORDS_REST_ENDPOINTS
 app.config['RECORDS_REST_ENDPOINTS']['recid']['search_index'] = index_name
 app.config['RECORDS_REST_ENDPOINTS']['recid']['record_class'] = MementoRecord
+# Configure suggesters
+app.config['RECORDS_REST_ENDPOINTS']['recid']['suggesters'] = {
+    'title-complete': {
+        'completion': {
+            # see testrecord-v1.0.0.json for index configuration
+            'field': 'suggest_title',
+            'size': 10,
+        }
+    }
+}
 # Sort options
 app.config['RECORDS_REST_SORT_OPTIONS'] = {
     index_name: {
