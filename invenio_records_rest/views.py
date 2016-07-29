@@ -53,11 +53,9 @@ from .errors import InvalidDataRESTError, InvalidQueryRESTError, \
     SuggestMissingContextRESTError, SuggestNoCompletionsRESTError, \
     UnsupportedMediaRESTError
 from .links import default_links_factory
+from .proxies import current_records_rest
 from .query import default_search_factory
 from .utils import obj_or_import_string
-
-current_records_rest = LocalProxy(
-    lambda: current_app.extensions['invenio-records-rest'])
 
 
 def elasticsearch_query_parsing_exception_handler(error):

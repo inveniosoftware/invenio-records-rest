@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2016 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -26,8 +26,9 @@
 
 from __future__ import absolute_import, print_function
 
-from .ext import InvenioRecordsREST
-from .proxies import current_records_rest
-from .version import __version__
+from flask import current_app
+from werkzeug.local import LocalProxy
 
-__all__ = ('__version__', 'current_records_rest', 'InvenioRecordsREST')
+current_records_rest = LocalProxy(
+    lambda: current_app.extensions['invenio-records-rest'])
+"""Proxy to an instance of ``_RecordRESTState``."""
