@@ -82,8 +82,8 @@ def create_blueprint(endpoints):
         url_prefix='',
     )
 
-    for endpoint, options in (endpoints or {}).items():
-        for rule in create_url_rules(endpoint, **options):
+    for options in (endpoints or {}).values():
+        for rule in create_url_rules(options['pid_type'], **options):
             blueprint.add_url_rule(**rule)
 
     # catch record validation errors
