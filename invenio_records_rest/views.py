@@ -70,22 +70,8 @@ elasticsearch_error_handlers = {
 """List of handlers for ElasticSearch errors."""
 
 
-def create_blueprint(endpoints):
-    """Create Invenio-Records-REST blueprint.
-
-    :params: Dictionary representing the endpoints configuration.
-    :returns: Configured blueprint.
-    """
-    blueprint = Blueprint(
-        'invenio_records_rest',
-        __name__,
-        url_prefix='',
-    )
-
-    for endpoint, options in (endpoints or {}).items():
-        for rule in create_url_rules(endpoint, **options):
-            blueprint.add_url_rule(**rule)
-
+def create_error_handlers(blueprint):
+    """Create error handlers on blueprint."""
     # catch record validation errors
     @blueprint.errorhandler(ValidationError)
     def validation_error(error):
@@ -108,6 +94,25 @@ def create_blueprint(endpoints):
         return handler(error)
 
     return blueprint
+
+
+def create_blueprint(endpoints):
+    """Create Invenio-Records-REST blueprint.
+
+    :params: Dictionary representing the endpoints configuration.
+    :returns: Configured blueprint.
+    """
+    blueprint = Blueprint(
+        'invenio_records_rest',
+        __name__,
+        url_prefix='',
+    )
+
+    for endpoint, options in (endpoints or {}).items():
+        for rule in create_url_rules(endpoint, **options):
+            blueprint.add_url_rule(**rule)
+
+    return create_error_handlers(blueprint)
 
 
 def create_url_rules(endpoint, list_route=None, item_route=None,
