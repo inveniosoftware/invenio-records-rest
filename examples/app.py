@@ -27,18 +27,20 @@
 
 For this example the access control is disabled.
 
-Run example development server:
+Install requirements:
 
 .. code-block:: console
 
+    $ pip install -e .[all]
     $ cd examples
-    $ pip install -r requirements.txt
-    $ export FLASK_APP=app.py
-    $ flask db init
-    $ flask db create
-    $ flask index init
-    $ flask fixtures records
-    $ flask run --debugger
+    $ ./app-setup.sh
+    $ FLASK_APP=app.py flask fixtures records
+
+Run the server:
+
+.. code-block:: console
+
+    $ FLASK_APP=app.py flask run --debugger -p 5000
 
 Try to get some records:
 
@@ -54,6 +56,8 @@ Try to get some records:
 
 Then search for existing records:
 
+.. code-block:: console
+
     $ curl -v -XGET 'http://localhost:5000/records/?size=3'
     $ curl -v -XGET 'http://localhost:5000/records/?size=2&page=3'
     $ curl -v -XGET 'http://localhost:5000/records/?q=awesome'
@@ -61,21 +65,35 @@ Then search for existing records:
 
 Default sorting (without/with query):
 
+.. code-block:: console
+
     $ curl -v -XGET 'http://localhost:5000/records/?typefilter=data&q='
     $ curl -v -XGET 'http://localhost:5000/records/?typefilter=data&q=data'
 
 Aggregations and filtering (post filter + filter):
+
+.. code-block:: console
 
     $ curl -v -XGET 'http://localhost:5000/records/?type=order'
     $ curl -v -XGET 'http://localhost:5000/records/?typefilter=order'
 
 View options about the endpoint:
 
+.. code-block:: console
+
     $ curl -v -XGET 'http://localhost:5000/records/_options'
 
 See suggestions:
 
+.. code-block:: console
+
     $ curl -v -XGET 'http://localhost:5000/records/_suggest?title-complete=Reg'
+
+To be able to uninstall the example app:
+
+.. code-block:: console
+
+    $ ./app-teardown.sh
 """
 
 from __future__ import absolute_import, print_function

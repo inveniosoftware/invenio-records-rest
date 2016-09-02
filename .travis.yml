@@ -37,6 +37,7 @@ cache:
 
 services:
   - postgresql
+  - rabbitmq
   - redis
 
 env:
