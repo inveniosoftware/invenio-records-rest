@@ -1,8 +1,8 @@
 ================================
- Invenio-Records-REST v1.0.0a15
+ Invenio-Records-REST v1.0.0a16
 ================================
 
-Invenio-Records-REST v1.0.0a15 was released on June 15, 2016.
+Invenio-Records-REST v1.0.0a16 was released on September 15, 2016.
 
 About
 -----
@@ -19,7 +19,7 @@ What's new
 Installation
 ------------
 
-   $ pip install invenio-records-rest==1.0.0a15
+   $ pip install invenio-records-rest==1.0.0a16
 
 Documentation
 -------------
