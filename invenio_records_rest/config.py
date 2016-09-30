@@ -88,8 +88,9 @@ The structure of the dictionary is as follows:
 
 
     RECORDS_REST_ENDPOINTS = {
-        'record-pid-type': {
+        'endpoint-prefix': {
             'create_permission_factory_imp': permission_check_factory(),
+            'default_endpoint_prefix': True,
             'default_media_type': 'application/json',
             'delete_permission_factory_imp': permission_check_factory(),
             'item_route': ''/recods/<pid(record-pid-type):pid_value>'',
@@ -132,6 +133,10 @@ The structure of the dictionary is as follows:
 :param create_permission_factory_imp: Import path to factory that create
     permission object for a given record.
 
+:param default_endpoint_prefix: declare the current endpoint as the default
+    when building endpoints for the defined ``pid_type``. By default the
+    default prefix is defined to be the value of ``pid_type``.
+
 :param default_media_type: Default media type for both records and search.
 
 :param delete_permission_factory_imp: Import path to factory that creates a
@@ -146,10 +151,10 @@ The structure of the dictionary is as follows:
 :param max_result_window: Maximum total number of records retrieved from a
     query.
 
-:param pid_type: It specifies the record pid type. It's used also to build the
-    endpoint name. Required.
+:param pid_type: It specifies the record pid type. Required.
     You can generate an URL to list all records of the given ``pid_type`` by
-    calling ``url_for('invenio_records_rest.{0}_list'.format(pid_type))``.
+    calling ``url_for('invenio_records_rest.{0}_list'.format(
+    current_records_rest.default_endpoint_prefixes[pid_type]))``.
 
 :param pid_fetcher: It identifies the registered fetcher name. Required.
 

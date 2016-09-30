@@ -130,7 +130,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      default_media_type=None,
                      max_result_window=None, use_options_view=True,
                      search_factory_imp=None, links_factory_imp=None,
-                     suggesters=None):
+                     suggesters=None, default_endpoint_prefix=None):
     """Create Werkzeug URL rules.
 
     :param endpoint: Name of endpoint.
@@ -148,6 +148,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         update permission object for a given record.
     :param delete_permission_factory_imp: Import path to factory that creates a
         delete permission object for a given record.
+    :param default_endpoint_prefix: ignored.
     :param record_class: A record API class or importable string.
     :param record_serializers: Serializers used for records.
     :param record_loaders: It contains the list of record deserializers for
@@ -452,7 +453,8 @@ class RecordsListResource(ContentNegotiatedMethodView):
             size=size,
             _external=True,
         )
-        endpoint = '.{0}_list'.format(self.pid_type)
+        endpoint = '.{0}_list'.format(
+            current_records_rest.default_endpoint_prefixes[self.pid_type])
         links = dict(self=url_for(endpoint, page=page, **urlkwargs))
         if page > 1:
             links['prev'] = url_for(endpoint, page=page - 1, **urlkwargs)
@@ -515,7 +517,8 @@ class RecordsListResource(ContentNegotiatedMethodView):
             pid, record, 201, links_factory=self.item_links_factory)
 
         # Add location headers
-        endpoint = '.{0}_item'.format(pid.pid_type)
+        endpoint = '.{0}_item'.format(
+            current_records_rest.default_endpoint_prefixes[pid.pid_type])
         location = url_for(endpoint, pid_value=pid.pid_value, _external=True)
         response.headers.extend(dict(location=location))
         return response

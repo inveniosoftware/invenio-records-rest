@@ -26,6 +26,8 @@
 
 from flask import url_for
 
+from .proxies import current_records_rest
+
 
 def default_links_factory(pid):
     """Factory for record links generation.
@@ -33,7 +35,8 @@ def default_links_factory(pid):
     :param pid: A Persistent Identifier instance.
     :returns: Dictionary containing a list of useful links for the record.
     """
-    endpoint = '.{0}_item'.format(pid.pid_type)
+    endpoint = '.{0}_item'.format(
+        current_records_rest.default_endpoint_prefixes[pid.pid_type])
     links = dict(self=url_for(endpoint, pid_value=pid.pid_value,
                  _external=True))
     return links

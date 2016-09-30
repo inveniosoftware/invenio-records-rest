@@ -112,6 +112,21 @@ def app(request, search_class):
 
     This will parameterize the default 'recid' endpoint in
     RECORDS_REST_ENDPOINTS.
+
+    Alternatively:
+
+    .. code-block:: python
+
+    @pytest.mark.parametrize('app', [dict(
+        records_rest_endpoints=dict(
+            recid=dict(
+                search_class='conftest:TestSearch',
+            )
+        )
+    def test_mytest(app, db, es):
+        # ...
+
+    This will fully parameterize RECORDS_REST_ENDPOINTS.
     """
     instance_path = tempfile.mkdtemp()
     app = Flask('testapp', instance_path=instance_path)
@@ -156,6 +171,15 @@ def app(request, search_class):
         if 'endpoint' in request.param:
             app.config['RECORDS_REST_ENDPOINTS']['recid'].update(
                 request.param['endpoint'])
+        if 'records_rest_endpoints' in request.param:
+            original_endpoint = app.config['RECORDS_REST_ENDPOINTS']['recid']
+            del app.config['RECORDS_REST_ENDPOINTS']['recid']
+            for new_endpoint_prefix, new_endpoint_value in \
+                    request.param['records_rest_endpoints'].items():
+                new_endpoint = dict(original_endpoint)
+                new_endpoint.update(new_endpoint_value)
+                app.config['RECORDS_REST_ENDPOINTS'][new_endpoint_prefix] = \
+                    new_endpoint
 
     app.url_map.converters['pid'] = PIDConverter
 

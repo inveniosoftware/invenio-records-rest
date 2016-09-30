@@ -29,7 +29,7 @@ from __future__ import absolute_import, print_function
 from werkzeug.utils import cached_property
 
 from . import config
-from .utils import load_or_import_from_config
+from .utils import build_default_endpoint_prefixes, load_or_import_from_config
 from .views import create_blueprint
 
 
@@ -74,6 +74,11 @@ class _RecordRESTState(object):
         return load_or_import_from_config(
             'RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY', app=self.app
         )
+
+    @cached_property
+    def default_endpoint_prefixes(self):
+        """Map between pid_type and endpoint_prefix."""
+        return build_default_endpoint_prefixes()
 
     def reset_permission_factories(self):
         """Remove cached permission factories."""

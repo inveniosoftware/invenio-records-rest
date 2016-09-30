@@ -38,6 +38,45 @@ from werkzeug.utils import cached_property, import_string
 from .errors import PIDDeletedRESTError, PIDDoesNotExistRESTError, \
     PIDMissingObjectRESTError, PIDRedirectedRESTError, \
     PIDUnregisteredRESTError
+from .proxies import current_records_rest
+
+
+def build_default_endpoint_prefixes():
+    """Build the default_endpoint_prefixes map."""
+    ret = {}
+    record_rest_endpoints = current_app.config['RECORDS_REST_ENDPOINTS']
+    for endpoint in record_rest_endpoints.values():
+        pid_type = endpoint['pid_type']
+        ret[pid_type] = get_default_endpoint_for(pid_type,
+                                                 record_rest_endpoints)
+
+    return ret
+
+
+def get_default_endpoint_for(pid_type, _record_rest_endpoints=None):
+    """Get default endpoint for the given pid_type."""
+    if _record_rest_endpoints is None:
+        _record_rest_endpoints = current_app.config['RECORDS_REST_ENDPOINTS']
+
+    endpoint_prefix = None
+
+    for key, value in _record_rest_endpoints.items():
+        if (value['pid_type'] == pid_type and
+                value.get('default_endpoint_prefix')):
+            if endpoint_prefix is None:
+                endpoint_prefix = key
+            else:
+                raise ValueError('More than one endpoint-prefix has been '
+                                 'defined as default for '
+                                 'pid_type="{0}"'.format(pid_type))
+
+    if endpoint_prefix:
+        return endpoint_prefix
+    if pid_type in _record_rest_endpoints:
+        return pid_type
+
+    raise ValueError('No endpoint-prefix corresponds to pid_type="{0}"'.format(
+        pid_type))
 
 
 def obj_or_import_string(value, default=None):
@@ -129,7 +168,9 @@ class LazyPIDValue(object):
         except PIDRedirectedError as e:
             try:
                 location = url_for(
-                    '.{0}_item'.format(e.destination_pid.pid_type),
+                    '.{0}_item'.format(
+                        current_records_rest.default_endpoint_prefixes[
+                            e.destination_pid.pid_type]),
                     pid_value=e.destination_pid.pid_value)
                 data = dict(
                     status=301,
@@ -139,7 +180,7 @@ class LazyPIDValue(object):
                 response = make_response(jsonify(data), data['status'])
                 response.headers['Location'] = location
                 abort(response)
-            except BuildError:
+            except (BuildError, KeyError):
                 current_app.logger.exception(
                     'Invalid redirect - pid_type "{0}" '
                     'endpoint missing.'.format(
