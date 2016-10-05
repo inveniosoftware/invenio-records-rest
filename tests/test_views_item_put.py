@@ -29,16 +29,20 @@ from __future__ import absolute_import, print_function
 import json
 
 import mock
+import pytest
 from helpers import _mock_validate_fail, get_json, record_url
 
-HEADERS = [
-    ('Content-Type', 'application/json'),
-    ('Accept', 'application/json')
-]
 
-
-def test_valid_put(app, test_records):
+@pytest.mark.parametrize('content_type', [
+    'application/json', 'application/json;charset=utf-8'
+])
+def test_valid_put(app, test_records, content_type):
     """Test VALID record patch request (PATCH .../records/<record_id>)."""
+    HEADERS = [
+        ('Accept', 'application/json'),
+        ('Content-Type', content_type)
+    ]
+
     pid, record = test_records[0]
 
     record['year'] = 1234
@@ -55,8 +59,16 @@ def test_valid_put(app, test_records):
         assert get_json(client.get(url))['metadata']['year'] == 1234
 
 
-def test_valid_put_etag(app, test_records):
+@pytest.mark.parametrize('content_type', [
+    'application/json', 'application/json;charset=utf-8'
+])
+def test_valid_put_etag(app, test_records, content_type):
     """Test concurrency control with etags."""
+    HEADERS = [
+        ('Accept', 'application/json'),
+        ('Content-Type', content_type)
+    ]
+
     pid, record = test_records[0]
 
     record['year'] = 1234
@@ -75,8 +87,16 @@ def test_valid_put_etag(app, test_records):
         assert get_json(client.get(url))['metadata']['year'] == 1234
 
 
-def test_put_on_deleted(app, test_records):
+@pytest.mark.parametrize('content_type', [
+    'application/json', 'application/json;charset=utf-8'
+])
+def test_put_on_deleted(app, test_records, content_type):
     """Test putting to a deleted record."""
+    HEADERS = [
+        ('Accept', 'application/json'),
+        ('Content-Type', content_type)
+    ]
+
     # create the record using the internal API
     pid, record = test_records[0]
 
@@ -88,8 +108,17 @@ def test_put_on_deleted(app, test_records):
         assert res.status_code == 410
 
 
-def test_invalid_put(app, test_records):
+@pytest.mark.parametrize('charset', [
+    '', ';charset=utf-8'
+])
+def test_invalid_put(app, test_records, charset):
     """Test INVALID record put request (PUT .../records/<record_id>)."""
+    HEADERS = [
+        ('Accept', 'application/json'),
+        ('Content-Type',
+         'application/json{0}'.format(charset)),
+    ]
+
     pid, record = test_records[0]
 
     record['year'] = 1234
@@ -104,13 +133,13 @@ def test_invalid_put(app, test_records):
         assert res.status_code == 404
 
         # Invalid accept mime type.
-        headers = [('Content-Type', 'application/json'),
+        headers = [('Content-Type', 'application/json{0}'.format(charset)),
                    ('Accept', 'video/mp4')]
         res = client.put(url, data=json.dumps(test_data), headers=headers)
         assert res.status_code == 406
 
         # Invalid content type
-        headers = [('Content-Type', 'video/mp4'),
+        headers = [('Content-Type', 'video/mp4{0}'.format(charset)),
                    ('Accept', 'application/json')]
         res = client.put(url, data=json.dumps(test_data), headers=headers)
         assert res.status_code == 415
@@ -123,14 +152,23 @@ def test_invalid_put(app, test_records):
         res = client.put(
             url,
             data=json.dumps(test_data),
-            headers={'Content-Type': 'application/json', 'If-Match': '"2"'}
+            headers={'Content-Type': 'application/json{0}'.format(charset),
+                     'If-Match': '"2"'}
         )
         assert res.status_code == 412
 
 
 @mock.patch('invenio_records.api.Record.validate', _mock_validate_fail)
-def test_validation_error(app, test_records):
+@pytest.mark.parametrize('content_type', [
+    'application/json', 'application/json;charset=utf-8'
+])
+def test_validation_error(app, test_records, content_type):
     """Test when record validation fail."""
+    HEADERS = [
+        ('Accept', 'application/json'),
+        ('Content-Type', content_type)
+    ]
+
     pid, record = test_records[0]
 
     record['year'] = 1234

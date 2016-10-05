@@ -492,10 +492,10 @@ class RecordsListResource(ContentNegotiatedMethodView):
 
         :returns: The created record.
         """
-        if request.content_type not in self.loaders:
-            raise UnsupportedMediaRESTError(request.content_type)
+        if request.mimetype not in self.loaders:
+            raise UnsupportedMediaRESTError(request.mimetype)
 
-        data = self.loaders[request.content_type]()
+        data = self.loaders[request.mimetype]()
         if data is None:
             raise InvalidDataRESTError()
 
@@ -639,7 +639,7 @@ class RecordResource(ContentNegotiatedMethodView):
         :param record: Record object.
         :returns: The modified record.
         """
-        data = self.loaders[request.content_type]()
+        data = self.loaders[request.mimetype]()
         if data is None:
             raise InvalidDataRESTError()
 
@@ -676,10 +676,10 @@ class RecordResource(ContentNegotiatedMethodView):
         :param record: Record object.
         :returns: The modified record.
         """
-        if request.content_type not in self.loaders:
-            raise UnsupportedMediaRESTError(request.content_type)
+        if request.mimetype not in self.loaders:
+            raise UnsupportedMediaRESTError(request.mimetype)
 
-        data = self.loaders[request.content_type]()
+        data = self.loaders[request.mimetype]()
         if data is None:
             raise InvalidDataRESTError()
 

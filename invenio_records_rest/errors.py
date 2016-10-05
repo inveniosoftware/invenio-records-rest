@@ -137,7 +137,7 @@ class UnsupportedMediaRESTError(RESTException):
     def __init__(self, content_type=None, **kwargs):
         """Initialize exception."""
         super(RESTException, self).__init__(**kwargs)
-        content_type = content_type or request.content_type
+        content_type = content_type or request.mimetype
         self.description = 'Unsupported media type "{0}".'.format(content_type)
 
 

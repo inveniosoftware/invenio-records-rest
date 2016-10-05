@@ -34,15 +34,19 @@ from helpers import _mock_validate_fail, get_json, record_url
 from mock import patch
 from sqlalchemy.exc import SQLAlchemyError
 
-HEADERS = [
-    ('Content-Type', 'application/json'),
-    ('Accept', 'application/json')
-]
 
-
-def test_valid_create(app, db, test_data, search_url):
+@pytest.mark.parametrize('content_type', [
+    'application/json', 'application/json;charset=utf-8'
+])
+def test_valid_create(app, db, test_data, search_url, content_type):
     """Test VALID record creation request (POST .../records/)."""
     with app.test_client() as client:
+        HEADERS = [
+            ('Accept', 'application/json'),
+            ('Content-Type', content_type)
+        ]
+        HEADERS.append(('Content-Type', content_type))
+
         # Create record
         res = client.post(
             search_url, data=json.dumps(test_data[0]), headers=HEADERS)
@@ -73,9 +77,17 @@ def test_valid_create(app, db, test_data, search_url):
         # assert_hits_len(res, 1)
 
 
-def test_invalid_create(app, db, test_data, search_url):
+@pytest.mark.parametrize('content_type', [
+    'application/json', 'application/json;charset=utf-8'
+])
+def test_invalid_create(app, db, test_data, search_url, content_type):
     """Test INVALID record creation request (POST .../records/)."""
     with app.test_client() as client:
+        HEADERS = [
+            ('Accept', 'application/json'),
+            ('Content-Type', content_type)
+        ]
+
         # Invalid accept type
         headers = [('Content-Type', 'application/json'),
                    ('Accept', 'video/mp4')]
@@ -113,9 +125,17 @@ def test_invalid_create(app, db, test_data, search_url):
 
 
 @mock.patch('invenio_records.api.Record.validate', _mock_validate_fail)
-def test_validation_error(app, db, test_data, search_url):
+@pytest.mark.parametrize('content_type', [
+    'application/json', 'application/json;charset=utf-8'
+])
+def test_validation_error(app, db, test_data, search_url, content_type):
     """Test when record validation fail."""
     with app.test_client() as client:
+        HEADERS = [
+            ('Accept', 'application/json'),
+            ('Content-Type', content_type)
+        ]
+
         # Create record
         res = client.post(
             search_url, data=json.dumps(test_data[0]), headers=HEADERS)

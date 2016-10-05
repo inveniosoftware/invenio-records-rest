@@ -29,16 +29,19 @@ from __future__ import absolute_import, print_function
 import json
 
 import mock
+import pytest
 from helpers import _mock_validate_fail, get_json, record_url
 
-HEADERS = [
-    ('Content-Type', 'application/json-patch+json'),
-    ('Accept', 'application/json')
-]
 
-
-def test_valid_patch(app, test_records, test_patch):
+@pytest.mark.parametrize('content_type', [
+    'application/json-patch+json', 'application/json-patch+json;charset=utf-8'
+])
+def test_valid_patch(app, test_records, test_patch, content_type):
     """Test VALID record patch request (PATCH .../records/<record_id>)."""
+    HEADERS = [
+        ('Accept', 'application/json'),
+        ('Content-Type', content_type)
+    ]
     pid, record = test_records[0]
 
     # Check that
@@ -57,8 +60,15 @@ def test_valid_patch(app, test_records, test_patch):
         assert previous_year != get_json(client.get(url))['metadata']['year']
 
 
-def test_patch_deleted(app, test_records, test_patch):
+@pytest.mark.parametrize('content_type', [
+    'application/json-patch+json', 'application/json-patch+json;charset=utf-8'
+])
+def test_patch_deleted(app, test_records, test_patch, content_type):
     """Test patching deleted record."""
+    HEADERS = [
+        ('Accept', 'application/json'),
+        ('Content-Type', content_type)
+    ]
     pid, record = test_records[0]
 
     with app.test_client() as client:
@@ -71,8 +81,16 @@ def test_patch_deleted(app, test_records, test_patch):
         assert res.status_code == 410
 
 
-def test_invalid_patch(app, test_records, test_patch):
+@pytest.mark.parametrize('charset', [
+    '', ';charset=utf-8'
+])
+def test_invalid_patch(app, test_records, test_patch, charset):
     """Test INVALID record put request (PUT .../records/<record_id>)."""
+    HEADERS = [
+        ('Accept', 'application/json'),
+        ('Content-Type',
+         'application/json-patch+json{0}'.format(charset))
+    ]
     pid, record = test_records[0]
 
     with app.test_client() as client:
@@ -84,13 +102,14 @@ def test_invalid_patch(app, test_records, test_patch):
         assert res.status_code == 404
 
         # Invalid accept mime type.
-        headers = [('Content-Type', 'application/json-patch+json'),
+        headers = [('Content-Type',
+                    'application/json-patch+json{0}'.format(charset)),
                    ('Accept', 'video/mp4')]
         res = client.patch(url, data=json.dumps(test_patch), headers=headers)
         assert res.status_code == 406
 
         # Invalid content type
-        headers = [('Content-Type', 'video/mp4'),
+        headers = [('Content-Type', 'video/mp4{0}'.format(charset)),
                    ('Accept', 'application/json')]
         res = client.patch(url, data=json.dumps(test_patch), headers=headers)
         assert res.status_code == 415
@@ -98,7 +117,7 @@ def test_invalid_patch(app, test_records, test_patch):
         # Invalid Patch
         res = client.patch(
             url,
-            data=json.dumps([{'invalid': 'json-patch'}]),
+            data=json.dumps([{'invalid': 'json-patch{0}'.format(charset)}]),
             headers=HEADERS)
         assert res.status_code == 400
 
@@ -111,7 +130,8 @@ def test_invalid_patch(app, test_records, test_patch):
             url,
             data=json.dumps(test_patch),
             headers={
-                'Content-Type': 'application/json-patch+json',
+                'Content-Type': 'application/json-patch+json{0}'.format(
+                    charset),
                 'If-Match': '"2"'
             }
         )
@@ -119,8 +139,15 @@ def test_invalid_patch(app, test_records, test_patch):
 
 
 @mock.patch('invenio_records.api.Record.validate', _mock_validate_fail)
-def test_validation_error(app, test_records, test_patch):
+@pytest.mark.parametrize('content_type', [
+    'application/json-patch+json', 'application/json-patch+json;charset=utf-8'
+])
+def test_validation_error(app, test_records, test_patch, content_type):
     """Test VALID record patch request (PATCH .../records/<record_id>)."""
+    HEADERS = [
+        ('Accept', 'application/json'),
+        ('Content-Type', content_type)
+    ]
     pid, record = test_records[0]
 
     # Check that
