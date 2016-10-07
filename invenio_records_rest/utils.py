@@ -41,42 +41,36 @@ from .errors import PIDDeletedRESTError, PIDDoesNotExistRESTError, \
 from .proxies import current_records_rest
 
 
-def build_default_endpoint_prefixes():
+def build_default_endpoint_prefixes(records_rest_endpoints):
     """Build the default_endpoint_prefixes map."""
-    ret = {}
-    record_rest_endpoints = current_app.config['RECORDS_REST_ENDPOINTS']
-    for endpoint in record_rest_endpoints.values():
+    pid_types = set()
+    guessed = set()
+    endpoint_prefixes = {}
+
+    for key, endpoint in records_rest_endpoints.items():
         pid_type = endpoint['pid_type']
-        ret[pid_type] = get_default_endpoint_for(pid_type,
-                                                 record_rest_endpoints)
+        pid_types.add(pid_type)
+        is_guessed = key == pid_type
+        is_default = endpoint.get('default_endpoint_prefix', False)
 
-    return ret
+        if is_default:
+            if pid_type in endpoint_prefixes and pid_type not in guessed:
+                raise ValueError('More than one "{0}" defined.'.format(
+                    pid_type
+                ))
+            endpoint_prefixes[pid_type] = key
+            guessed -= {pid_type}
+        elif is_guessed and pid_type not in endpoint_prefixes:
+            endpoint_prefixes[pid_type] = key
+            guessed |= {pid_type}
 
+    not_found = pid_types - set(endpoint_prefixes.keys())
+    if not_found:
+        raise ValueError('No endpoint-prefix for {0}.'.format(
+            ', '.join(not_found)
+        ))
 
-def get_default_endpoint_for(pid_type, _record_rest_endpoints=None):
-    """Get default endpoint for the given pid_type."""
-    if _record_rest_endpoints is None:
-        _record_rest_endpoints = current_app.config['RECORDS_REST_ENDPOINTS']
-
-    endpoint_prefix = None
-
-    for key, value in _record_rest_endpoints.items():
-        if (value['pid_type'] == pid_type and
-                value.get('default_endpoint_prefix')):
-            if endpoint_prefix is None:
-                endpoint_prefix = key
-            else:
-                raise ValueError('More than one endpoint-prefix has been '
-                                 'defined as default for '
-                                 'pid_type="{0}"'.format(pid_type))
-
-    if endpoint_prefix:
-        return endpoint_prefix
-    if pid_type in _record_rest_endpoints:
-        return pid_type
-
-    raise ValueError('No endpoint-prefix corresponds to pid_type="{0}"'.format(
-        pid_type))
+    return endpoint_prefixes
 
 
 def obj_or_import_string(value, default=None):

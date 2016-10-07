@@ -78,7 +78,9 @@ class _RecordRESTState(object):
     @cached_property
     def default_endpoint_prefixes(self):
         """Map between pid_type and endpoint_prefix."""
-        return build_default_endpoint_prefixes()
+        return build_default_endpoint_prefixes(
+            self.app.config['RECORDS_REST_ENDPOINTS']
+        )
 
     def reset_permission_factories(self):
         """Remove cached permission factories."""

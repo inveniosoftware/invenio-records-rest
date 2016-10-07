@@ -26,6 +26,7 @@
 
 from __future__ import absolute_import, print_function
 
+import copy
 import json
 import os
 import shutil
@@ -133,7 +134,7 @@ def app(request, search_class):
     app.config.update(
         INDEXER_DEFAULT_DOC_TYPE='testrecord',
         INDEXER_DEFAULT_INDEX=search_class.Meta.index,
-        RECORDS_REST_ENDPOINTS=config.RECORDS_REST_ENDPOINTS,
+        RECORDS_REST_ENDPOINTS=copy.deepcopy(config.RECORDS_REST_ENDPOINTS),
         RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY=None,
         RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY=None,
         RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY=None,
