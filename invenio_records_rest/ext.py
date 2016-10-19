@@ -29,7 +29,8 @@ from __future__ import absolute_import, print_function
 from werkzeug.utils import cached_property
 
 from . import config
-from .utils import build_default_endpoint_prefixes, load_or_import_from_config
+from .utils import build_default_endpoint_prefixes, \
+    load_or_import_from_config, obj_or_import_string
 from .views import create_blueprint
 
 
@@ -113,3 +114,8 @@ class InvenioRecordsREST(object):
         for k in dir(config):
             if k.startswith('RECORDS_REST_'):
                 app.config.setdefault(k, getattr(config, k))
+
+        # Resolve the Elasticsearch error handlers
+        handlers = app.config['RECORDS_REST_ELASTICSEARCH_ERROR_HANDLERS']
+        for k, v in handlers.items():
+            handlers[k] = obj_or_import_string(v)

@@ -335,3 +335,11 @@ RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY = deny_all
 
 RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY = deny_all
 """Default delete permission factory: reject any request."""
+
+RECORDS_REST_ELASTICSEARCH_ERROR_HANDLERS = {
+    'query_parsing_exception': (
+        'invenio_records_rest.views'
+        ':elasticsearch_query_parsing_exception_handler'
+    ),
+}
+"""Handlers for ElasticSearch error codes."""

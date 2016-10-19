@@ -29,6 +29,7 @@ from __future__ import absolute_import, print_function
 import re
 
 import pytest
+from flask import url_for
 from helpers import assert_hits_len, get_json, parse_url, to_relative_url
 
 
@@ -226,3 +227,16 @@ def test_query_wrong(app, indexed_records, search_url):
 
         res = client.get(search_url, query_string={'q': 'test;'})
         assert res.status_code == 200
+
+
+@pytest.mark.parametrize('app', [dict(
+    endpoint=dict(
+        search_factory_imp='invenio_records_rest.query.es_search_factory'
+    )
+)], indirect=['app'])
+def test_elasticsearch_exception(app, indexed_records):
+    with app.test_client() as client:
+        res = client.get(url_for('invenio_records_rest.recid_list', q='i/o'))
+        assert res.status_code == 400
+        assert ('The syntax of the search query is invalid.' in
+                res.get_data(as_text=True))

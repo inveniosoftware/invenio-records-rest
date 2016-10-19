@@ -64,15 +64,13 @@ def elasticsearch_query_parsing_exception_handler(error):
     return InvalidQueryRESTError(description=description).get_response()
 
 
-elasticsearch_error_handlers = {
-    'query_parsing_exception': elasticsearch_query_parsing_exception_handler,
-}
-"""List of handlers for ElasticSearch errors."""
-
-
 def create_error_handlers(blueprint):
-    """Create error handlers on blueprint."""
-    # catch record validation errors
+    """Create error handlers on blueprint.
+
+    :params blueprint: Records API blueprint.
+    :returns: Configured blueprint.
+    """
+    # Catch record validation errors
     @blueprint.errorhandler(ValidationError)
     def validation_error(error):
         """Catch validation errors."""
@@ -81,17 +79,14 @@ def create_error_handlers(blueprint):
     @blueprint.errorhandler(RequestError)
     def elasticsearch_badrequest_error(error):
         """Catch errors of ElasticSearch."""
-        def first(function, iterable, default=None):
-            """Return the first item from iterable which function is true."""
-            for item in iterable:
-                if function(item):
-                    return item
-            return default
+        handlers = current_app.config[
+            'RECORDS_REST_ELASTICSEARCH_ERROR_HANDLERS']
+        cause_types = {c['type'] for c in error.info['error']['root_cause']}
 
-        handlers = map(lambda c: elasticsearch_error_handlers.get(c['type']),
-                       error.info['error']['root_cause'])
-        handler = first(lambda h: h, handlers, lambda h: h)
-        return handler(error)
+        for cause_type, handler in handlers.items():
+            if cause_type in cause_types:
+                return handler(error)
+        return error
 
     return blueprint
 
@@ -99,7 +94,7 @@ def create_error_handlers(blueprint):
 def create_blueprint(endpoints):
     """Create Invenio-Records-REST blueprint.
 
-    :params: Dictionary representing the endpoints configuration.
+    :params endpoints: Dictionary representing the endpoints configuration.
     :returns: Configured blueprint.
     """
     blueprint = Blueprint(
@@ -111,7 +106,6 @@ def create_blueprint(endpoints):
     for endpoint, options in (endpoints or {}).items():
         for rule in create_url_rules(endpoint, **options):
             blueprint.add_url_rule(**rule)
-
     return create_error_handlers(blueprint)
 
 
