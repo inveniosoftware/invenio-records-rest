@@ -36,7 +36,6 @@ from os.path import dirname, join
 import pytest
 from elasticsearch.exceptions import RequestError
 from flask import Flask, url_for
-from flask_cli import FlaskCLI
 from flask_login import LoginManager, UserMixin
 from helpers import create_record
 from invenio_db import InvenioDB
@@ -184,7 +183,6 @@ def app(request, search_class):
 
     app.url_map.converters['pid'] = PIDConverter
 
-    FlaskCLI(app)
     InvenioDB(app)
     InvenioREST(app)
     InvenioRecords(app)

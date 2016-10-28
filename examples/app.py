@@ -102,7 +102,6 @@ import os
 
 from flask import Flask
 from flask_celeryext import FlaskCeleryExt
-from flask_cli import FlaskCLI
 from invenio_db import InvenioDB, db
 from invenio_indexer import InvenioIndexer
 from invenio_indexer.api import RecordIndexer
@@ -185,7 +184,6 @@ app.config['RECORDS_REST_FACETS'] = {
     }
 }
 app.url_map.converters['pid'] = PIDConverter
-FlaskCLI(app)
 FlaskCeleryExt(app)
 InvenioDB(app)
 InvenioREST(app)
