@@ -26,7 +26,7 @@
 
 from __future__ import absolute_import, print_function
 
-from datacite import schema31
+from datacite import schema31, schema40
 from invenio_records.api import Record
 from lxml import etree
 from lxml.builder import E
@@ -34,12 +34,17 @@ from lxml.builder import E
 from .marshmallow import MarshmallowSerializer
 
 
-class DataCite31Serializer(MarshmallowSerializer):
+class BaseDataCiteSerializer(MarshmallowSerializer):
     """Marshmallow based DataCite serializer for records.
 
     Note: This serializer is not suitable for serializing large number of
     records.
     """
+
+    schema = None
+    """Class variable to define which schema use."""
+    version = None
+    """Class variable to tell the version of the schema."""
 
     def serialize(self, pid, record, links_factory=None):
         """Serialize a single record and persistent identifier.
@@ -48,7 +53,7 @@ class DataCite31Serializer(MarshmallowSerializer):
         :param record: Record instance.
         :param links_factory: Factory function for record links.
         """
-        return schema31.tostring(
+        return self.schema.tostring(
             self.transform_record(pid, record, links_factory))
 
     def serialize_search(self, pid_fetcher, search_result, links=None,
@@ -61,7 +66,7 @@ class DataCite31Serializer(MarshmallowSerializer):
         """
         records = []
         for hit in search_result['hits']['hits']:
-            records.append(schema31.tostring(self.transform_search_hit(
+            records.append(self.schema.tostring(self.transform_search_hit(
                 pid_fetcher(hit['_id'], hit['_source']),
                 hit,
                 links_factory=item_links_factory,
@@ -75,15 +80,42 @@ class DataCite31Serializer(MarshmallowSerializer):
             if isinstance(record['_source'], Record) \
             else self.transform_search_hit(pid, record)
 
-        return schema31.dump_etree(obj)
+        return self.schema.dump_etree(obj)
+
+
+class DataCite31Serializer(BaseDataCiteSerializer):
+    """Marshmallow DataCite serializer v3.1 for records.
+
+    Note: This serializer is not suitable for serializing large number of
+    records.
+    """
+
+    schema = schema31
+    """Class variable to define which schema use."""
+    version = '3.1'
+    """Class variable to tell the version of the schema."""
+
+
+class DataCite40Serializer(BaseDataCiteSerializer):
+    """Marshmallow DataCite serializer v4.0 for records.
+
+    Note: This serializer is not suitable for serializing large number of
+    records.
+    """
+
+    schema = schema40
+    """Class variable to define which schema use."""
+    version = '4.0'
+    """Class variable to tell the version of the schema."""
 
 
 class OAIDataCiteSerializer(object):
     """OAI DataCite serializer (only for OAI-PMH)."""
 
-    def __init__(self, v31=None, datacentre=None, is_reference_quality='true'):
+    def __init__(self, serializer=None, datacentre=None,
+                 is_reference_quality='true'):
         """Initialize serializer."""
-        self.v31 = v31
+        self.serializer = serializer
         self.datacentre = datacentre
         self.is_reference_quality = is_reference_quality
 
@@ -103,10 +135,10 @@ class OAIDataCiteSerializer(object):
         )
 
         root.append(E.isReferenceQuality(self.is_reference_quality))
-        root.append(E.schemaVersion('3.1'))
+        root.append(E.schemaVersion(self.serializer.version))
         root.append(E.datacentreSymbol(self.datacentre))
         root.append(E.payload(
-            self.v31.serialize_oaipmh(pid, record)
+            self.serializer.serialize_oaipmh(pid, record)
         ))
 
         return root

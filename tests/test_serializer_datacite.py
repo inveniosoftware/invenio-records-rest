@@ -26,12 +26,14 @@
 
 from __future__ import absolute_import, print_function
 
+import pytest
+
 from invenio_pidstore.models import PersistentIdentifier
 from invenio_records import Record
 from marshmallow import Schema, fields
 
 from invenio_records_rest.serializers.datacite import DataCite31Serializer, \
-    OAIDataCiteSerializer
+    DataCite40Serializer, OAIDataCiteSerializer
 
 
 class DOISchema(Schema):
@@ -47,33 +49,38 @@ class SimpleSchema(Schema):
     identifier = fields.Nested(DOISchema, attribute='metadata')
 
 
-def test_serialize():
-    """Test JSON serialize."""
+@pytest.mark.parametrize('serializer', [DataCite31Serializer,
+                                        DataCite40Serializer])
+def test_serialize(serializer):
     pid = PersistentIdentifier(pid_type='recid', pid_value='2')
     record = Record({'doi': '10.1234/foo'})
-    data = DataCite31Serializer(SimpleSchema).serialize(pid, record)
+    s = serializer(SimpleSchema)
+    data = s.serialize(pid, record)
 
     assert """<identifier identifierType="DOI">10.1234/foo</identifier>""" \
         in data
 
-    s = DataCite31Serializer(SimpleSchema)
     tree = s.serialize_oaipmh(
         pid, {'_source': record})
     assert len(tree.xpath('/resource/identifier')) == 1
 
-    tree = OAIDataCiteSerializer(v31=s, datacentre='CERN').serialize_oaipmh(
+    tree = OAIDataCiteSerializer(serializer=s,
+                                 datacentre='CERN').serialize_oaipmh(
         pid,
         {'_source': record})
     assert len(tree.xpath('/oai_datacite/datacentreSymbol')) == 1
 
 
-def test_serialize_search():
+@pytest.mark.parametrize('serializer', [DataCite31Serializer,
+                                        DataCite40Serializer])
+def test_serialize_search(serializer):
     """Test JSON serialize."""
     def fetcher(obj_uuid, data):
         assert obj_uuid in ['a', 'b']
         return PersistentIdentifier(pid_type='doi', pid_value=data['doi'])
 
-    data = DataCite31Serializer(SimpleSchema).serialize_search(
+    s = serializer(SimpleSchema)
+    data = s.serialize_search(
         fetcher,
         dict(
             hits=dict(
@@ -93,13 +100,13 @@ def test_serialize_search():
     assert """<identifier identifierType="DOI">10.1234/b</identifier>""" \
         in data
 
-    s = DataCite31Serializer(SimpleSchema)
     tree = s.serialize_oaipmh(
         PersistentIdentifier(pid_type='doi', pid_value='10.1234/b'),
         {'_source': dict(doi='10.1234/b'), '_id': 'b', '_version': 1})
     assert len(tree.xpath('/resource/identifier')) == 1
 
-    tree = OAIDataCiteSerializer(v31=s, datacentre='CERN').serialize_oaipmh(
+    tree = OAIDataCiteSerializer(serializer=s,
+                                 datacentre='CERN').serialize_oaipmh(
         PersistentIdentifier(pid_type='doi', pid_value='10.1234/b'),
         {'_source': dict(doi='10.1234/b'), '_id': 'b', '_version': 1})
     assert len(tree.xpath('/oai_datacite/datacentreSymbol')) == 1
