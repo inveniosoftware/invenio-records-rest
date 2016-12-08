@@ -237,8 +237,8 @@ RECORDS_REST_SORT_OPTIONS = dict(
         ),
         mostrecent=dict(
             title=_('Most recent'),
-            fields=['created_date'],
-            default_order='desc',
+            fields=['-_created'],
+            default_order='asc',
             order=2,
         ),
     )
