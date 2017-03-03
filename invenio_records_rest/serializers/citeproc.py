@@ -124,9 +124,10 @@ class CiteprocSerializer(object):
             return BibTeX(data)
 
     def _clean_result(self, text):
-        """Remove double spaces and punctuation."""
+        """Remove double spaces, punctuation and escapes apostrophes."""
         text = re.sub('\s\s+', ' ', text)
         text = re.sub('\.\.+', '.', text)
+        text = text.replace("'", "\\'")
         return text
 
     def serialize(self, pid, record, links_factory=None, **kwargs):
