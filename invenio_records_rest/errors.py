@@ -27,7 +27,7 @@
 from __future__ import absolute_import, print_function
 
 from flask import request
-from invenio_rest.errors import RESTException
+from invenio_rest.errors import RESTException, RESTValidationError
 
 
 #
@@ -177,3 +177,15 @@ class SuggestNoCompletionsRESTError(RESTException):
         super(RESTException, self).__init__(**kwargs)
         self.description = 'No completions requested.{0}'.format(
             ' (options: {0})'.format(options) if options else '')
+
+
+class JSONSchemaValidationError(RESTValidationError):
+    """JSONSchema validation error exception."""
+
+    code = 400
+
+    def __init__(self, error=None, **kwargs):
+        """Error description."""
+        super(RESTValidationError, self).__init__(**kwargs)
+        self.description = 'Validation error: {0}.'.format(
+            error.message if error else '')
