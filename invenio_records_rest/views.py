@@ -42,14 +42,14 @@ from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
 from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.decorators import require_content_types
-from invenio_rest.errors import RESTValidationError
 from invenio_search import RecordsSearch
 from jsonpatch import JsonPatchException, JsonPointerException
 from jsonschema.exceptions import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 
 from .errors import InvalidDataRESTError, InvalidQueryRESTError, \
-    MaxResultWindowRESTError, PatchJSONFailureRESTError, PIDResolveRESTError, \
+    JSONSchemaValidationError, MaxResultWindowRESTError, \
+    PatchJSONFailureRESTError, PIDResolveRESTError, \
     SuggestMissingContextRESTError, SuggestNoCompletionsRESTError, \
     UnsupportedMediaRESTError
 from .links import default_links_factory
@@ -74,7 +74,7 @@ def create_error_handlers(blueprint):
     @blueprint.errorhandler(ValidationError)
     def validation_error(error):
         """Catch validation errors."""
-        return RESTValidationError().get_response()
+        return JSONSchemaValidationError(error=error).get_response()
 
     @blueprint.errorhandler(RequestError)
     def elasticsearch_badrequest_error(error):

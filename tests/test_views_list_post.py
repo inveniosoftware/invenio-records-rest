@@ -140,3 +140,30 @@ def test_validation_error(app, db, test_data, search_url, content_type):
         res = client.post(
             search_url, data=json.dumps(test_data[0]), headers=HEADERS)
         assert res.status_code == 400
+
+
+@pytest.mark.parametrize('content_type', [
+    'application/json', 'application/json;charset=utf-8'
+])
+def test_jsonschema_validation_error(app, db, search_url, content_type):
+    """Test when jsonschema validation fails."""
+    record = {
+        'title': 1,
+        '$schema': {
+            'properties': {
+                'title': {'type': 'string'}
+            }
+        }
+    }
+    with app.test_client() as client:
+        HEADERS = [
+            ('Accept', 'application/json'),
+            ('Content-Type', content_type)
+        ]
+
+        # Create record
+        res = client.post(
+            search_url, data=json.dumps(record), headers=HEADERS)
+        assert res.status_code == 400
+        data = get_json(res)
+        assert data['message']
