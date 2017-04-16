@@ -121,6 +121,8 @@ def check_elasticsearch(record, *args, **kwargs):
     """
     def can(self):
         """Try to search for given record."""
+        if not record:
+            return True
         search = request._methodview.search_class()
         search = search.get_record(str(record.id))
         return search.count() == 1
