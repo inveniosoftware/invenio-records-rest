@@ -61,8 +61,3 @@ Views
 .. automodule:: invenio_records_rest.views
    :members: create_url_rules
 
-Integrations
-------------
-
-.. automodule:: invenio_records_rest.memento
-   :members:
