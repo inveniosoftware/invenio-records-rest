@@ -41,12 +41,17 @@ def default_search_factory(self, search, query_parser=None):
     :param search: Elastic search DSL search instance.
     :returns: Tuple with search instance and URL arguments.
     """
-    from invenio_query_parser.contrib.elasticsearch import IQ
+    def _default_parser(qstr=None):
+        """Default parser that uses the Q() from elasticsearch_dsl."""
+        if qstr:
+            return Q('query_string', query=qstr)
+        return Q()
+
     from .facets import default_facets_factory
     from .sorter import default_sorter_factory
 
-    query_parser = query_parser or IQ
-    query_string = request.values.get('q', '')
+    query_string = request.values.get('q')
+    query_parser = query_parser or _default_parser
 
     try:
         search = search.query(query_parser(query_string))
@@ -67,7 +72,13 @@ def default_search_factory(self, search, query_parser=None):
     return search, urlkwargs
 
 
-es_search_factory = partial(
-    default_search_factory,
-    query_parser=lambda qstr: Q('query_string', query=qstr) if qstr else Q()
-)
+es_search_factory = default_search_factory
+
+
+def invenio_search_parser(search_factory):
+    """Set the default search factory to use invenio-query-parser."""
+    from invenio_query_parser.contrib.elasticsearch import IQ
+    return partial(default_search_factory, query_parser=IQ)
+
+
+invenio_search_factory = invenio_search_parser(default_search_factory)

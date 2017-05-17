@@ -54,7 +54,7 @@ from .errors import InvalidDataRESTError, InvalidQueryRESTError, \
     UnsupportedMediaRESTError
 from .links import default_links_factory
 from .proxies import current_records_rest
-from .query import default_search_factory
+from .query import es_search_factory
 from .utils import obj_or_import_string
 
 
@@ -238,7 +238,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         default_media_type=default_media_type,
         max_result_window=max_result_window,
         search_factory=(obj_or_import_string(
-            search_factory_imp, default=default_search_factory
+            search_factory_imp, default=es_search_factory
         )),
         item_links_factory=links_factory,
         record_class=record_class,
