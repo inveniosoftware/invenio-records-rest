@@ -62,6 +62,9 @@ extras_require = {
     'dublincore': [
         'dcxml>=0.1.0',
     ],
+    'invenio-query-parser': [
+        'invenio-query-parser>=0.6.0',
+    ],
     'tests': tests_require,
 }
 
@@ -82,7 +85,6 @@ install_requires = [
     'invenio-records>=1.0.0a17',
     'invenio-rest>=1.0.0a10',
     'invenio-search>=1.0.0a7',
-    'invenio-query-parser>=0.6.0',
     'marshmallow>=2.5.0',
     'python-dateutil>=2.4.2',
     'six>=1.10',

@@ -145,13 +145,6 @@ def test_query(app, indexed_records, search_url):
         res = client.get(search_url, query_string=dict(q='back'))
         assert len(get_json(res)['hits']['hits']) == 2
 
-        # Invalid query syntax (using ES instead of Invenio syntax)
-        res = client.get(search_url, query_string=dict(q='+title:back'))
-        assert res.status_code == 400
-        data = get_json(res)
-        assert 'message' in data
-        assert data['status'] == 400
-
 
 @pytest.mark.parametrize('app', [dict(
     endpoint=dict(
