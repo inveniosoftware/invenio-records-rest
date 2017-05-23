@@ -24,7 +24,7 @@
 
 """Links for record serialization."""
 
-from flask import url_for
+from flask import request, url_for
 
 from .proxies import current_records_rest
 
@@ -40,3 +40,21 @@ def default_links_factory(pid):
     links = dict(self=url_for(endpoint, pid_value=pid.pid_value,
                  _external=True))
     return links
+
+
+def default_links_factory_with_additional(additional_links):
+    """Generate a links generation factory with the specified additional links.
+
+    :param additional_links: A dict of link names to links to be added to the
+           returned object.
+    :returns: A link generation factory.
+    """
+    def factory(pid):
+        links = default_links_factory(pid)
+        for link in additional_links:
+            links[link] = additional_links[link].format(pid=pid,
+                                                        scheme=request.scheme,
+                                                        host=request.host)
+        return links
+
+    return factory
