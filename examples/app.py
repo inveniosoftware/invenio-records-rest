@@ -152,6 +152,7 @@ app.config['RECORDS_REST_ENDPOINTS']['recid']['suggesters'] = {
         }
     }
 }
+app.config['RECORDS_REST_ENDPOINTS']['recid']['record_class'] = MementoRecord
 # Sort options
 app.config['RECORDS_REST_SORT_OPTIONS'] = {
     index_name: {
