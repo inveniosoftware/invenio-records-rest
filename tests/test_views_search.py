@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015, 2016 CERN.
+# Copyright (C) 2015, 2016, 2017 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -29,6 +29,7 @@ from __future__ import absolute_import, print_function
 import re
 
 import pytest
+from elasticsearch import TransportError
 from flask import url_for
 from helpers import assert_hits_len, get_json, parse_url, to_relative_url
 
@@ -51,6 +52,22 @@ def test_json_result_serializer(app, indexed_records, test_records,
         pid, db_record = test_records[0]
         assert record['id'] == int(pid.pid_value)
         assert record['metadata'] == db_record.dumps()
+
+
+def test_search_specific_index(app, indexed_records, search_url):
+    """JSON result."""
+    with app.test_client() as client:
+        # Get a query with only one record
+        app.config['RECORDS_REST_ENDPOINTS']['recid']['search_index'] = \
+            'non-existant-index'
+        with pytest.raises(TransportError):
+            res = client.get(search_url, query_string={'q': '*'})
+
+        app.config['RECORDS_REST_ENDPOINTS']['recid']['search_index'] = \
+            'invenio-records-rest-testrecord'
+        res = client.get(search_url, query_string={'q': '*'})
+        assert_hits_len(res, 4)
+        assert res.status_code == 200
 
 
 def test_page_size(app, indexed_records, search_url):

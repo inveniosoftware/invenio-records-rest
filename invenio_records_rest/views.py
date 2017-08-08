@@ -433,7 +433,13 @@ class RecordsListResource(ContentNegotiatedMethodView):
 
         # Arguments that must be added in prev/next links
         urlkwargs = dict()
-        search = self.search_class().params(version=True)
+        self.search_index = current_app.config[
+            'RECORDS_REST_ENDPOINTS'][self.pid_type]['search_index']
+        if self.search_index:
+            search = self.search_class(index=self.search_index).\
+                params(version=True)
+        else:
+            search = self.search_class().params(version=True)
         search = search[(page - 1) * size:page * size]
 
         search, qs_kwargs = self.search_factory(search)
