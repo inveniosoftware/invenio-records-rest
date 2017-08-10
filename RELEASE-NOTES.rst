@@ -1,15 +1,13 @@
-================================
- Invenio-Records-REST v1.0.0a18
-================================
+===============================
+ Invenio-Records-REST v1.0.0b1
+===============================
 
-Invenio-Records-REST v1.0.0a18 was released on November 16, 2016.
+Invenio-Records-REST v1.0.0b1 was released on August 10, 2017.
 
 About
 -----
 
 REST API for invenio-records.
-
-*This is an experimental developer preview release.*
 
 What's new
 ----------
@@ -19,18 +17,18 @@ What's new
 Installation
 ------------
 
-   $ pip install invenio-records-rest==1.0.0a18
+   $ pip install invenio-records-rest==1.0.0b1
 
 Documentation
 -------------
 
-   http://invenio-records-rest.readthedocs.io/
+   https://invenio-records-rest.readthedocs.io/
 
 Happy hacking and thanks for flying Invenio-Records-REST.
 
 | Invenio Development Team
 |   Email: info@inveniosoftware.org
 |   IRC: #invenio on irc.freenode.net
-|   Twitter: http://twitter.com/inveniosoftware
+|   Twitter: https://twitter.com/inveniosoftware
 |   GitHub: https://github.com/inveniosoftware/invenio-records-rest
 |   URL: http://inveniosoftware.org

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015, 2016 CERN.
+# Copyright (C) 2015, 2016, 2017 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -35,8 +35,8 @@ tests_require = [
     'check-manifest>=0.25',
     'coverage>=4.0',
     'Flask-Login>=0.3.2',
-    'invenio-db[all]>=1.0.0a6',
-    'invenio-indexer>=1.0.0a1',
+    'invenio-db[all]>=1.0.0b8',
+    'invenio-indexer>=1.0.0a10',
     'isort>=4.2.2',
     'pydocstyle>=1.0.0',
     'pytest-cache>=1.0',
@@ -81,10 +81,10 @@ install_requires = [
     'Flask>=0.11.1',
     'Flask-BabelEx>=0.9.2',
     'elasticsearch-dsl>=2.0.0',
-    'invenio-pidstore>=1.0.0a9',
-    'invenio-records>=1.0.0a17',
-    'invenio-rest>=1.0.0a10',
-    'invenio-search>=1.0.0a7',
+    'invenio-pidstore>=1.0.0b1',
+    'invenio-records>=1.0.0b1',
+    'invenio-rest>=1.0.0b1',
+    'invenio-search>=1.0.0a10',
     'marshmallow>=2.5.0',
     'python-dateutil>=2.4.2',
     'six>=1.10',
@@ -142,6 +142,6 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
     ],
 )
