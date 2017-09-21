@@ -104,7 +104,7 @@ def test_page_links(app, indexed_records, search_url):
         assert_hits_len(res, 1)
 
         def parse_link_header(response):
-            """Parses the links from a REST response's HTTP header."""
+            """Parse the links from a REST response's HTTP header."""
             return {
                 k: v for (k, v) in
                 map(lambda s: re.findall(r'<(.*)>; rel="(.*)"', s)[0][::-1],
@@ -228,8 +228,32 @@ def test_query_wrong(app, indexed_records, search_url):
     )
 )], indirect=['app'])
 def test_elasticsearch_exception(app, indexed_records):
+    """Test elasticsearch exception."""
     with app.test_client() as client:
         res = client.get(url_for('invenio_records_rest.recid_list', q='i/o'))
         assert res.status_code == 400
         assert ('The syntax of the search query is invalid.' in
                 res.get_data(as_text=True))
+
+
+def test_dynamic_aggregation(app, indexed_records, search_url):
+    """Test invalid accept header."""
+    with app.test_client() as client:
+        def stars_aggs():
+            """Include only my deposits in the aggregation."""
+            return {
+                'terms': {
+                    'field': 'stars',
+                    'include': [4, 5]
+                }
+            }
+        app.config['RECORDS_REST_FACETS'][
+            'invenio-records-rest']['aggs']['test'] = stars_aggs
+        res = client.get(search_url, query_string={'q': ''})
+        assert res.status_code == 200
+        data = get_json(res)
+        expected = sorted([{'doc_count': 2, 'key': 4},
+                           {'doc_count': 1, 'key': 5}],
+                          key=lambda x: x['doc_count'])
+        assert sorted(data['aggregations']['test']['buckets'],
+                      key=lambda x: x['doc_count']) == expected

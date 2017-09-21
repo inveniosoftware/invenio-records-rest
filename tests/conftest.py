@@ -132,6 +132,7 @@ def app(request, search_class):
     instance_path = tempfile.mkdtemp()
     app = Flask('testapp', instance_path=instance_path)
     app.config.update(
+        ACCOUNTS_JWT_ENABLE=False,
         INDEXER_DEFAULT_DOC_TYPE='testrecord',
         INDEXER_DEFAULT_INDEX=search_class.Meta.index,
         RECORDS_REST_ENDPOINTS=copy.deepcopy(config.RECORDS_REST_ENDPOINTS),
