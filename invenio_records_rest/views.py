@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015, 2016 CERN.
+# Copyright (C) 2015, 2016, 2017 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -117,6 +117,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      delete_permission_factory_imp=None,
                      record_class=None,
                      record_serializers=None,
+                     record_serializers_aliases=None,
                      record_loaders=None,
                      search_class=None,
                      search_serializers=None,
@@ -145,6 +146,8 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     :param default_endpoint_prefix: ignored.
     :param record_class: A record API class or importable string.
     :param record_serializers: Serializers used for records.
+    :param record_serializers_aliases: A mapping of query arg `format` values
+        to valid mimetypes: dict(alias -> mimetype).
     :param record_loaders: It contains the list of record deserializers for
         supperted formats.
     :param search_class: Import path or class object for the object in charge
@@ -250,6 +253,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         update_permission_factory=update_permission_factory,
         delete_permission_factory=delete_permission_factory,
         serializers=record_serializers,
+        serializers_query_aliases=record_serializers_aliases,
         loaders=record_loaders,
         search_class=search_class,
         links_factory=links_factory,
