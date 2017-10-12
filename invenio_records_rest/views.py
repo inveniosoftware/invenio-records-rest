@@ -437,7 +437,8 @@ class RecordsListResource(ContentNegotiatedMethodView):
 
         # Arguments that must be added in prev/next links
         urlkwargs = dict()
-        search = self.search_class().params(version=True)
+        search_obj = self.search_class()
+        search = search_obj.with_preference_param().params(version=True)
         search = search[(page - 1) * size:page * size]
 
         search, qs_kwargs = self.search_factory(search)
