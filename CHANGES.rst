@@ -25,6 +25,11 @@
 Changes
 =======
 
+Version 1.0.0b3 (released 2017-10-20)
+--------------------------------------
+
+- Fix inconsistent order in search results.
+
 Version 1.0.0b2 (released 2017-10-04)
 --------------------------------------
 
