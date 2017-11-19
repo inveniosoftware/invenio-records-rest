@@ -127,7 +127,7 @@ def _aggregations(search, definitions):
     """Add aggregations to query."""
     if definitions:
         for name, agg in definitions.items():
-            search.aggs[name] = agg
+            search.aggs[name] = agg if not callable(agg) else agg()
     return search
 
 
