@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015, 2016 CERN.
+# Copyright (C) 2015, 2016, 2017 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -22,7 +22,6 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-
 root = true
 
 [*]
@@ -37,9 +36,10 @@ charset = utf-8
 indent_size = 4
 # isort plugin configuration
 known_first_party = invenio_records_rest
-known_third_party = invenio_accounts, invenio_db, invenio_indexer, invenio_records, invenio_rest, invenio_pidstore, invenio_search
+known_third_party = invenio_accounts, invenio_db, invenio_indexer, invenio_pidstore, invenio_records, invenio_rest, invenio_search,
 multi_line_output = 2
 default_section = THIRDPARTY
+skip = .eggs
 
 # RST files (used by sphinx)
 [*.rst]

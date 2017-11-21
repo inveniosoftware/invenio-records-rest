@@ -7,7 +7,7 @@ Invenio-Records-REST v1.0.0b3 was released on October 20, 2017.
 About
 -----
 
-REST API for invenio-records.
+REST API for Invenio-Records.
 
 What's new
 ----------

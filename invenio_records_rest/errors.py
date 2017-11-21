@@ -185,7 +185,7 @@ class JSONSchemaValidationError(RESTValidationError):
     code = 400
 
     def __init__(self, error=None, **kwargs):
-        """Error description."""
+        """Initialize exception."""
         super(RESTValidationError, self).__init__(**kwargs)
         self.description = 'Validation error: {0}.'.format(
             error.message if error else '')

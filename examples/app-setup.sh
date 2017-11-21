@@ -6,6 +6,9 @@ set -o errexit
 # quit on unbound symbols:
 set -o nounset
 
+DIR=`dirname "$0"`
+
+cd $DIR
 export FLASK_APP=app.py
 
 # Install specific dependencies

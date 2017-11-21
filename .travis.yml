@@ -32,6 +32,9 @@ sudo: false
 
 language: python
 
+matrix:
+  fast_finish: true
+
 cache:
   - pip
 
@@ -42,7 +45,7 @@ services:
 
 env:
   - REQUIREMENTS=lowest ES_HOST=127.0.0.1 ES_VERSION=2.2.0 SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://postgres@localhost:5432/invenio"
-  - REQUIREMENTS=release ES_HOST=127.0.0.1 ES_VERSION=2.2.0 SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://postgres@localhost:5432/invenio"
+  - REQUIREMENTS=release DEPLOY=true ES_HOST=127.0.0.1 ES_VERSION=2.2.0 SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://postgres@localhost:5432/invenio"
   - REQUIREMENTS=devel ES_HOST=127.0.0.1 ES_VERSION=2.2.0 SQLALCHEMY_DATABASE_URI="postgresql+psycopg2://postgres@localhost:5432/invenio"
 
 python:
@@ -75,8 +78,9 @@ deploy:
   user: lnielsen
   password:
     secure: "b+qTIIt8TMhs8/ZLiiHzvqYrNf2lpEuoxGmMSv8uY5Cq4/vLgnuUwEf9zz7m1bVSpkB63t+tqo7R0WfnnQFhySgJVPXyBJMkKqq6yZec7z0oUXDNjP0St/71LDPmEMI39mJnIPP68jSvkKCwFXHKL8O5S1DBdqyKq1iM5zWO8wikApRuW1NKep7j5sLo706w9af3wKZxEJDOHkAgb+l7TY9zpqlSAhIMDmTSxTYZ5OzV/w4nO+9htl0QGX4OgyLUF923RrbgWh+GxzfgwY3C/+LWpXQl/QWfWTRvaGKJnYEQc72LKzGu3t3eHzTWB1lJDWPE2vDpw4ZL8BGBSxK1771H16/8DiZcF0pgUt130PjFDiTg8xfiw7m0PrOzQRil8x0hgw9gUoLBzRE4EgO1Y+PSJfO/jjUDhX9x0ydjq8/21YK3p1GJJjt5V5ExRPDxethONNot6By6a9Ah5DZfDuQRCSZZ2bKjkKNHuin7K/CqqdtEulUSTuRzu5hxHiR8GpOVMmKXJtL6PRWLW5/2oBXcVtvCG8Qk9Qg5DaxJQ/iVczyCMoYf6hsyrR/I0KOmg/Sx0eUXFOH2vWbDpxm7YnJW9wohHhbyPyEvYYWE1QOj3NCEMoyBpiCZubvSL0weITkM2zTiQBVpoMsduPmxowkLVQ0s1IwyceixKBn07aI="
-  distributions: "sdist bdist_wheel"
+  distributions: "compile_catalog sdist bdist_wheel"
   on:
     tags: true
     python: "2.7"
-    condition: $REQUIREMENTS = release
+    repo: inveniosoftware/invenio-records-rest
+    condition: $DEPLOY = true

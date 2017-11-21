@@ -34,6 +34,7 @@ from .utils import check_elasticsearch, deny_all
 
 
 def _(x):
+    """Identity function for string extraction."""
     return x
 
 RECORDS_REST_ENDPOINTS = dict(
@@ -219,7 +220,7 @@ This option can be overritten in each REST endpoint as follows:
         'recid': {
             ...
             'record_loaders': {
-                'aplication/json': 'mypackage.utils:myloader',
+                'application/json': 'mypackage.utils:myloader',
             },
             ...
         }

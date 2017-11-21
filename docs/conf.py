@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2015, 2017 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -21,6 +21,8 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+
+"""Sphinx configuration."""
 
 from __future__ import print_function
 
@@ -63,7 +65,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Invenio-Records-REST'
-copyright = u'2015, CERN'
+copyright = u'2017, CERN'
 author = u'CERN'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -74,7 +76,9 @@ author = u'CERN'
 
 # Get the version string. Cannot be done with import!
 g = {}
-with open(os.path.join('..', 'invenio_records_rest', 'version.py'), 'rt') as fp:
+with open(os.path.join(os.path.dirname(__file__), '..',
+                       'invenio_records_rest', 'version.py'),
+          'rt') as fp:
     exec(fp.read(), g)
     version = g['__version__']
 
@@ -137,8 +141,8 @@ html_theme_options = {
     'github_banner': True,
     'show_powered_by': False,
     'extra_nav_links': {
-        'invenio-records-rest@GitHub': 'http://github.com/inveniosoftware/invenio-records-rest',
-        'invenio-records-rest@PyPI': 'http://pypi.python.org/pypi/invenio-records-rest/',
+        'invenio-records-rest@GitHub': 'https://github.com/inveniosoftware/invenio-records-rest',
+        'invenio-records-rest@PyPI': 'https://pypi.python.org/pypi/invenio-records-rest/',
     }
 }
 
@@ -248,17 +252,17 @@ htmlhelp_basename = 'invenio-records-rest_namedoc'
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
-    # The paper size ('letterpaper' or 'a4paper').
-    #'papersize': 'letterpaper',
+# The paper size ('letterpaper' or 'a4paper').
+#'papersize': 'letterpaper',
 
-    # The font size ('10pt', '11pt' or '12pt').
-    #'pointsize': '10pt',
+# The font size ('10pt', '11pt' or '12pt').
+#'pointsize': '10pt',
 
-    # Additional stuff for the LaTeX preamble.
-    #'preamble': '',
+# Additional stuff for the LaTeX preamble.
+#'preamble': '',
 
-    # Latex figure (float) alignment
-    #'figure_align': 'htbp',
+# Latex figure (float) alignment
+#'figure_align': 'htbp',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
@@ -329,7 +333,7 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    'https://docs.python.org/': None,
+    'python': ('https://docs.python.org/', None),
     'invenio-access': (
         'https://invenio-access.readthedocs.io/en/latest/', None
     ),
@@ -337,3 +341,6 @@ intersphinx_mapping = {
         'https://invenio-search.readthedocs.io/en/latest/', None
     ),
 }
+
+# Autodoc configuraton.
+autoclass_content = 'both'

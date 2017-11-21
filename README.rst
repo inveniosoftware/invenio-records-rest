@@ -40,8 +40,8 @@
 .. image:: https://img.shields.io/github/license/inveniosoftware/invenio-records-rest.svg
         :target: https://github.com/inveniosoftware/invenio-records-rest/blob/master/LICENSE
 
+REST API for Invenio-Records.
 
-REST API for invenio-records.
+Further documentation is available on
+https://invenio-records-rest.readthedocs.io/.
 
-* Free software: GPLv2 license
-* Documentation: https://invenio-records-rest.readthedocs.io/

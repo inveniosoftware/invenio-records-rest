@@ -22,7 +22,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""REST API for invenio-records module."""
+"""REST API for invenio-records."""
 
 import os
 
@@ -50,20 +50,20 @@ extras_require = {
         'citeproc-py>=0.3.0',
         'citeproc-py-styles>=0.1.0',
     ],
-    'docs': [
-        'Sphinx>=1.4.2',
-    ],
     'datacite': [
         'datacite>=0.3.0',
     ],
-    'jsonld': [
-        'pyld>=0.7.1',
+    'docs': [
+        'Sphinx>=1.5.1',
     ],
     'dublincore': [
         'dcxml>=0.1.0',
     ],
     'invenio-query-parser': [
         'invenio-query-parser>=0.6.0',
+    ],
+    'jsonld': [
+        'pyld>=0.7.1',
     ],
     'tests': tests_require,
 }
@@ -74,7 +74,7 @@ for reqs in extras_require.values():
 
 setup_requires = [
     'Babel>=1.3',
-    'pytest-runner>=2.7.0'
+    'pytest-runner>=2.6.2'
 ]
 
 install_requires = [
@@ -92,6 +92,7 @@ install_requires = [
 ]
 
 packages = find_packages()
+
 
 # Get the version string. Cannot be done with import!
 g = {}
@@ -124,6 +125,9 @@ setup(
         'invenio_base.api_converters': [
             'pid = invenio_records_rest.utils:PIDConverter',
             'pidpath = invenio_records_rest.utils:PIDPathConverter',
+        ],
+        'invenio_i18n.translations': [
+            'messages = invenio_records_rest',
         ],
     },
     extras_require=extras_require,

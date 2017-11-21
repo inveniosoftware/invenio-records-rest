@@ -29,6 +29,7 @@ import os
 import signal
 import subprocess
 import time
+from os.path import abspath, dirname, join
 
 import pytest
 
@@ -37,27 +38,29 @@ import pytest
 def example_app():
     """Example app fixture."""
     current_dir = os.getcwd()
-    # go to example directory
-    project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    exampleappdir = os.path.join(project_dir, 'examples')
-    os.chdir(exampleappdir)
-    # setup example
-    cmd = './app-setup.sh'
-    exit_status = subprocess.call(cmd, shell=True)
-    assert exit_status == 0
-    # Starting example web app
-    cmd = 'FLASK_APP=app.py flask run --debugger -p 5000'
-    webapp = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                              preexec_fn=os.setsid, shell=True)
+
+    # Go to example directory
+    project_dir = dirname(dirname(abspath(__file__)))
+    exampleapp_dir = join(project_dir, 'examples')
+    os.chdir(exampleapp_dir)
+
+    # Setup application
+    assert subprocess.call('./app-setup.sh', shell=True) == 0
+
+    # Start example app
+    webapp = subprocess.Popen(
+        'FLASK_APP=app.py flask run --debugger -p 5000',
+        stdout=subprocess.PIPE, preexec_fn=os.setsid, shell=True)
     time.sleep(20)
-    # return webapp
     yield webapp
-    # stop server
+
+    # Stop server
     os.killpg(webapp.pid, signal.SIGTERM)
-    # tear down example app
-    cmd = './app-teardown.sh'
-    subprocess.call(cmd, shell=True)
-    # return to the original directory
+
+    # Tear down example app
+    subprocess.call('./app-teardown.sh', shell=True)
+
+    # Return to the original directory
     os.chdir(current_dir)
 
 
