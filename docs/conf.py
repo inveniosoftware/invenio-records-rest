@@ -340,6 +340,12 @@ intersphinx_mapping = {
     'invenio-search': (
         'https://invenio-search.readthedocs.io/en/latest/', None
     ),
+    'invenio-rest': (
+        'https://invenio-rest.readthedocs.io/en/latest/', None
+    ),
+    'invenio-pidstore': (
+        'https://invenio-pidstore.readthedocs.io/en/latest/', None
+    ),
 }
 
 # Autodoc configuraton.

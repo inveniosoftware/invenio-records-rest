@@ -22,7 +22,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""REST API for invenio-records."""
+"""Flask extension for the Invenio-Records-REST."""
 
 from __future__ import absolute_import, print_function
 

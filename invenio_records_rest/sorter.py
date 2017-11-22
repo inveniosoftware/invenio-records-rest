@@ -22,16 +22,16 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-r"""Sorter factory for REST API.
+r"""Sorter factories for REST API.
 
 The default sorter factory allows you to define possible sort options in
-the ``RECORDS_REST_SORT_OPTIONS`` configuration variable. The sort options
-are defined per index alias (e.g. ``records``). If more fine grained control
-is needed a custom sorter factory can be provided to Records-REST instead.
+the :data:`invenio_records_rest.config.RECORDS_REST_SORT_OPTIONS`
+configuration variable. The sort options are defined per index alias
+(e.g. ``records``). If more fine grained control is needed a custom sorter
+factory can be provided to Records-REST instead.
 
 See Elasticsearch Reference Manual for full details of sorting capabilities:
-https://www.elastic.co/guide/en/elasticsearch/reference/2.x\
-/search-request-sort.html
+https://www.elastic.co/guide/en/elasticsearch/reference/2.4/search-request-sort.html
 """
 
 from __future__ import absolute_import, print_function

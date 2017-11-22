@@ -22,7 +22,11 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""Links for record serialization."""
+"""Default link factories for PID serialization into URLs.
+
+Link factory can be specified as ``links_factory_impl`` in
+:data:`invenio_records_rest.config.RECORDS_REST_ENDPOINTS` configuration.
+"""
 
 from flask import request, url_for
 

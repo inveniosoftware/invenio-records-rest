@@ -22,7 +22,11 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""Facets factory for REST API."""
+"""Facets and factories for result filtering and aggregation.
+
+See :data:`invenio_records_rest.config.RECORDS_REST_FACETS` for more
+information on how to specify aggregations and filters.
+"""
 
 from __future__ import absolute_import, print_function
 

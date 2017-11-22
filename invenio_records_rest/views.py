@@ -292,7 +292,12 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
 
 
 def pass_record(f):
-    """Decorator to retrieve persistent identifier and record."""
+    """Decorator to retrieve persistent identifier and record.
+
+    This decorator will resolve the ``pid_value`` parameter from the route
+    pattern and resolve it to a PID and a record, which are then available in
+    the decorated function as ``pid`` and ``record`` kwargs respectively.
+    """
     @wraps(f)
     def inner(self, pid_value, *args, **kwargs):
         try:
@@ -325,7 +330,7 @@ def verify_record_permission(permission_factory, record):
 def need_record_permission(factory_name):
     """Decorator checking that the user has the required permissions on record.
 
-    :param factory_name: name of the factory to retrieve.
+    :param factory_name: name of the permission factory.
     """
     def need_record_permission_builder(f):
         @wraps(f)
@@ -427,8 +432,10 @@ class RecordsListResource(ContentNegotiatedMethodView):
     def get(self, **kwargs):
         """Search records.
 
-        :returns: the search result containing hits and aggregations as
-        returned by invenio-search.
+        Permissions: does not perform any permission checks by default.
+
+        :returns: Search result containing hits and aggregations as
+                  returned by invenio-search.
         """
         page = request.values.get('page', 1, type=int)
         size = request.values.get('size', 10, type=int)
@@ -471,6 +478,8 @@ class RecordsListResource(ContentNegotiatedMethodView):
     @need_record_permission('create_permission_factory')
     def post(self, **kwargs):
         """Create a record.
+
+        Permissions: ``create_permission_factory``
 
         Procedure description:
 
@@ -563,6 +572,8 @@ class RecordResource(ContentNegotiatedMethodView):
     def delete(self, pid, record, **kwargs):
         """Delete a record.
 
+        Permissions: ``delete_permission_factory``
+
         Procedure description:
 
         #. The record is resolved reading the pid value from the url.
@@ -596,6 +607,8 @@ class RecordResource(ContentNegotiatedMethodView):
     def get(self, pid, record, **kwargs):
         """Get a record.
 
+        Permissions: ``read_permission_factory``
+
         Procedure description:
 
         #. The record is resolved reading the pid value from the url.
@@ -622,7 +635,10 @@ class RecordResource(ContentNegotiatedMethodView):
     def patch(self, pid, record, **kwargs):
         """Modify a record.
 
+        Permissions: ``update_permission_factory``
+
         The data should be a JSON-patch, which will be applied to the record.
+        Requires header ``Content-Type: application/json-patch+json``.
 
         Procedure description:
 
@@ -658,6 +674,8 @@ class RecordResource(ContentNegotiatedMethodView):
     @need_record_permission('update_permission_factory')
     def put(self, pid, record, **kwargs):
         """Replace a record.
+
+        Permissions: ``update_permission_factory``
 
         The body should be a JSON object, which will fully replace the current
         record metadata.

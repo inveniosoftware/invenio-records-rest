@@ -22,7 +22,12 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""Search errors."""
+"""Records REST errors.
+
+All error classes in this module are inheriting from
+:class:`invenio_rest.errors.RESTException` or
+:class:`invenio_rest.errors.RESTValidationError`.
+"""
 
 from __future__ import absolute_import, print_function
 

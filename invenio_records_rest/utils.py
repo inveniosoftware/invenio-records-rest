@@ -22,7 +22,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""Implementention of various utility functions."""
+"""General utility functions module."""
 
 from functools import partial
 
@@ -129,20 +129,25 @@ def check_elasticsearch(record, *args, **kwargs):
 
 
 class LazyPIDValue(object):
-    """Lazy resolver for PID value."""
+    """Lazy PID resolver.
+
+    The PID will not be resolved until the `data` property is accessed.
+    """
 
     def __init__(self, resolver, value):
-        """Initialize with resolver and URL value.
+        """Initialize with resolver object and the PID value.
 
-        :params resolver: Used to resolve PID value and return a record.
+        :params resolver: Resolves for PID,
+                          see :class:`invenio_pidstore.resolver.Resolver`.
         :params value: PID value.
+        :type value: str
         """
         self.resolver = resolver
         self.value = value
 
     @cached_property
     def data(self):
-        """Resolve PID value and return tuple with PID and record.
+        """Resolve PID from a value and return a tuple with PID and the record.
 
         :returns: A tuple with the PID and the record resolved.
         """
@@ -187,10 +192,18 @@ class LazyPIDValue(object):
 
 
 class PIDConverter(BaseConverter):
-    """Resolve PID value."""
+    """Converter for PID values in the route mapping.
+
+    This class is a custom routing converter defining the 'PID' type.
+    See http://werkzeug.pocoo.org/docs/0.12/routing/#custom-converters.
+
+    Use ``pid`` as a type in the route pattern, e.g.: the use of
+    route decorator: ``@blueprint.route('/record/<pid(recid):pid_value>')``,
+    will match and resolve a path: ``/record/123456``.
+    """
 
     def __init__(self, url_map, pid_type, getter=None, record_class=None):
-        """Initialize PID resolver."""
+        """Initialize the converter."""
         super(PIDConverter, self).__init__(url_map)
         getter = obj_or_import_string(getter, default=partial(
             obj_or_import_string(record_class, default=Record).get_record,
@@ -205,4 +218,12 @@ class PIDConverter(BaseConverter):
 
 
 class PIDPathConverter(PIDConverter, PathConverter):
-    """Resolve PID path value."""
+    """PIDConverter with support for path-like (with slashes) PID values.
+
+    This class is a custom routing converter defining the 'PID' type.
+    See http://werkzeug.pocoo.org/docs/0.12/routing/#custom-converters.
+
+    Use ``pidpath`` as a type in the route patter, e.g.: the use of a route
+    decorator: ``@blueprint.route('/record/<pidpath(recid):pid_value>')``,
+    will match and resolve a path containing a DOI: ``/record/10.1010/12345``.
+    """
