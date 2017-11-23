@@ -31,10 +31,11 @@ from invenio_records.api import Record
 from lxml import etree
 from lxml.builder import E
 
-from .marshmallow import MarshmallowSerializer
+from .base import PreprocessorMixin
+from .marshmallow import MarshmallowMixin
 
 
-class BaseDataCiteSerializer(MarshmallowSerializer):
+class BaseDataCiteSerializer(MarshmallowMixin, PreprocessorMixin):
     """Marshmallow based DataCite serializer for records.
 
     Note: This serializer is not suitable for serializing large number of

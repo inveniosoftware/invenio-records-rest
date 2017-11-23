@@ -26,28 +26,35 @@
 
 from __future__ import absolute_import, print_function
 
-from .base import PreprocessorMixin
+from .base import TransformerMixinInterface
+from .schemas.json import RecordSchemaJSONV1
 
 
-class MarshmallowSerializer(PreprocessorMixin):
+class MarshmallowMixin(TransformerMixinInterface):
     """Base class for marshmallow serializers."""
 
-    def __init__(self, schema_class=None, replace_refs=False):
+    def __init__(self, schema_class=RecordSchemaJSONV1, **kwargs):
         """Initialize record."""
         self.schema_class = schema_class
-        super(MarshmallowSerializer, self).__init__(
-            replace_refs=replace_refs)
+        super(MarshmallowMixin, self).__init__(**kwargs)
 
-    def dump(self, obj):
+    def dump(self, obj, context=None):
         """Serialize object with schema."""
-        return self.schema_class().dump(obj).data if self.schema_class else obj
+        return self.schema_class(context=context).dump(obj).data
 
-    def transform_record(self, pid, record, links_factory=None):
+    def transform_record(self, pid, record, links_factory=None, **kwargs):
         """Transform record into an intermediate representation."""
+        context = kwargs.get('marshmallow_context', {})
         return self.dump(self.preprocess_record(pid, record,
-                         links_factory=links_factory))
+                         links_factory=links_factory, **kwargs), context)
 
-    def transform_search_hit(self, pid, record_hit, links_factory=None):
+    def transform_search_hit(self, pid, record_hit, links_factory=None,
+                             **kwargs):
         """Transform search result hit into an intermediate representation."""
+        context = kwargs.get('marshmallow_context', {})
         return self.dump(self.preprocess_search_hit(pid, record_hit,
-                         links_factory=links_factory))
+                         links_factory=links_factory, **kwargs), context)
+
+
+MarshmallowSerializer = MarshmallowMixin
+"""Marshmallow Serializer, only for backward compatibility."""

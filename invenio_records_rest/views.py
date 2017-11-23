@@ -48,6 +48,7 @@ from jsonpatch import JsonPatchException, JsonPointerException
 from jsonschema.exceptions import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 
+from ._compat import wrap_links_factory
 from .errors import InvalidDataRESTError, InvalidQueryRESTError, \
     JSONSchemaValidationError, MaxResultWindowRESTError, \
     PatchJSONFailureRESTError, PIDResolveRESTError, \
@@ -236,6 +237,13 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     links_factory = obj_or_import_string(
         links_factory_imp, default=default_links_factory
     )
+    # For backward compatibility. Previous signature was links_factory(pid).
+    if wrap_links_factory(links_factory):
+        orig_links_factory = links_factory
+
+        def links_factory(pid, record=None, **kwargs):
+            return orig_links_factory(pid)
+
     record_class = obj_or_import_string(
         record_class, default=Record
     )
