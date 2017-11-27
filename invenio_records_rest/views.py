@@ -28,6 +28,7 @@ from __future__ import absolute_import, print_function
 
 import copy
 import uuid
+from collections import defaultdict
 from functools import partial, wraps
 
 from elasticsearch.exceptions import RequestError
@@ -64,12 +65,33 @@ def elasticsearch_query_parsing_exception_handler(error):
     return InvalidQueryRESTError(description=description).get_response()
 
 
-def create_error_handlers(blueprint):
+def create_error_handlers(blueprint, error_handlers_registry=None):
     """Create error handlers on blueprint.
 
     :params blueprint: Records API blueprint.
+    :params error_handlers_registry: Configuration of error handlers per
+        exception or HTTP status code and view name.
+
+        The dictionary has the following structure:
+
+        .. code-block:: python
+
+            {
+                SomeExceptionClass: {
+                    'recid_list': 'path.to.error_handler_function_foo',
+                    'recid_item': 'path.to.error_handler_function_foo',
+                },
+                410: {
+                    'custom_pid_list': 'path.to.error_handler_function_bar',
+                    'custom_pid_item': 'path.to.error_handler_function_bar',
+                    'recid_item': 'path.to.error_handler_function_baz',
+                    'recid_list': 'path.to.error_handler_function_baz',
+                },
+            }
     :returns: Configured blueprint.
     """
+    error_handlers_registry = error_handlers_registry or {}
+
     # Catch record validation errors
     @blueprint.errorhandler(ValidationError)
     def validation_error(error):
@@ -88,6 +110,19 @@ def create_error_handlers(blueprint):
                 return handler(error)
         return error
 
+    for exc_or_code, handlers in error_handlers_registry.items():
+        # Build full endpoint names and resolve handlers
+        handlers = {
+            '.'.join([blueprint.name, view_name]): obj_or_import_string(func)
+            for view_name, func in handlers.items()
+        }
+
+        def dispatch_handler(error):
+            def default_handler(e):
+                raise e
+            return handlers.get(request.endpoint, default_handler)(error)
+        blueprint.register_error_handler(exc_or_code, dispatch_handler)
+
     return blueprint
 
 
@@ -97,16 +132,24 @@ def create_blueprint(endpoints):
     :params endpoints: Dictionary representing the endpoints configuration.
     :returns: Configured blueprint.
     """
+    endpoints = endpoints or {}
+
     blueprint = Blueprint(
         'invenio_records_rest',
         __name__,
         url_prefix='',
     )
 
-    for endpoint, options in (endpoints or {}).items():
+    error_handlers_registry = defaultdict(dict)
+    for endpoint, options in endpoints.items():
+        error_handlers = options.pop('error_handlers', {})
         for rule in create_url_rules(endpoint, **options):
+            for exc_or_code, handler in error_handlers.items():
+                view_name = rule['view_func'].__name__
+                error_handlers_registry[exc_or_code][view_name] = handler
             blueprint.add_url_rule(**rule)
-    return create_error_handlers(blueprint)
+
+    return create_error_handlers(blueprint, error_handlers_registry)
 
 
 def create_url_rules(endpoint, list_route=None, item_route=None,

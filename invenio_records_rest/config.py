@@ -57,6 +57,7 @@ RECORDS_REST_ENDPOINTS = dict(
         item_route='/records/<pid(recid):pid_value>',
         default_media_type='application/json',
         max_result_window=10000,
+        error_handlers=dict(),
     ),
 )
 """Default REST endpoints loaded.
@@ -72,6 +73,7 @@ The structure of the dictionary is as follows:
     from flask import abort
     from flask_security import current_user
     from invenio_records_rest.query import es_search_factory
+    from invenio_records_rest.errors import PIDDeletedRESTError
 
 
     def search_factory(*args, **kwargs):
@@ -87,6 +89,12 @@ The structure of the dictionary is as follows:
                     return True
             return type('Check', (), {'can': can})()
 
+    def deleted_pid_error_handler(error):
+        record = error.pid_error.record or {}
+        return make_response(jsonify({
+            'status': 410,
+            'message': error.description,
+            'removal_reason': record.get('removal_reason')}), 410)
 
     RECORDS_REST_ENDPOINTS = {
         'endpoint-prefix': {
@@ -128,6 +136,9 @@ The structure of the dictionary is as follows:
             },
             'update_permission_factory_imp': permission_check_factory(),
             'use_options_view': True,
+            'error_handlers': {
+                PIDDeletedRESTError: deleted_pid_error_handler,
+            },
         },
     }
 
@@ -204,6 +215,13 @@ The structure of the dictionary is as follows:
 
 :param use_options_view: Determines if a special option view should be
     installed.
+
+:param error_handlers: Error handlers configuration for the endpoint. The
+    dictionary has an exception type or HTTP status code as a key and a
+    function or an import path to a function as a value. The function will be
+    passed as an argument to :meth:`flask.Blueprint.register_error_handler`, so
+    it should take the handled exception/code as its single argument.
+
 """
 
 RECORDS_REST_DEFAULT_LOADERS = {

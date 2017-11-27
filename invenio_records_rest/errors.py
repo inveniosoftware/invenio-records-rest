@@ -73,46 +73,55 @@ class StyleNotFoundRESTError(RESTException):
 #
 # PID
 #
-class PIDDoesNotExistRESTError(RESTException):
+class PIDRESTException(RESTException):
+    """Base REST API PID exception class."""
+
+    def __init__(self, pid_error=None, **kwargs):
+        """Initialize exception."""
+        super(RESTException, self).__init__(**kwargs)
+        self.pid_error = pid_error
+
+
+class PIDDoesNotExistRESTError(PIDRESTException):
     """Non-existent PID."""
 
     code = 404
     description = 'PID does not exist.'
 
 
-class PIDUnregisteredRESTError(RESTException):
+class PIDUnregisteredRESTError(PIDRESTException):
     """Unregistered PID."""
 
     code = 404
     description = 'PID is not registered.'
 
 
-class PIDDeletedRESTError(RESTException):
+class PIDDeletedRESTError(PIDRESTException):
     """Deleted PID."""
 
     code = 410
     description = 'PID has been deleted.'
 
 
-class PIDMissingObjectRESTError(RESTException):
+class PIDMissingObjectRESTError(PIDRESTException):
     """PID missing object."""
 
     code = 500
 
     def __init__(self, pid, **kwargs):
         """Initialize exception."""
-        super(RESTException, self).__init__(**kwargs)
+        super(PIDMissingObjectRESTError, self).__init__(**kwargs)
         self.description = 'No object assigned to {0}.'.format(pid)
 
 
-class PIDRedirectedRESTError(RESTException):
+class PIDRedirectedRESTError(PIDRESTException):
     """Invalid redirect for destination."""
 
     code = 500
 
     def __init__(self, pid_type=None, **kwargs):
         """Initialize exception."""
-        super(RESTException, self).__init__(**kwargs)
+        super(PIDRedirectedRESTError, self).__init__(**kwargs)
         self.description = (
             'Invalid redirect - pid_type{0}endpoint missing.'.format(
                 ' "{0}" '.format(pid_type) if pid_type else ' ')

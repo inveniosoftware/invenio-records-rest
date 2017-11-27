@@ -153,24 +153,24 @@ class LazyPIDValue(object):
         """
         try:
             return self.resolver.resolve(self.value)
-        except PIDDoesNotExistError:
-            raise PIDDoesNotExistRESTError()
-        except PIDUnregistered:
-            raise PIDUnregisteredRESTError()
-        except PIDDeletedError:
-            raise PIDDeletedRESTError()
-        except PIDMissingObjectError as e:
+        except PIDDoesNotExistError as pid_error:
+            raise PIDDoesNotExistRESTError(pid_error=pid_error)
+        except PIDUnregistered as pid_error:
+            raise PIDUnregisteredRESTError(pid_error=pid_error)
+        except PIDDeletedError as pid_error:
+            raise PIDDeletedRESTError(pid_error=pid_error)
+        except PIDMissingObjectError as pid_error:
             current_app.logger.exception(
-                'No object assigned to {0}.'.format(e.pid),
-                extra={'pid': e.pid})
-            raise PIDMissingObjectRESTError(e.pid)
-        except PIDRedirectedError as e:
+                'No object assigned to {0}.'.format(pid_error.pid),
+                extra={'pid': pid_error.pid})
+            raise PIDMissingObjectRESTError(pid_error.pid, pid_error=pid_error)
+        except PIDRedirectedError as pid_error:
             try:
                 location = url_for(
                     '.{0}_item'.format(
                         current_records_rest.default_endpoint_prefixes[
-                            e.destination_pid.pid_type]),
-                    pid_value=e.destination_pid.pid_value)
+                            pid_error.destination_pid.pid_type]),
+                    pid_value=pid_error.destination_pid.pid_value)
                 data = dict(
                     status=301,
                     message='Moved Permanently',
@@ -183,12 +183,13 @@ class LazyPIDValue(object):
                 current_app.logger.exception(
                     'Invalid redirect - pid_type "{0}" '
                     'endpoint missing.'.format(
-                        e.destination_pid.pid_type),
+                        pid_error.destination_pid.pid_type),
                     extra={
-                        'pid': e.pid,
-                        'destination_pid': e.destination_pid,
+                        'pid': pid_error.pid,
+                        'destination_pid': pid_error.destination_pid,
                     })
-                raise PIDRedirectedRESTError(e.destination_pid.pid_type)
+                raise PIDRedirectedRESTError(
+                    pid_error.destination_pid.pid_type, pid_error=pid_error)
 
 
 class PIDConverter(BaseConverter):
