@@ -33,11 +33,11 @@ from mock import patch
 from sqlalchemy.exc import SQLAlchemyError
 
 
-def test_valid_delete(app, test_records):
+def test_valid_delete(app, indexed_records):
     """Test VALID record delete request (DELETE .../records/<record_id>)."""
     # Test with and without headers
     for i, headers in enumerate([[], [('Accept', 'video/mp4')]]):
-        pid, record = test_records[i]
+        pid, record = indexed_records[i]
         with app.test_client() as client:
             res = client.delete(record_url(pid), headers=headers)
             assert res.status_code == 204
@@ -46,9 +46,9 @@ def test_valid_delete(app, test_records):
             assert res.status_code == 410
 
 
-def test_delete_deleted(app, test_records):
+def test_delete_deleted(app, indexed_records):
     """Test deleting a perviously deleted record."""
-    pid, record = test_records[0]
+    pid, record = indexed_records[0]
 
     with app.test_client() as client:
         res = client.delete(record_url(pid))
@@ -61,7 +61,7 @@ def test_delete_deleted(app, test_records):
         assert data['status'] == 410
 
 
-def test_delete_notfound(app, test_records):
+def test_delete_notfound(app, indexed_records):
     """Test INVALID record delete request (DELETE .../records/<record_id>)."""
     with app.test_client() as client:
         # Check that GET with non existing id will return 404
@@ -70,9 +70,9 @@ def test_delete_notfound(app, test_records):
         assert res.status_code == 404
 
 
-def test_delete_with_sqldatabase_error(app, test_records):
+def test_delete_with_sqldatabase_error(app, indexed_records):
     """Test VALID record delete request (GET .../records/<record_id>)."""
-    pid, record = test_records[0]
+    pid, record = indexed_records[0]
 
     with app.test_client() as client:
         def raise_error():

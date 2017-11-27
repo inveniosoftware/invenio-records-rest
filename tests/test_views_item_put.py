@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015, 2016 CERN.
+# Copyright (C) 2015, 2016, 2017 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -30,13 +30,15 @@ import json
 
 import mock
 import pytest
-from helpers import _mock_validate_fail, get_json, record_url
+from conftest import IndexFlusher
+from helpers import _mock_validate_fail, assert_hits_len, get_json, record_url
 
 
 @pytest.mark.parametrize('content_type', [
     'application/json', 'application/json;charset=utf-8'
 ])
-def test_valid_put(app, test_records, content_type):
+def test_valid_put(app, es, test_records, content_type, search_url,
+                   search_class):
     """Test VALID record patch request (PATCH .../records/<record_id>)."""
     HEADERS = [
         ('Accept', 'application/json'),
@@ -54,7 +56,9 @@ def test_valid_put(app, test_records, content_type):
 
         # Check that the returned record matches the given data
         assert get_json(res)['metadata']['year'] == 1234
-
+        IndexFlusher(search_class).flush_and_wait()
+        res = client.get(search_url, query_string={"year": 1234})
+        assert_hits_len(res, 1)
         # Retrieve record via get request
         assert get_json(client.get(url))['metadata']['year'] == 1234
 
@@ -62,7 +66,8 @@ def test_valid_put(app, test_records, content_type):
 @pytest.mark.parametrize('content_type', [
     'application/json', 'application/json;charset=utf-8'
 ])
-def test_valid_put_etag(app, test_records, content_type):
+def test_valid_put_etag(app, es, test_records, content_type, search_url,
+                        search_class):
     """Test concurrency control with etags."""
     HEADERS = [
         ('Accept', 'application/json'),
@@ -83,26 +88,37 @@ def test_valid_put_etag(app, test_records, content_type):
                 'If-Match': '"{0}"'.format(record.revision_id)
             })
         assert res.status_code == 200
-
         assert get_json(client.get(url))['metadata']['year'] == 1234
+
+        IndexFlusher(search_class).flush_and_wait()
+        res = client.get(search_url, query_string={"year": 1234})
+        assert_hits_len(res, 1)
 
 
 @pytest.mark.parametrize('content_type', [
     'application/json', 'application/json;charset=utf-8'
 ])
-def test_put_on_deleted(app, test_records, content_type):
+def test_put_on_deleted(app, db, es, test_data, content_type, search_url,
+                        search_class):
     """Test putting to a deleted record."""
-    HEADERS = [
-        ('Accept', 'application/json'),
-        ('Content-Type', content_type)
-    ]
-
-    # create the record using the internal API
-    pid, record = test_records[0]
-
     with app.test_client() as client:
-        url = record_url(pid)
+        HEADERS = [
+            ('Accept', 'application/json'),
+            ('Content-Type', content_type)
+        ]
+        HEADERS.append(('Content-Type', content_type))
+
+        # Create record
+        res = client.post(
+            search_url, data=json.dumps(test_data[0]), headers=HEADERS)
+        assert res.status_code == 201
+
+        url = record_url(get_json(res)['id'])
         assert client.delete(url).status_code == 204
+        IndexFlusher(search_class).flush_and_wait()
+        res = client.get(search_url,
+                         query_string={'title': test_data[0]['title']})
+        assert_hits_len(res, 0)
 
         res = client.put(url, data='{}', headers=HEADERS)
         assert res.status_code == 410
@@ -111,7 +127,7 @@ def test_put_on_deleted(app, test_records, content_type):
 @pytest.mark.parametrize('charset', [
     '', ';charset=utf-8'
 ])
-def test_invalid_put(app, test_records, charset):
+def test_invalid_put(app, es, test_records, charset, search_url):
     """Test INVALID record put request (PUT .../records/<record_id>)."""
     HEADERS = [
         ('Accept', 'application/json'),
@@ -131,6 +147,8 @@ def test_invalid_put(app, test_records, charset):
         res = client.put(
             record_url('0'), data=json.dumps(test_data), headers=HEADERS)
         assert res.status_code == 404
+        res = client.get(search_url, query_string={"year": 1234})
+        assert_hits_len(res, 0)
 
         # Invalid accept mime type.
         headers = [('Content-Type', 'application/json{0}'.format(charset)),

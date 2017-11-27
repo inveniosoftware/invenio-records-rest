@@ -78,7 +78,7 @@ class IndexFlusher(object):
 
     def flush_and_wait(self):
         """Flush index and wait until operation is fully done."""
-        current_search.flush_and_refresh(search_class.Meta.index)
+        current_search.flush_and_refresh(self.search_class.Meta.index)
 
 
 @pytest.yield_fixture(scope='session')
@@ -188,6 +188,7 @@ def app(request, search_class):
     InvenioDB(app)
     InvenioREST(app)
     InvenioRecords(app)
+    InvenioIndexer(app)
     InvenioPIDStore(app)
     search = InvenioSearch(app)
     search.register_mappings(search_class.Meta.index, 'mappings')

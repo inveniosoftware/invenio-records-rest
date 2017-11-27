@@ -337,6 +337,9 @@ intersphinx_mapping = {
     'invenio-access': (
         'https://invenio-access.readthedocs.io/en/latest/', None
     ),
+    'invenio-indexer': (
+        'https://invenio-indexer.readthedocs.io/en/latest/', None
+    ),
     'invenio-search': (
         'https://invenio-search.readthedocs.io/en/latest/', None
     ),

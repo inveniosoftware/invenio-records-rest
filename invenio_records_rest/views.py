@@ -37,6 +37,7 @@ from flask import Blueprint, abort, current_app, jsonify, make_response, \
 from flask.views import MethodView
 from flask_babelex import gettext as _
 from invenio_db import db
+from invenio_indexer.api import RecordIndexer
 from invenio_pidstore import current_pidstore
 from invenio_pidstore.models import PersistentIdentifier
 from invenio_pidstore.resolver import Resolver
@@ -163,6 +164,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      record_serializers_aliases=None,
                      record_loaders=None,
                      search_class=None,
+                     indexer_class=None,
                      search_serializers=None,
                      search_index=None, search_type=None,
                      default_media_type=None,
@@ -198,6 +200,9 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         :class:`invenio_search.api.RecordsSearch`.
         For more information about resource loading, see the Search of
         ElasticSearch DSL library.
+    :param indexer_class: Import path or class object for the object in charge
+        of indexing records. The default indexer is
+        :class:`invenio_indexer.api.RecordIndexer`.
     :param search_serializers: Serializers used for search results.
     :param search_index: Name of the search index used when searching records.
     :param search_type: Name of the search type used when searching records.
@@ -242,6 +247,9 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     search_class = obj_or_import_string(
         search_class, default=RecordsSearch
     )
+    indexer_class = obj_or_import_string(
+        indexer_class, default=RecordIndexer
+    )
 
     search_class_kwargs = {}
     if search_index:
@@ -281,6 +289,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         record_loaders=record_loaders,
         search_serializers=search_serializers,
         search_class=search_class,
+        indexer_class=indexer_class,
         default_media_type=default_media_type,
         max_result_window=max_result_window,
         search_factory=(obj_or_import_string(
@@ -299,6 +308,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         serializers_query_aliases=record_serializers_aliases,
         loaders=record_loaders,
         search_class=search_class,
+        indexer_class=indexer_class,
         links_factory=links_factory,
         default_media_type=default_media_type)
 
@@ -444,7 +454,8 @@ class RecordsListResource(ContentNegotiatedMethodView):
                  record_loaders=None,
                  search_serializers=None, default_media_type=None,
                  max_result_window=None, search_factory=None,
-                 item_links_factory=None, record_class=None, **kwargs):
+                 item_links_factory=None, record_class=None,
+                 indexer_class=None, **kwargs):
         """Constructor."""
         super(RecordsListResource, self).__init__(
             method_serializers={
@@ -471,6 +482,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         self.loaders = record_loaders or \
             current_records_rest.loaders
         self.record_class = record_class or Record
+        self.indexer_class = indexer_class
 
     def get(self, **kwargs):
         """Search records.
@@ -564,6 +576,10 @@ class RecordsListResource(ContentNegotiatedMethodView):
 
         db.session.commit()
 
+        # Index the record
+        if self.indexer_class:
+            self.indexer_class().index(record)
+
         response = self.make_response(
             pid, record, 201, links_factory=self.item_links_factory)
 
@@ -584,7 +600,7 @@ class RecordResource(ContentNegotiatedMethodView):
                  update_permission_factory=None,
                  delete_permission_factory=None, default_media_type=None,
                  links_factory=None,
-                 loaders=None, search_class=None,
+                 loaders=None, search_class=None, indexer_class=None,
                  **kwargs):
         """Constructor.
 
@@ -609,6 +625,7 @@ class RecordResource(ContentNegotiatedMethodView):
         self.delete_permission_factory = delete_permission_factory
         self.links_factory = links_factory
         self.loaders = loaders or current_records_rest.loaders
+        self.indexer_class = indexer_class
 
     @pass_record
     @need_record_permission('delete_permission_factory')
@@ -642,6 +659,8 @@ class RecordResource(ContentNegotiatedMethodView):
             if not rec_pid.is_deleted():
                 rec_pid.delete()
         db.session.commit()
+        if self.indexer_class:
+            self.indexer_class().delete(record)
 
         return '', 204
 
@@ -709,6 +728,8 @@ class RecordResource(ContentNegotiatedMethodView):
 
         record.commit()
         db.session.commit()
+        if self.indexer_class:
+            self.indexer_class().index(record)
 
         return self.make_response(
             pid, record, links_factory=self.links_factory)
@@ -749,6 +770,8 @@ class RecordResource(ContentNegotiatedMethodView):
         record.update(data)
         record.commit()
         db.session.commit()
+        if self.indexer_class:
+            self.indexer_class().index(record)
         return self.make_response(
             pid, record, links_factory=self.links_factory)
 
