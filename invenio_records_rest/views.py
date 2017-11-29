@@ -769,14 +769,14 @@ class SuggestResource(MethodView):
         size = request.values.get('size', type=int)
 
         for k in self.suggesters.keys():
-            val = request.values.get(k, type=str)
+            val = request.values.get(k)
             if val:
                 # Get completion suggestions
                 opts = copy.deepcopy(self.suggesters[k])
 
                 if 'context' in opts.get('completion', {}):
                     ctx_field = opts['completion']['context']
-                    ctx_val = request.values.get(ctx_field, type=str)
+                    ctx_val = request.values.get(ctx_field)
                     if not ctx_val:
                         raise SuggestMissingContextRESTError
                         # raise SuggestMissingContextRESTError(ctx_field)
