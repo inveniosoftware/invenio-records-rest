@@ -31,6 +31,7 @@ import uuid
 from collections import defaultdict
 from functools import partial, wraps
 
+from elasticsearch import VERSION as ES_VERSION
 from elasticsearch.exceptions import RequestError
 from flask import Blueprint, abort, current_app, jsonify, make_response, \
     request, url_for
@@ -810,7 +811,6 @@ class SuggestResource(MethodView):
                     ctx_val = request.values.get(ctx_field)
                     if not ctx_val:
                         raise SuggestMissingContextRESTError
-                        # raise SuggestMissingContextRESTError(ctx_field)
                     opts['completion']['context'] = {
                         ctx_field: ctx_val
                     }
@@ -821,7 +821,6 @@ class SuggestResource(MethodView):
                 completions.append((k, val, opts))
 
         if not completions:
-            # raise SuggestNoCompletionsRESTError
             raise SuggestNoCompletionsRESTError(
                 ', '.join(sorted(self.suggesters.keys())))
 
@@ -832,6 +831,12 @@ class SuggestResource(MethodView):
 
         # Execute search
         response = s.execute_suggest().to_dict()
+        if ES_VERSION[0] == 2:
+            for field, _, _ in completions:
+                for resp in response[field]:
+                    for op in resp['options']:
+                        if 'payload' in op:
+                            op['_source'] = copy.deepcopy(op['payload'])
 
         result = dict()
         for field, val, opts in completions:

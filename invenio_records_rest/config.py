@@ -362,5 +362,9 @@ RECORDS_REST_ELASTICSEARCH_ERROR_HANDLERS = {
         'invenio_records_rest.views'
         ':elasticsearch_query_parsing_exception_handler'
     ),
+    'query_shard_exception': (
+        'invenio_records_rest.views'
+        ':elasticsearch_query_parsing_exception_handler'
+    ),
 }
 """Handlers for ElasticSearch error codes."""

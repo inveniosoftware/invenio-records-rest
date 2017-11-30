@@ -152,4 +152,7 @@ def test_get_records_list(test_custom_endpoints_app, indexed_records):
         assert res.status_code == 200
         data = get_json(res)
         assert len(data['hits']['hits']) == 1
-        assert record[1] == data['hits']['hits'][0]['metadata']
+        # We need to check only for select record keys, since the ES
+        # result contains manually-injected 'suggest' properties
+        for k in ['title', 'year', 'stars', 'control_number']:
+            assert record[1][k] == data['hits']['hits'][0]['metadata'][k]
