@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2016 CERN.
+# Copyright (C) 2016, 2017 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -27,6 +27,7 @@
 from __future__ import absolute_import, print_function
 
 from flask import request
+from invenio_indexer.api import RecordIndexer
 from invenio_search import RecordsSearch
 
 from .facets import terms_filter
@@ -43,6 +44,7 @@ RECORDS_REST_ENDPOINTS = dict(
         pid_minter='recid',
         pid_fetcher='recid',
         search_class=RecordsSearch,
+        indexer_class=RecordIndexer,
         search_index=None,
         search_type=None,
         record_serializers={

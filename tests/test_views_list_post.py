@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015, 2016 CERN.
+# Copyright (C) 2015, 2016, 2017 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -30,7 +30,8 @@ import json
 
 import mock
 import pytest
-from helpers import _mock_validate_fail, get_json, record_url
+from conftest import IndexFlusher
+from helpers import _mock_validate_fail, assert_hits_len, get_json, record_url
 from mock import patch
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -38,7 +39,8 @@ from sqlalchemy.exc import SQLAlchemyError
 @pytest.mark.parametrize('content_type', [
     'application/json', 'application/json;charset=utf-8'
 ])
-def test_valid_create(app, db, test_data, search_url, content_type):
+def test_valid_create(app, db, es, test_data, search_url, search_class,
+                      content_type):
     """Test VALID record creation request (POST .../records/)."""
     with app.test_client() as client:
         HEADERS = [
@@ -66,21 +68,18 @@ def test_valid_create(app, db, test_data, search_url, content_type):
         # Record can be retrieved.
         assert client.get(record_url(data['id'])).status_code == 200
 
-        # Record can be searched (after a moment of time)
-        # Note: Currently we don't index on record creation so this part is
-        # disabled.
-
-        # current_search.flush_and_refresh(search_class.Meta.index)
-        # res = client.get(
-        #     search_url,
-        #     query_string={'q': 'control_number:{}'.format(data['id'])})
-        # assert_hits_len(res, 1)
+        IndexFlusher(search_class).flush_and_wait()
+        # Record shows up in search
+        res = client.get(search_url,
+                         query_string={"control_number":
+                                       data['metadata']['control_number']})
+        assert_hits_len(res, 1)
 
 
 @pytest.mark.parametrize('content_type', [
     'application/json', 'application/json;charset=utf-8'
 ])
-def test_invalid_create(app, db, test_data, search_url, content_type):
+def test_invalid_create(app, db, es, test_data, search_url, content_type):
     """Test INVALID record creation request (POST .../records/)."""
     with app.test_client() as client:
         HEADERS = [
@@ -94,6 +93,9 @@ def test_invalid_create(app, db, test_data, search_url, content_type):
         res = client.post(
             search_url, data=json.dumps(test_data[0]), headers=headers)
         assert res.status_code == 406
+        # check that nothing is indexed
+        res = client.get(search_url, query_string=dict(page=1, size=2))
+        assert_hits_len(res, 0)
 
         # Invalid content-type
         headers = [('Content-Type', 'video/mp4'),
@@ -101,14 +103,20 @@ def test_invalid_create(app, db, test_data, search_url, content_type):
         res = client.post(
             search_url, data=json.dumps(test_data[0]), headers=headers)
         assert res.status_code == 415
+        res = client.get(search_url, query_string=dict(page=1, size=2))
+        assert_hits_len(res, 0)
 
         # Invalid JSON
         res = client.post(search_url, data='{fdssfd', headers=HEADERS)
         assert res.status_code == 400
+        res = client.get(search_url, query_string=dict(page=1, size=2))
+        assert_hits_len(res, 0)
 
         # No data
         res = client.post(search_url, headers=HEADERS)
         assert res.status_code == 400
+        res = client.get(search_url, query_string=dict(page=1, size=2))
+        assert_hits_len(res, 0)
 
         # Posting a list instead of dictionary
         pytest.raises(
