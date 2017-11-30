@@ -55,6 +55,27 @@ def test_valid_suggest(app, db, es, indexed_records):
         assert res.status_code == 200
         data = json.loads(res.get_data(as_text=True))
         assert len(data['text'][0]['options']) == 2
+        options = data['text'][0]['options']
+        assert all('_source' in op for op in options)
+
+        def is_option(d, options):
+            """Check if the provided suggestion 'd' exists in the options."""
+            return any(d == dict((k, op['_source'][k]) for k in d.keys())
+                       for op in options)
+
+        exp1 = {
+            'control_number': '1',
+            'stars': 4,
+            'title': 'Back to the Future',
+            'year': 2015
+        }
+        exp2 = {
+            'control_number': '2',
+            'stars': 3,
+            'title': 'Back to the Past',
+            'year': 2042
+        }
+        assert all(is_option(exp, options) for exp in [exp1, exp2])
 
         # Valid simple completion suggester with size
         res = client.get(
@@ -63,6 +84,7 @@ def test_valid_suggest(app, db, es, indexed_records):
         )
         data = json.loads(res.get_data(as_text=True))
         assert len(data['text'][0]['options']) == 1
+        assert is_option(exp1, data['text'][0]['options'])
 
         # Valid context suggester
         res = client.get(
@@ -72,6 +94,7 @@ def test_valid_suggest(app, db, es, indexed_records):
         assert res.status_code == 200
         data = json.loads(res.get_data(as_text=True))
         assert len(data['text_byyear'][0]['options']) == 1
+        assert is_option(exp1, data['text_byyear'][0]['options'])
 
         # Missing context for context suggester
         res = client.get(
