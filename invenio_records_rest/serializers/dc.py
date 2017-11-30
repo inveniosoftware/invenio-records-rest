@@ -29,10 +29,12 @@ from __future__ import absolute_import, print_function
 from dcxml import simpledc
 from invenio_records.api import Record
 
-from .marshmallow import MarshmallowSerializer
+from .base import PreprocessorMixin, SerializerMixinInterface
+from .marshmallow import MarshmallowMixin
 
 
-class DublinCoreSerializer(MarshmallowSerializer):
+class DublinCoreSerializer(SerializerMixinInterface, MarshmallowMixin,
+                           PreprocessorMixin):
     """Marshmallow based DublinCore serializer for records.
 
     Note: This serializer is not suitable for serializing large number of

@@ -33,7 +33,7 @@ from flask import request, url_for
 from .proxies import current_records_rest
 
 
-def default_links_factory(pid):
+def default_links_factory(pid, record=None, **kwargs):
     """Factory for record links generation.
 
     :param pid: A Persistent Identifier instance.
@@ -53,7 +53,7 @@ def default_links_factory_with_additional(additional_links):
            returned object.
     :returns: A link generation factory.
     """
-    def factory(pid):
+    def factory(pid, **kwargs):
         links = default_links_factory(pid)
         for link in additional_links:
             links[link] = additional_links[link].format(pid=pid,
