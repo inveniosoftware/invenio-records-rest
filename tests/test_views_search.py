@@ -50,7 +50,9 @@ def test_json_result_serializer(app, indexed_records, test_records,
 
         pid, db_record = test_records[0]
         assert record['id'] == int(pid.pid_value)
-        assert record['metadata'] == db_record.dumps()
+        db_record_dump = db_record.dumps()
+        for k in ['title', 'year', 'stars', 'control_number']:
+            assert record['metadata'][k] == db_record_dump[k]
 
 
 def test_page_size(app, indexed_records, search_url):

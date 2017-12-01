@@ -30,10 +30,12 @@ import copy
 import json
 import os
 import shutil
+import sys
 import tempfile
 from os.path import dirname, join
 
 import pytest
+from elasticsearch import VERSION as ES_VERSION
 from elasticsearch.exceptions import RequestError
 from flask import Flask, url_for
 from flask_login import LoginManager, UserMixin
@@ -42,6 +44,7 @@ from invenio_db import db as db_
 from invenio_db import InvenioDB
 from invenio_indexer import InvenioIndexer
 from invenio_indexer.api import RecordIndexer
+from invenio_indexer.signals import before_record_index
 from invenio_pidstore import InvenioPIDStore
 from invenio_records import InvenioRecords
 from invenio_rest import InvenioREST
@@ -52,6 +55,8 @@ from sqlalchemy_utils.functions import create_database, database_exists
 from invenio_records_rest import InvenioRecordsREST, config
 from invenio_records_rest.facets import terms_filter
 from invenio_records_rest.utils import PIDConverter
+
+sys.path.append(os.path.dirname(__file__))
 
 
 class TestSearch(RecordsSearch):
@@ -66,7 +71,7 @@ class TestSearch(RecordsSearch):
     def __init__(self, **kwargs):
         """Add extra options."""
         super(TestSearch, self).__init__(**kwargs)
-        self._extra.update(**{'_source': {'exclude': ['_access']}})
+        self._extra.update(**{'_source': {'excludes': ['_access']}})
 
 
 class IndexFlusher(object):
@@ -191,7 +196,7 @@ def app(request, search_class):
     InvenioIndexer(app)
     InvenioPIDStore(app)
     search = InvenioSearch(app)
-    search.register_mappings(search_class.Meta.index, 'mappings')
+    search.register_mappings(search_class.Meta.index, 'mock_module.mappings')
     InvenioRecordsREST(app)
 
     with app.app_context():
@@ -228,17 +233,54 @@ def es(app):
     list(current_search.delete(ignore=[404]))
 
 
+def record_indexer_receiver(sender, json=None, record=None, index=None,
+                            **kwargs):
+    """Mock-receiver of a before_record_index signal."""
+    if ES_VERSION[0] == 2:
+        suggest_byyear = {}
+        suggest_byyear['context'] = {
+            'year': json['year']
+        }
+        suggest_byyear['input'] = [json['title'], ]
+        suggest_byyear['output'] = json['title']
+        suggest_byyear['payload'] = copy.deepcopy(json)
+
+        suggest_title = {}
+        suggest_title['input'] = [json['title'], ]
+        suggest_title['output'] = json['title']
+        suggest_title['payload'] = copy.deepcopy(json)
+
+        json['suggest_byyear'] = suggest_byyear
+        json['suggest_title'] = suggest_title
+
+    elif ES_VERSION[0] == 5:
+        suggest_byyear = {}
+        suggest_byyear['contexts'] = {
+            'year': [str(json['year'])]
+        }
+        suggest_byyear['input'] = [json['title'], ]
+
+        suggest_title = {}
+        suggest_title['input'] = [json['title'], ]
+        json['suggest_byyear'] = suggest_byyear
+        json['suggest_title'] = suggest_title
+
+    return json
+
+
 @pytest.yield_fixture()
 def indexer(app, es):
     """Create a record indexer."""
     InvenioIndexer(app)
+    before_record_index.connect(record_indexer_receiver, sender=app)
     yield RecordIndexer()
 
 
 @pytest.yield_fixture(scope='session')
 def test_data():
     """Load test records."""
-    with open(join(dirname(__file__), 'data/testrecords.json')) as fp:
+    path = 'data/testrecords.json'
+    with open(join(dirname(__file__), path)) as fp:
         records = json.load(fp)
     yield records
 
