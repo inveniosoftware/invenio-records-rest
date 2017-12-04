@@ -25,12 +25,17 @@
 Changes
 =======
 
+Version 1.0.0b4 (released 2017-11-04)
+-------------------------------------
+
+- Fix suggestions that cointain non ASCII characters
+
 Version 1.0.0b3 (released 2017-10-20)
---------------------------------------
+-------------------------------------
 
 - Fix inconsistent order in search results.
 
 Version 1.0.0b2 (released 2017-10-04)
---------------------------------------
+-------------------------------------
 
 - Initial public release.
