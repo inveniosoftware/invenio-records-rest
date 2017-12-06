@@ -166,7 +166,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      record_serializers_aliases=None,
                      record_loaders=None,
                      search_class=None,
-                     indexer_class=None,
+                     indexer_class=RecordIndexer,
                      search_serializers=None,
                      search_index=None, search_type=None,
                      default_media_type=None,
@@ -256,8 +256,9 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     search_class = obj_or_import_string(
         search_class, default=RecordsSearch
     )
+
     indexer_class = obj_or_import_string(
-        indexer_class, default=RecordIndexer
+        indexer_class, default=None
     )
 
     search_class_kwargs = {}
