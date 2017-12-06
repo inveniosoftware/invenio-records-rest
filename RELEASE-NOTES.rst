@@ -1,8 +1,8 @@
 ==============================
- Invenio-Records-REST v1.0.0b4
+ Invenio-Records-REST v1.0.0b5
 ==============================
 
-Invenio-Records-REST v1.0.0b4 was released on November 04, 2017.
+Invenio-Records-REST v1.0.0b4 was released on November 06, 2017.
 
 About
 -----
