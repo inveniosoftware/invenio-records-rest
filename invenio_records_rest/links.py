@@ -2,6 +2,9 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2015, 2016 CERN.
+# Copyright (C) 2017 Swiss Data Science Center (SDSC)
+# A partnership between École Polytechnique Fédérale de Lausanne (EPFL) and
+# Eidgenössische Technische Hochschule Zürich (ETHZ).
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -41,8 +44,9 @@ def default_links_factory(pid, record=None, **kwargs):
     """
     endpoint = '.{0}_item'.format(
         current_records_rest.default_endpoint_prefixes[pid.pid_type])
-    links = dict(self=url_for(endpoint, pid_value=pid.pid_value,
-                 _external=True))
+    urlkwargs = request.view_args.copy()
+    urlkwargs['pid_value'] = pid.pid_value
+    links = dict(self=url_for(endpoint, _external=True, **urlkwargs))
     return links
 
 

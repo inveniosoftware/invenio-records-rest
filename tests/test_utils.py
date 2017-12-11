@@ -2,6 +2,9 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2016 CERN.
+# Copyright (C) 2017 Swiss Data Science Center (SDSC)
+# A partnership between École Polytechnique Fédérale de Lausanne (EPFL) and
+# Eidgenössische Technische Hochschule Zürich (ETHZ).
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -30,7 +33,8 @@ from __future__ import absolute_import, print_function
 import pytest
 
 from invenio_records_rest.proxies import current_records_rest
-from invenio_records_rest.utils import build_default_endpoint_prefixes
+from invenio_records_rest.utils import LazyPIDValue, \
+    build_default_endpoint_prefixes
 
 
 @pytest.mark.parametrize('app', [dict(
@@ -139,3 +143,14 @@ def test_get_default_endpoint_for_inconsistent(app):
             },
         })
     assert 'No endpoint-prefix' in str(excinfo.value)
+
+
+def test_lazy_pid_value():
+    """Test lazy PID value."""
+    pid = LazyPIDValue(None, 1)
+
+    assert str(pid) == '1'
+
+    repr_pid = eval(repr(pid))
+    assert repr_pid.value == pid.value
+    assert repr_pid.resolver == pid.resolver

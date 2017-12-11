@@ -2,6 +2,9 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2015, 2016, 2017 CERN.
+# Copyright (C) 2017 Swiss Data Science Center (SDSC)
+# A partnership between École Polytechnique Fédérale de Lausanne (EPFL) and
+# Eidgenössische Technische Hochschule Zürich (ETHZ).
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -508,7 +511,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
             raise MaxResultWindowRESTError()
 
         # Arguments that must be added in prev/next links
-        urlkwargs = dict()
+        urlkwargs = request.view_args.copy()
         search_obj = self.search_class()
         search = search_obj.with_preference_param().params(version=True)
         search = search[(page - 1) * size:page * size]
@@ -596,7 +599,11 @@ class RecordsListResource(ContentNegotiatedMethodView):
         # Add location headers
         endpoint = '.{0}_item'.format(
             current_records_rest.default_endpoint_prefixes[pid.pid_type])
-        location = url_for(endpoint, pid_value=pid.pid_value, _external=True)
+
+        urlkwargs = request.view_args.copy()
+        urlkwargs['pid_value'] = pid.pid_value
+
+        location = url_for(endpoint, _external=True, **urlkwargs)
         response.headers.extend(dict(location=location))
         return response
 

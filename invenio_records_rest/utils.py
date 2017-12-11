@@ -2,6 +2,9 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2016 CERN.
+# Copyright (C) 2017 Swiss Data Science Center (SDSC)
+# A partnership between École Polytechnique Fédérale de Lausanne (EPFL) and
+# Eidgenössische Technische Hochschule Zürich (ETHZ).
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -144,6 +147,18 @@ class LazyPIDValue(object):
         """
         self.resolver = resolver
         self.value = value
+
+    def __repr__(self):
+        """Return a representation of the instance."""
+        return 'LazyPIDValue({0.resolver!r}, {0.value!r})'.format(self)
+
+    def __str__(self):
+        """Return string representation of its value.
+
+        This method is needed for rendering URLs using ``url_for`` with
+        instances of ``LazyPIDValue``.
+        """
+        return str(self.value)
 
     @cached_property
     def data(self):

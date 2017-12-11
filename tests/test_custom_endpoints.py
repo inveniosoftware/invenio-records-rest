@@ -2,6 +2,9 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2017 CERN.
+# Copyright (C) 2017 Swiss Data Science Center (SDSC)
+# A partnership between École Polytechnique Fédérale de Lausanne (EPFL) and
+# Eidgenössische Technische Hochschule Zürich (ETHZ).
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -36,6 +39,7 @@ from helpers import get_json
 from invenio_search import RecordsSearch
 
 from invenio_records_rest import utils
+from invenio_records_rest.links import default_links_factory
 from invenio_records_rest.query import default_search_factory
 from invenio_records_rest.serializers.json import JSONSerializer
 from invenio_records_rest.serializers.response import record_responsify, \
@@ -156,3 +160,122 @@ def test_get_records_list(test_custom_endpoints_app, indexed_records):
         # result contains manually-injected 'suggest' properties
         for k in ['title', 'year', 'stars', 'control_number']:
             assert record[1][k] == data['hits']['hits'][0]['metadata'][k]
+
+
+@pytest.mark.parametrize('app', [dict(
+    # Disable all endpoints from config. The test will create the endpoint.
+    records_rest_endpoints=dict(),
+)], indirect=['app'])
+def test_parent_child_record(test_custom_endpoints_app, test_records):
+    """Test the creation of an endpoint with a parent-child relation."""
+    test_records = test_records
+    """Test creation of a RecordResource view."""
+    blueprint = Blueprint(
+        'test_invenio_records_rest',
+        __name__,
+    )
+
+    json_v1 = JSONSerializer(RecordSchemaJSONV1)
+
+    blueprint.add_url_rule(
+        '/parent/',
+        view_func=RecordsListResource.as_view(
+            'recid_list',
+            minter_name='recid',
+            pid_fetcher='recid',
+            pid_type='recid',
+            search_serializers={
+                'application/json': search_responsify(
+                    json_v1, 'application/json'
+                )
+            },
+            search_class=RecordsSearch,
+            read_permission_factory=allow_all,
+            create_permission_factory=allow_all,
+            search_factory=default_search_factory,
+            default_media_type='application/json',
+        )
+    )
+    blueprint.add_url_rule(
+        '/parent/<pid(recid):pid_value>',
+        view_func=RecordResource.as_view(
+            'recid_item',
+            serializers={
+                'application/json': record_responsify(
+                    json_v1, 'application/json'
+                )
+            },
+            default_media_type='application/json',
+            links_factory=default_links_factory,
+            read_permission_factory=allow_all,
+            update_permission_factory=allow_all,
+            delete_permission_factory=allow_all,
+        )
+    )
+    blueprint.add_url_rule(
+        '/parent/<pid(recid):parent>/children/',
+        view_func=RecordsListResource.as_view(
+            'child_list',
+            minter_name='recid',
+            pid_fetcher='recid',
+            pid_type='recid',
+            search_serializers={
+                'application/json': search_responsify(
+                    json_v1, 'application/json'
+                )
+            },
+            search_class=RecordsSearch,
+            read_permission_factory=allow_all,
+            create_permission_factory=allow_all,
+            search_factory=default_search_factory,
+            default_media_type='application/json',
+        )
+    )
+    blueprint.add_url_rule(
+        '/parent/<pid(recid):parent>/children/<pid(recid):pid_value>',
+        view_func=RecordResource.as_view(
+            'child_item',
+            serializers={
+                'application/json': record_responsify(
+                    json_v1, 'application/json'
+                )
+            },
+            default_media_type='application/json',
+            links_factory=default_links_factory,
+            read_permission_factory=allow_all,
+            update_permission_factory=allow_all,
+            delete_permission_factory=allow_all,
+        )
+    )
+
+    test_custom_endpoints_app.register_blueprint(blueprint)
+
+    with test_custom_endpoints_app.app_context():
+        parent_pid, parent_record = test_records[0]
+        child_pid, child_record = test_records[1]
+
+        parent_url = url_for('test_invenio_records_rest.recid_item',
+                             pid_value=parent_pid.pid_value)
+        child_url = url_for('test_invenio_records_rest.child_item',
+                            parent=parent_pid.pid_value,
+                            pid_value=child_pid.pid_value)
+
+        with test_custom_endpoints_app.test_client() as client:
+            for url, record in ((parent_url, parent_record),
+                                (child_url, child_record)):
+
+                res = client.get(url)
+                assert res.status_code == 200
+
+                # Check metadata
+                data = get_json(res)
+                assert record == data['metadata']
+
+        parents_url = url_for('test_invenio_records_rest.recid_list')
+        children_url = url_for('test_invenio_records_rest.child_list',
+                               parent=parent_pid.pid_value)
+
+        with test_custom_endpoints_app.test_client() as client:
+            for url in (parents_url, children_url):
+                res = client.get(url)
+                assert res.status_code == 200
