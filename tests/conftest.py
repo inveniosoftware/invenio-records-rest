@@ -40,8 +40,8 @@ from elasticsearch.exceptions import RequestError
 from flask import Flask, url_for
 from flask_login import LoginManager, UserMixin
 from helpers import create_record
-from invenio_db import db as db_
 from invenio_db import InvenioDB
+from invenio_db import db as db_
 from invenio_indexer import InvenioIndexer
 from invenio_indexer.api import RecordIndexer
 from invenio_indexer.signals import before_record_index
