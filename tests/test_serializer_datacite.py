@@ -32,7 +32,7 @@ from invenio_records import Record
 from marshmallow import Schema, fields
 
 from invenio_records_rest.serializers.datacite import DataCite31Serializer, \
-    DataCite40Serializer, OAIDataCiteSerializer
+    DataCite40Serializer, DataCite41Serializer, OAIDataCiteSerializer
 
 
 class DOISchema(Schema):
@@ -49,7 +49,8 @@ class SimpleSchema(Schema):
 
 
 @pytest.mark.parametrize('serializer', [DataCite31Serializer,
-                                        DataCite40Serializer])
+                                        DataCite40Serializer,
+                                        DataCite41Serializer])
 def test_serialize(serializer):
     pid = PersistentIdentifier(pid_type='recid', pid_value='2')
     record = Record({'doi': '10.1234/foo'})
@@ -71,7 +72,8 @@ def test_serialize(serializer):
 
 
 @pytest.mark.parametrize('serializer', [DataCite31Serializer,
-                                        DataCite40Serializer])
+                                        DataCite40Serializer,
+                                        DataCite41Serializer])
 def test_serialize_search(serializer):
     """Test JSON serialize."""
     def fetcher(obj_uuid, data):

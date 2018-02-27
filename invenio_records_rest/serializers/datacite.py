@@ -26,7 +26,7 @@
 
 from __future__ import absolute_import, print_function
 
-from datacite import schema31, schema40
+from datacite import schema31, schema40, schema41
 from invenio_records.api import Record
 from lxml import etree
 from lxml.builder import E
@@ -107,6 +107,19 @@ class DataCite40Serializer(BaseDataCiteSerializer):
     schema = schema40
     """Class variable to define which schema use."""
     version = '4.0'
+    """Class variable to tell the version of the schema."""
+
+
+class DataCite41Serializer(BaseDataCiteSerializer):
+    """Marshmallow DataCite serializer v4.1 for records.
+
+    Note: This serializer is not suitable for serializing large number of
+    records.
+    """
+
+    schema = schema41
+    """Class variable to define which schema use."""
+    version = '4.1'
     """Class variable to tell the version of the schema."""
 
 
