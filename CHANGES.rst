@@ -25,22 +25,7 @@
 Changes
 =======
 
-Version 1.0.0b5 (released 2017-11-06)
--------------------------------------
-
-- Removed default indexer class for backward compatibility.
-
-Version 1.0.0b4 (released 2017-11-04)
--------------------------------------
-
-- Fix suggestions that contain non ASCII characters
-
-Version 1.0.0b3 (released 2017-10-20)
--------------------------------------
-
-- Fix inconsistent order in search results.
-
-Version 1.0.0b2 (released 2017-10-04)
+Version 1.0.0b6 (released 2018-02-28)
 -------------------------------------
 
 - Initial public release.
