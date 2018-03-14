@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2016 CERN.
+# Copyright (C) 2016, 2018 CERN.
 #
 # Invenio is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -26,8 +26,6 @@
 
 from __future__ import absolute_import, print_function
 
-from functools import partial
-
 from elasticsearch_dsl.query import Q
 from flask import current_app, request
 
@@ -35,7 +33,7 @@ from .errors import InvalidQueryRESTError
 
 
 def default_search_factory(self, search, query_parser=None):
-    """Parse query using Invenio-Query-Parser.
+    """Parse query using elasticsearch DSL query.
 
     :param self: REST view.
     :param search: Elastic search DSL search instance.
@@ -73,12 +71,3 @@ def default_search_factory(self, search, query_parser=None):
 
 
 es_search_factory = default_search_factory
-
-
-def invenio_search_parser(search_factory):
-    """Set the default search factory to use invenio-query-parser."""
-    from invenio_query_parser.contrib.elasticsearch import IQ
-    return partial(default_search_factory, query_parser=IQ)
-
-
-invenio_search_factory = invenio_search_parser(default_search_factory)
