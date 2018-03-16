@@ -23,7 +23,6 @@ tests_require = [
     'invenio-indexer>=1.0.0a10',
     'isort>=4.3.1',
     'pydocstyle>=1.0.0',
-    'pytest-cache>=1.0',
     'pytest-cov>=1.8.0',
     'pytest-pep8>=1.0.6',
     'pytest>=3.3.0',
