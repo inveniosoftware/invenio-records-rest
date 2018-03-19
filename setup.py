@@ -37,6 +37,9 @@ extras_require = {
     'elasticsearch5': [
         'invenio-search[elasticsearch5]>={}'.format(invenio_search_version),
     ],
+    'elasticsearch6': [
+        'invenio-search[elasticsearch6]>={}'.format(invenio_search_version),
+    ],
     'citeproc': [
         'citeproc-py>=0.3.0',
         'citeproc-py-styles>=0.1.0',

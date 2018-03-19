@@ -310,7 +310,6 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         dict(rule=list_route, view_func=list_view),
         dict(rule=item_route, view_func=item_view),
     ]
-
     if suggesters:
         suggest_view = SuggestResource.as_view(
             SuggestResource.view_name.format(endpoint),
@@ -814,14 +813,16 @@ class SuggestResource(MethodView):
         for field, val, opts in completions:
             s = s.suggest(field, val, **opts)
 
-        # Execute search
-        response = s.execute_suggest().to_dict()
         if ES_VERSION[0] == 2:
+            # Execute search
+            response = s.execute_suggest().to_dict()
             for field, _, _ in completions:
                 for resp in response[field]:
                     for op in resp['options']:
                         if 'payload' in op:
                             op['_source'] = copy.deepcopy(op['payload'])
+        elif ES_VERSION[0] >= 5:
+            response = s.execute().to_dict()['suggest']
 
         result = dict()
         for field, val, opts in completions:

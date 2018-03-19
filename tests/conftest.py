@@ -237,7 +237,7 @@ def record_indexer_receiver(sender, json=None, record=None, index=None,
         json['suggest_byyear'] = suggest_byyear
         json['suggest_title'] = suggest_title
 
-    elif ES_VERSION[0] == 5:
+    elif ES_VERSION[0] >= 5:
         suggest_byyear = {}
         suggest_byyear['contexts'] = {
             'year': [str(json['year'])]
