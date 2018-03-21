@@ -5,15 +5,31 @@
     Invenio is free software; you can redistribute it and/or modify it
     under the terms of the MIT License; see LICENSE file for more details.
 
-Authors
-=======
+Contributors
+============
 
-REST API for invenio-records.
-
-- Alexander Ioannidis <a.ioannidis@cern.ch>
-- Jiri Kuncar <jiri.kuncar@cern.ch>
-- Lars Holm Nielsen <lars.holm.nielsen@cern.ch>
-- Nicolas Harraudeau <nicolas.harraudeau@cern.ch>
-- Orestis Melkonian <melkon.or@gmail.com>
-- Rémi Ducceschi <remi.ducceschi@gmail.com>
-- Tibor Simko <tibor.simko@cern.ch>
+- Alexander Ioannidis
+- Chiara Bigarella
+- Diego Rodriguez
+- Dinos Kousidis
+- Esteban J. G. Gabancho
+- Harri Hirvonsalo
+- Harris Tzovanakis
+- Ioannis Tsanaktsidis
+- Jacopo Notarstefano
+- Javier Delgado
+- Jiri Kuncar
+- Johnny Mariéthoz
+- Krzysztof Nowak
+- Lars Holm Nielsen
+- Leonardo Rossi
+- Nicola Tarocco
+- Nicolas Harraudeau
+- Nikos Filippakis
+- Orestis Melkonian
+- Paulina Lach
+- Rémi Ducceschi
+- Samuele Kaplun
+- Satwik Kansal
+- Sebastian Witowski
+- Tibor Simko
