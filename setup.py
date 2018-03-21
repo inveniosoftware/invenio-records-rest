@@ -20,8 +20,8 @@ tests_require = [
     'check-manifest>=0.25',
     'coverage>=4.0',
     'Flask-Login>=0.3.2',
-    'invenio-db[all]>=1.0.0b8',
-    'invenio-indexer>=1.0.0a10',
+    'invenio-db[all]>=1.0.0',
+    'invenio-indexer>=1.0.0',
     'isort>=4.3.1',
     'pydocstyle>=1.0.0',
     'pytest-cov>=1.8.0',
@@ -29,7 +29,7 @@ tests_require = [
     'pytest>=3.3.0',
 ]
 
-invenio_search_version = '1.0.0b3'
+invenio_search_version = '1.0.0'
 
 extras_require = {
     'elasticsearch2': [
@@ -75,10 +75,10 @@ setup_requires = [
 install_requires = [
     'Flask>=0.11.1',
     'Flask-BabelEx>=0.9.2',
-    'invenio-pidstore>=1.0.0b1',
-    'invenio-records>=1.0.0b1',
-    'invenio-rest>=1.0.0b2',
-    'invenio-indexer>=1.0.0a10',
+    'invenio-pidstore>=1.0.0',
+    'invenio-records>=1.0.0',
+    'invenio-rest>=1.0.0',
+    'invenio-indexer>=1.0.0',
     'marshmallow>=2.5.0',
     'python-dateutil>=2.4.2',
     'six>=1.10',
@@ -140,6 +140,6 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
     ],
 )

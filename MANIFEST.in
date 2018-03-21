@@ -12,11 +12,9 @@ include *.txt
 include .dockerignore
 include .editorconfig
 include .tx/config
-include .lgtm
 include babel.ini
 include docs/requirements.txt
 include LICENSE
-include MAINTAINERS
 include pytest.ini
 prune docs/_build
 recursive-include docs *.bat
