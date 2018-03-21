@@ -1,0 +1,14 @@
+{
+    "project_name": "My datamodel",
+    "project_shortname": "{{ cookiecutter.project_name | lower | replace(' ', '-') }}",
+    "package_name": "{{ cookiecutter.project_shortname | replace('-', '_') }}",
+    "github_repo": "{{ cookiecutter.project_shortname }}/{{ cookiecutter.project_shortname }}",
+    "description": "Invenio data model.",
+    "author_name": "CERN",
+    "author_email": "info@inveniosoftware.org",
+    "year": "2018",
+    "copyright_holder": "{{ cookiecutter.author_name }}",
+  "elasticsearch_version": ["v6", "v6"],
+    "extension_class": "{{ cookiecutter.project_name | replace('-', '') | replace(' ', '') }}",
+    "pid_name": "id"
+}
