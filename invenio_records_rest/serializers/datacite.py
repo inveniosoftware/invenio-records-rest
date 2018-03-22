@@ -1,32 +1,16 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2016 CERN.
+# Copyright (C) 2016-2018 CERN.
 #
-# Invenio is free software; you can redistribute it
-# and/or modify it under the terms of the GNU General Public License as
-# published by the Free Software Foundation; either version 2 of the
-# License, or (at your option) any later version.
-#
-# Invenio is distributed in the hope that it will be
-# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Invenio; if not, write to the
-# Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
-# MA 02111-1307, USA.
-#
-# In applying this license, CERN does not
-# waive the privileges and immunities granted to it by virtue of its status
-# as an Intergovernmental Organization or submit itself to any jurisdiction.
+# Invenio is free software; you can redistribute it and/or modify it
+# under the terms of the MIT License; see LICENSE file for more details.
 
 """Marshmallow based DataCite serializer for records."""
 
 from __future__ import absolute_import, print_function
 
-from datacite import schema31, schema40
+from datacite import schema31, schema40, schema41
 from invenio_records.api import Record
 from lxml import etree
 from lxml.builder import E
@@ -107,6 +91,19 @@ class DataCite40Serializer(BaseDataCiteSerializer):
     schema = schema40
     """Class variable to define which schema use."""
     version = '4.0'
+    """Class variable to tell the version of the schema."""
+
+
+class DataCite41Serializer(BaseDataCiteSerializer):
+    """Marshmallow DataCite serializer v4.1 for records.
+
+    Note: This serializer is not suitable for serializing large number of
+    records.
+    """
+
+    schema = schema41
+    """Class variable to define which schema use."""
+    version = '4.1'
     """Class variable to tell the version of the schema."""
 
 

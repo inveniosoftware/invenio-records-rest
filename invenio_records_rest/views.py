@@ -1,29 +1,13 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015, 2016, 2017 CERN.
-# Copyright (C) 2017 Swiss Data Science Center (SDSC)
+# Copyright (C) 2015-2018 CERN.
+# Copyright (C) 2017-2018 Swiss Data Science Center (SDSC)
 # A partnership between École Polytechnique Fédérale de Lausanne (EPFL) and
 # Eidgenössische Technische Hochschule Zürich (ETHZ).
 #
-# Invenio is free software; you can redistribute it
-# and/or modify it under the terms of the GNU General Public License as
-# published by the Free Software Foundation; either version 2 of the
-# License, or (at your option) any later version.
-#
-# Invenio is distributed in the hope that it will be
-# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Invenio; if not, write to the
-# Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
-# MA 02111-1307, USA.
-#
-# In applying this license, CERN does not
-# waive the privileges and immunities granted to it by virtue of its status
-# as an Intergovernmental Organization or submit itself to any jurisdiction.
+# Invenio is free software; you can redistribute it and/or modify it
+# under the terms of the MIT License; see LICENSE file for more details.
 
 """REST API resources."""
 
@@ -329,7 +313,6 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         dict(rule=list_route, view_func=list_view),
         dict(rule=item_route, view_func=item_view),
     ]
-
     if suggesters:
         suggest_view = SuggestResource.as_view(
             SuggestResource.view_name.format(endpoint),
@@ -837,14 +820,16 @@ class SuggestResource(MethodView):
         for field, val, opts in completions:
             s = s.suggest(field, val, **opts)
 
-        # Execute search
-        response = s.execute_suggest().to_dict()
         if ES_VERSION[0] == 2:
+            # Execute search
+            response = s.execute_suggest().to_dict()
             for field, _, _ in completions:
                 for resp in response[field]:
                     for op in resp['options']:
                         if 'payload' in op:
                             op['_source'] = copy.deepcopy(op['payload'])
+        elif ES_VERSION[0] >= 5:
+            response = s.execute().to_dict()['suggest']
 
         result = dict()
         for field, val, opts in completions:
