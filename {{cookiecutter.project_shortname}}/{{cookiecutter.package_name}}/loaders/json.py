@@ -12,7 +12,13 @@ def marshmallow_loader(schema_class):
     def json_loader():
         request_json = request.get_json()
 
-        result = schema_class().load(request_json)
+        context = {}
+        pid_data = request.view_args.get('pid_value')
+        if pid_data:
+            pid, _ = pid_data.data
+            context['pid'] = pid
+
+        result = schema_class(context=context).load(request_json)
 
         if result.errors:
             raise MarshmallowErrors(result.errors)

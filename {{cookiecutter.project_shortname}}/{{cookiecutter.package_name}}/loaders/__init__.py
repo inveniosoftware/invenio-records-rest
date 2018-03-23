@@ -1,5 +1,5 @@
-from ..serializers.schemas import MetadataSchemaV1
 from .json import json_patch_loader, marshmallow_loader
+from .schemas import MetadataSchemaV1
 
 # Loaders
 # =======

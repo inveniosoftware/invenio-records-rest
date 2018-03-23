@@ -54,7 +54,7 @@
                     }
                 },
                 "_created": {
-                  "type": "date"
+                    "type": "date"
                 },
                 "_updated": {
                     "type": "date"
