@@ -44,9 +44,9 @@ after_success:
 
 deploy:
   provider: pypi
-  user: inveniosoftware
+  user: TODO: PYPIUSERNAME
   password:
-    secure: TODO:PYPISECUREHASH
+    secure: TODO: PYPISECUREHASH
   distributions: "compile_catalog sdist bdist_wheel"
   on:
     tags: true
