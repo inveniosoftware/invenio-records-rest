@@ -36,6 +36,9 @@ setup_requires = [
 
 install_requires = [
     'Flask-BabelEx>=0.9.2',
+    'arrow>=0.12.1',
+    'bleach>=2.1.3',
+    'ftfy>=5.3.0',
 ]
 
 packages = find_packages()
