@@ -12,7 +12,7 @@ RECORDS_REST_ENDPOINTS = {
         pid_fetcher='recid',
         search_class=RecordsSearch,
         indexer_class=RecordIndexer,
-        search_index=None,
+        search_index='records',
         search_type=None,
         record_serializers={
             'application/json': ('{{ cookiecutter.package_name}}.serializers'

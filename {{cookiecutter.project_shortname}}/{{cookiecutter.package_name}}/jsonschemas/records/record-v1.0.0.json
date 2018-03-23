@@ -9,7 +9,7 @@
             "description": "Record title.",
             "type": "string"
         },
-        "recid": {
+        "{{ cookiecutter.pid_name }}": {
             "description": "Invenio record identifier (integer).",
             "type": "number"
         },
@@ -85,7 +85,7 @@
         }
     },
     "required": [
-        "recid",
+        "{{ cookiecutter.pid_name }}",
         "contributors",
         "title"
     ]

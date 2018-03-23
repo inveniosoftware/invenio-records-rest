@@ -65,6 +65,9 @@ setup(
         'invenio_base.apps': [
             '{{ cookiecutter.package_name }} = {{ cookiecutter.package_name }}:{{ cookiecutter.extension_class }}',
         ],
+        'invenio_base.api_apps': [
+            '{{ cookiecutter.package_name }} = {{ cookiecutter.package_name }}:{{ cookiecutter.extension_class }}',
+        ],
         'invenio_jsonschemas.schemas': [
             '{{ cookiecutter.package_name}} = {{ cookiecutter.package_name}}.jsonschemas'
         ],

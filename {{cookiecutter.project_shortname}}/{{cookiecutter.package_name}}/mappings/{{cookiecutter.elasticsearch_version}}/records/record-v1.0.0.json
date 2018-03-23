@@ -15,7 +15,7 @@
                 "suggest_title": {
                     "type": "completion"
                 },
-                "recid": {
+                "{{ cookiecutter.pid_name }}": {
                     "type": "double"
                 },
                 "keywords": {
