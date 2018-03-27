@@ -22,6 +22,7 @@ from __future__ import absolute_import, print_function
 
 import copy
 
+import six
 from flask import current_app, request
 
 
@@ -115,7 +116,8 @@ def default_sorter_factory(search, index):
 
     # Get default sorting if sort is not specified.
     if not urlfield:
-        has_query = request.values.get('q', type=str)
+        # cast to six.text_type to handle unicodes in Python 2
+        has_query = request.values.get('q', type=six.text_type)
         urlfield = current_app.config['RECORDS_REST_DEFAULT_SORT'].get(
             index, {}).get('query' if has_query else 'noquery', '')
 

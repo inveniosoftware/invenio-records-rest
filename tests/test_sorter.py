@@ -129,6 +129,13 @@ def test_default_sorter_factory(app):
             [{'field1': {'order': 'desc'}}, {'field2': {'order': 'asc'}}]
         assert urlargs == dict(sort='-myfield')
 
+    # Default sort with query that includes unicodes
+    with app.test_request_context("/?q=tést"):
+        query, urlargs = default_sorter_factory(Search(), 'myindex')
+        assert query.to_dict()['sort'] == \
+            [{'field1': {'order': 'desc'}}, {'field2': {'order': 'asc'}}]
+        assert urlargs == dict(sort='-myfield')
+
     # Default sort another index
     with app.test_request_context("/?q=test"):
         query, urlargs = default_sorter_factory(Search(), 'aidx')
