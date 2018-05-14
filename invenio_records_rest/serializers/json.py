@@ -22,15 +22,7 @@ class JSONSerializerMixin(SerializerMixinInterface):
     @staticmethod
     def _format_args():
         """Get JSON dump indentation and separates."""
-        # Ensure we can run outside a application/request context.
-        try:
-            pretty_format = \
-                current_app.config['JSONIFY_PRETTYPRINT_REGULAR'] and \
-                not request.is_xhr
-        except RuntimeError:
-            pretty_format = False
-
-        if pretty_format:
+        if request and request.args.get('prettyprint'):
             return dict(
                 indent=2,
                 separators=(', ', ': '),

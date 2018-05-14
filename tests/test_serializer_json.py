@@ -78,12 +78,10 @@ def test_serialize_pretty(app):
     pid = PersistentIdentifier(pid_type='recid', pid_value='2'),
     rec = Record({'title': 'test'})
 
-    app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
     with app.test_request_context():
         assert JSONSerializer(TestSchema).serialize(pid, rec) == \
             '{"title":"test"}'
 
-    app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
-    with app.test_request_context():
+    with app.test_request_context('/?prettyprint=1'):
         assert JSONSerializer(TestSchema).serialize(pid, rec) == \
             '{\n  "title": "test"\n}'
