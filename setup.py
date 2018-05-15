@@ -73,6 +73,9 @@ setup_requires = [
 ]
 
 install_requires = [
+    'arrow>=0.12.1',
+    'bleach>=2.1.3',
+    'ftfy>=4.4.3,<5.0',
     'Flask>=0.11.1',
     'Flask-BabelEx>=0.9.2',
     'invenio-pidstore>=1.0.0',
