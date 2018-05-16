@@ -65,7 +65,7 @@ def test_custom_error_handlers(app, db, test_data):
         data = json.loads(res.get_data(as_text=True))
         assert data == {
             'message': (
-                'The browser (or proxy) sent a request that this server could '
-                'not understand.'),
+                'Failed to decode JSON object: Expecting property name '
+                'enclosed in double quotes: line 1 column 2 (char 1)'),
             'status': 400
         }
