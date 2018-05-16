@@ -61,6 +61,13 @@ class _RecordRESTState(object):
         )
 
     @cached_property
+    def read_list_permission_factory(self):
+        """Load default read permission factory."""
+        return load_or_import_from_config(
+            'RECORDS_REST_DEFAULT_READ_LIST_PERMISSION_FACTORY', app=self.app
+        )
+
+    @cached_property
     def default_endpoint_prefixes(self):
         """Map between pid_type and endpoint_prefix."""
         return build_default_endpoint_prefixes(
