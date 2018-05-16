@@ -160,6 +160,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      create_permission_factory_imp=None,
                      update_permission_factory_imp=None,
                      delete_permission_factory_imp=None,
+                     read_list_permission_factory_imp=None,
                      record_class=None,
                      record_serializers=None,
                      record_serializers_aliases=None,
@@ -189,6 +190,8 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         update permission object for a given record.
     :param delete_permission_factory_imp: Import path to factory that creates a
         delete permission object for a given record.
+    :param read_list_permission_factory_imp: Import path to factory that
+        creates a read list permission object for a given index/list.
     :param default_endpoint_prefix: ignored.
     :param record_class: A record API class or importable string.
     :param record_serializers: Serializers used for records.
@@ -238,6 +241,9 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     )
     delete_permission_factory = obj_or_import_string(
         delete_permission_factory_imp
+    )
+    read_list_permission_factory = obj_or_import_string(
+        read_list_permission_factory_imp
     )
     links_factory = obj_or_import_string(
         links_factory_imp, default=default_links_factory
@@ -294,6 +300,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         pid_fetcher=pid_fetcher,
         read_permission_factory=read_permission_factory,
         create_permission_factory=create_permission_factory,
+        read_list_permission_factory=read_list_permission_factory,
         record_serializers=record_serializers,
         record_loaders=record_loaders,
         search_serializers=search_serializers,
@@ -347,8 +354,9 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
             item_media_types=record_serializers.keys(),
         )
         return [
-            dict(rule="{0}_options".format(list_route), view_func=options_view)
-        ] + views
+                   dict(rule="{0}_options".format(list_route),
+                        view_func=options_view)
+               ] + views
     return views
 
 
@@ -366,6 +374,7 @@ def pass_record(f):
             return f(self, pid=pid, record=record, *args, **kwargs)
         except SQLAlchemyError:
             raise PIDResolveRESTError(pid)
+
     return inner
 
 
@@ -457,7 +466,9 @@ class RecordsListResource(ContentNegotiatedMethodView):
 
     def __init__(self, resolver=None, minter_name=None, pid_type=None,
                  pid_fetcher=None, read_permission_factory=None,
-                 create_permission_factory=None, search_class=None,
+                 create_permission_factory=None,
+                 read_list_permission_factory=None,
+                 search_class=None,
                  record_serializers=None,
                  record_loaders=None,
                  search_serializers=None, default_media_type=None,
@@ -483,6 +494,8 @@ class RecordsListResource(ContentNegotiatedMethodView):
         self.read_permission_factory = read_permission_factory
         self.create_permission_factory = create_permission_factory or \
             current_records_rest.create_permission_factory
+        self.read_list_permission_factory = read_list_permission_factory or \
+            current_records_rest.read_list_permission_factory
         self.search_class = search_class
         self.max_result_window = max_result_window or 10000
         self.search_factory = partial(search_factory, self)
@@ -492,10 +505,12 @@ class RecordsListResource(ContentNegotiatedMethodView):
         self.record_class = record_class or Record
         self.indexer_class = indexer_class
 
+    @need_record_permission('read_list_permission_factory')
     def get(self, **kwargs):
         """Search records.
 
-        Permissions: does not perform any permission checks by default.
+        Permissions: the `read_list_permission_factory` permissions are
+            checked.
 
         :returns: Search result containing hits and aggregations as
                   returned by invenio-search.

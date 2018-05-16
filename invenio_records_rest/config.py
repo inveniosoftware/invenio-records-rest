@@ -15,7 +15,7 @@ from invenio_indexer.api import RecordIndexer
 from invenio_search import RecordsSearch
 
 from .facets import terms_filter
-from .utils import check_elasticsearch, deny_all
+from .utils import allow_all, check_elasticsearch, deny_all
 
 
 def _(x):
@@ -96,6 +96,7 @@ The structure of the dictionary is as follows:
             'pid_fetcher': '<registered-pid-fetcher>',
             'pid_minter': '<registered-minter-name>',
             'pid_type': '<record-pid-type>',
+            'read_list_permission_factory_imp': permission_check_factory(),
             'read_permission_factory_imp': permission_check_factory(),
             'record_class': 'mypackage.api:MyRecord',
             'record_loaders': {
@@ -157,6 +158,9 @@ The structure of the dictionary is as follows:
 :param pid_fetcher: It identifies the registered fetcher name. Required.
 
 :param pid_minter: It identifies the registered minter name. Required.
+
+:param read_list_permission_factory_imp: Import path to factory that creates a
+    read list permission object for a given index / list.
 
 :param read_permission_factory_imp: Import path to factory that creates a
     read permission object for a given record.
@@ -331,6 +335,9 @@ The structure of the dictionary is as follows:
 
 RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY = deny_all
 """Default create permission factory: reject any request."""
+
+RECORDS_REST_DEFAULT_READ_LIST_PERMISSION_FACTORY = allow_all
+"""Default read list permission factory: allow all requests"""
 
 RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY = check_elasticsearch
 """Default read permission factory: check if the record exists."""
