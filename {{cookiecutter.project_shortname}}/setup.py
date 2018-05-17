@@ -18,15 +18,26 @@ tests_require = [
     'pytest>=2.8.0',
 ]
 
+invenio_search_version = '1.0.0'
+
 extras_require = {
     'docs': [
         'Sphinx>=1.5.1',
+    ],
+    # Elasticsearch version
+    'elasticsearch5': [
+        'invenio-search[elasticsearch5]>={}'.format(invenio_search_version),
+    ],
+    'elasticsearch6': [
+        'invenio-search[elasticsearch6]>={}'.format(invenio_search_version),
     ],
     'tests': tests_require,
 }
 
 extras_require['all'] = []
-for reqs in extras_require.values():
+for name, reqs in extras_require.values():
+    if name[0] == ':' or name in ('elasticsearch5', 'elasticsearch6'):
+        continue
     extras_require['all'].extend(reqs)
 
 setup_requires = [
