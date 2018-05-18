@@ -24,7 +24,7 @@ class ContributorSchemaV1(StrictKeysMixin):
 
 
 class MetadataSchemaV1(StrictKeysMixin):
-    """Schema for a record."""
+    """Schema for the record metadata."""
 
     title = SanitizedHTML(required=True, validate=validate.Length(min=3))
     keywords = fields.Nested(fields.Str(), many=True)

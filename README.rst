@@ -32,7 +32,7 @@ Install the latest Cookiecutter if you haven't installed it yet::
 
     pip install -U cookiecutter
 
-Generate your Invenio instance::
+Generate your Invenio datamodel::
 
     cookiecutter https://github.com/inveniosoftware/cookiecutter-invenio-datamodel.git
 

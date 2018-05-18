@@ -6,9 +6,7 @@ from .errors import MarshmallowErrors
 
 
 def marshmallow_loader(schema_class):
-    """Marshmallow loader for JSON requests.
-    simplicity, but it can
-    """
+    """Marshmallow loader for JSON requests."""
     def json_loader():
         request_json = request.get_json()
 

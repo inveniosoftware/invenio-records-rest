@@ -1,1 +1,10 @@
 {% include 'misc/header.py' %}
+
+"""JSON schemas.
+
+JSON schemas can be used to define the structure of the record data
+of your instance.
+The documentation of
+`Invenio-JSONSchemas <https://invenio-jsonschemas.readthedocs.io/>`_
+describes their usage and configuration options.
+"""
