@@ -12,3 +12,5 @@ echo "--------------------------------------------------------------------------
 echo
 
 echo "You might also want add this new module to your instance requirements inside the setup.py"
+
+rm -r misc/
