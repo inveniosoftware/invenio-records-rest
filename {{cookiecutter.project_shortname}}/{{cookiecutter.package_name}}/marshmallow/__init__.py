@@ -1,7 +1,7 @@
 {% include 'misc/header.py' %}
 
-"""Serializer Schemas."""
+"""Schemas for marshmallow."""
 
-from .json import RecordSchemaV1, MetadataSchemaV1
+from .json import MetadataSchemaV1, RecordSchemaV1
 
 __all__ = ('RecordSchemaV1', 'MetadataSchemaV1')
