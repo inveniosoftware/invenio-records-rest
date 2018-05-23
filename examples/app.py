@@ -102,6 +102,7 @@ from invenio_records_rest import InvenioRecordsREST
 from invenio_records_rest.config import RECORDS_REST_ENDPOINTS
 from invenio_records_rest.facets import terms_filter
 from invenio_records_rest.utils import PIDConverter
+from invenio_records_rest.views import create_blueprint_from_app
 
 # create application's instance directory. Needed for this example only.
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -179,6 +180,7 @@ search = InvenioSearch(app)
 search.register_mappings('testrecords', 'data')
 InvenioIndexer(app)
 InvenioRecordsREST(app)
+app.register_blueprint(create_blueprint_from_app(app))
 
 # A few documents which will be added in order to make search interesting
 record_examples = [{

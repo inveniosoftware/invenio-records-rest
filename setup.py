@@ -119,6 +119,10 @@ setup(
             'pid = invenio_records_rest.utils:PIDConverter',
             'pidpath = invenio_records_rest.utils:PIDPathConverter',
         ],
+        'invenio_base.api_blueprints': [
+            ('invenio_records_rest = '
+             'invenio_records_rest.views:create_blueprint_from_app'),
+        ],
         'invenio_base.api_converters': [
             'pid = invenio_records_rest.utils:PIDConverter',
             'pidpath = invenio_records_rest.utils:PIDPathConverter',
