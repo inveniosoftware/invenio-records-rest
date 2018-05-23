@@ -21,17 +21,17 @@ RECORDS_REST_ENDPOINTS = {
         search_index='records',
         search_type=None,
         record_serializers={
-            'application/json': ('{{ cookiecutter.package_name}}.serializers'
+            'application/json': ('{{ cookiecutter.package_name }}.serializers'
                                  ':json_v1_response'),
         },
         search_serializers={
-            'application/json': ('{{ cookiecutter.package_name}}.serializers'
+            'application/json': ('{{ cookiecutter.package_name }}.serializers'
                                  ':json_v1_search'),
         },
         record_loaders={
             'application/json': ('{{ cookiecutter.package_name }}.loaders'
                                  ':json_v1'),
-            'application/json-patch+json': ('{{ cookiecutter.package_name}}.'
+            'application/json-patch+json': ('{{ cookiecutter.package_name }}.'
                                             'loaders:json_patch_v1')
         },
         list_route='/records/',

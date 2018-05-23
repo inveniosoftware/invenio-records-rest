@@ -5,7 +5,7 @@
 from invenio_records_rest.serializers.fields import DateString, \
     SanitizedUnicode
 from invenio_records_rest.serializers.schemas.json import StrictKeysMixin
-from marshmallow import fields, missing
+from marshmallow import fields, missing, validate
 
 
 class PersonIdsSchemaV1(StrictKeysMixin):
@@ -34,7 +34,7 @@ class MetadataSchemaV1(StrictKeysMixin):
         return pid.pid_value if pid else missing
 
     {{ cookiecutter.pid_name }} = fields.Method(deserialize='get_{{ cookiecutter.pid_name }}')
-    title = SanitizedUnicode(required=True)
+    title = SanitizedUnicode(required=True, validate=validate.Length(min=3))
     keywords = fields.Nested(fields.Str(), many=True)
     publication_date = DateString()
     contributors = fields.Nested(ContributorSchemaV1, many=True, required=True)

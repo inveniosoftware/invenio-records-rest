@@ -7,7 +7,8 @@ schemas for the record metadata. In the provided json_v1 instance,
 it uses the MetadataSchemaV1, defining the PersistentIdentifier field.
 """
 
-from .json import json_patch_loader, marshmallow_loader
+from invenio_records_rest.serializers.loaders.marshmallow import \
+    json_patch_loader, marshmallow_loader
 from ..marshmallow import MetadataSchemaV1
 
 # It uses the same schema as for the response serializers just for simplicity.
