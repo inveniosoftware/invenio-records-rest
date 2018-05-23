@@ -9,7 +9,7 @@ from invenio_search import RecordsSearch
 # from {{ cookiecutter.package_name }}.config import {{ cookiecutter.package_name | upper }}_RECORDS_REST_ENDPOINTS
 # RECORDS_REST_ENDPOINTS.update({{ cookiecutter.package_name | upper }}_RECORDS_REST_ENDPOINTS)
 
-{{ cookiecutter.package_name | upper }}_RECORDS_REST_ENDPOINTS = {
+RECORDS_REST_ENDPOINTS = {
     '{{ cookiecutter.pid_name}}':
     dict(
         pid_type='recid',
@@ -44,3 +44,5 @@ from invenio_search import RecordsSearch
 
 
 PIDSTORE_RECID_FIELD = '{{ cookiecutter.pid_name }}'
+
+{{ cookiecutter.package_name | upper }}_ENDPOINTS_ENABLED = True
