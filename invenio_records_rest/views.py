@@ -113,6 +113,21 @@ def create_error_handlers(blueprint, error_handlers_registry=None):
     return blueprint
 
 
+def create_blueprint_from_app(app):
+    """Create Invenio-Records-REST blueprint from a Flask application.
+
+    .. note::
+
+        This function assumes that the application has loaded all extensions
+        that want to register REST endpoints via the ``RECORDS_REST_ENDPOINTS``
+        configuration variable.
+
+    :params app: A Flask application.
+    :returns: Configured blueprint.
+    """
+    return create_blueprint(app.config.get('RECORDS_REST_ENDPOINTS'))
+
+
 def create_blueprint(endpoints):
     """Create Invenio-Records-REST blueprint.
 

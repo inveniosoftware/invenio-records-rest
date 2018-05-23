@@ -86,10 +86,6 @@ class InvenioRecordsREST(object):
     def init_app(self, app):
         """Flask application initialization."""
         self.init_config(app)
-        # Register records API blueprints
-        app.register_blueprint(
-            create_blueprint(app.config['RECORDS_REST_ENDPOINTS'])
-        )
         app.extensions['invenio-records-rest'] = _RecordRESTState(app)
 
     def init_config(self, app):

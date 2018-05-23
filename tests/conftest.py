@@ -39,6 +39,7 @@ from sqlalchemy_utils.functions import create_database, database_exists
 from invenio_records_rest import InvenioRecordsREST, config
 from invenio_records_rest.facets import terms_filter
 from invenio_records_rest.utils import PIDConverter
+from invenio_records_rest.views import create_blueprint_from_app
 
 sys.path.append(os.path.dirname(__file__))
 
@@ -182,6 +183,7 @@ def app(request, search_class):
     search = InvenioSearch(app)
     search.register_mappings(search_class.Meta.index, 'mock_module.mappings')
     InvenioRecordsREST(app)
+    app.register_blueprint(create_blueprint_from_app(app))
 
     with app.app_context():
         yield app
