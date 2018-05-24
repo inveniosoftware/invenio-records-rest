@@ -1,3 +1,6 @@
+"""JSON schemas for the loaders."""
+
+
 from marshmallow import fields, missing
 
 from ...serializers.schemas import MetadataSchemaV1 as BaseMetadataSchemaV1

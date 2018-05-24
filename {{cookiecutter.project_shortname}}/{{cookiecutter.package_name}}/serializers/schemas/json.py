@@ -2,6 +2,8 @@
 
 """Serializer JSON Schemas."""
 
+from invenio_records_rest.serializers.fields import DateString, \
+    SanitizedUnicode
 from invenio_records_rest.serializers.schemas.json import StrictKeysMixin
 from marshmallow import fields
 
@@ -26,7 +28,7 @@ class ContributorSchemaV1(StrictKeysMixin):
 class MetadataSchemaV1(StrictKeysMixin):
     """Schema for the record metadata."""
 
-    title = SanitizedHTML(required=True, validate=validate.Length(min=3))
+    title = SanitizedUnicode(required=True)
     keywords = fields.Nested(fields.Str(), many=True)
     publication_date = DateString()
     contributors = fields.Nested(ContributorSchemaV1, many=True, required=True)

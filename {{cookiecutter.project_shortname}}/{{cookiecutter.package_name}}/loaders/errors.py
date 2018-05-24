@@ -1,3 +1,5 @@
+"""Error class for JSON loaders."""
+
 import json
 
 from invenio_rest.errors import RESTValidationError

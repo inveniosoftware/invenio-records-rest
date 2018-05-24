@@ -14,7 +14,8 @@ Also, there are different serializers defined for output of individual record
 requests (json_v1_response) and search results (json_v1_search), as the
 internal objects may not have indentical structures.
 For more information on serializers please see
-`Invenio-JSONSchemas <https://invenio-records-rest.readthedocs.io/en/latest/usage.html#serialization/>`_.
+https://invenio-records-rest.readthedocs.io/en/latest/usage.html#serialization/
+.
 """
 
 from invenio_records_rest.serializers.json import JSONSerializer

@@ -19,6 +19,7 @@ tests_require = [
 ]
 
 invenio_search_version = '1.0.0'
+invenio_db_version = '1.0.0'
 
 extras_require = {
     'docs': [
@@ -31,12 +32,20 @@ extras_require = {
     'elasticsearch6': [
         'invenio-search[elasticsearch6]>={}'.format(invenio_search_version),
     ],
+    # Databases
+    'mysql': [
+        'invenio-db[mysql]>={}'.format(invenio_db_version),
+    ],
+    'postgresql': [
+        'invenio-db[postgresql]>={}'.format(invenio_db_version),
+    ],
     'tests': tests_require,
 }
 
 extras_require['all'] = []
-for name, reqs in extras_require.values():
-    if name[0] == ':' or name in ('elasticsearch5', 'elasticsearch6'):
+for name, reqs in extras_require.items():
+    if name[0] == ':' or name in ('elasticsearch5', 'elasticsearch6', 'mysql',
+                                  'postgresql'):
         continue
     extras_require['all'].extend(reqs)
 
@@ -47,6 +56,8 @@ setup_requires = [
 
 install_requires = [
     'Flask-BabelEx>=0.9.2',
+    # TODO: use the pypi version of invenio-records-rest once it's released
+    # 'invenio-records-rest>=1.0.2,<1.1.0',
     'arrow>=0.12.1',
 ]
 

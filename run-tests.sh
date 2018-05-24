@@ -25,16 +25,16 @@ trap finish EXIT
 
 sphinx-build -qnN docs docs/_build/html
 cookiecutter --no-input -o "$WORKDIR" . \
-    project_name=Generated-Fun \
-    database=postgresql \
-    elasticsearch=elasticsearch6
+    project_name=Generated-Fun
 
 cd "${WORKDIR}/generated-fun"
 
 git init
 git add -A
 
-pip install -e .\[all\] --quiet
+pip install -e .\[${EXTRAS:-all,elasticsearch6,postgresql}\] --quiet
+# TODO: remove me once the invenio-records-rest is released
+pip install -e git+https://github.com/inveniosoftware/invenio-records-rest.git#egg=invenio-records-rest
 
 check-manifest -u || true
 
