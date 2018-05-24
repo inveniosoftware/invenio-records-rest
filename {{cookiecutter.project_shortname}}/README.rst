@@ -1,3 +1,5 @@
+{% include 'misc/header.rst' %}
+
 {{ '=' * (cookiecutter.project_name|length + 2) }}
  {{ cookiecutter.project_name }}
 {{ '=' * (cookiecutter.project_name|length + 2) }}
