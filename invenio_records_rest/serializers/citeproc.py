@@ -61,10 +61,11 @@ class CiteprocSerializer(object):
         """Initialize the inner record serializer.
 
         :param serializer: Serializer object that does the record serialization
-        to a format that `citeproc-py` can process (CSL-JSON or BibTeX). The
-        object has to implement a `serialize` method that matches the signature
-        of the `serialize` method of this class.
-        :param record_format: Format that the serializer produces
+            to a format that `citeproc-py` can process (CSL-JSON or BibTeX).
+            The object has to implement a `serialize` method that matches the
+            signature of the `serialize` method of this class.
+        :param record_format: Format that the serializer produces.
+
         """
         assert record_format in self._valid_formats
 

@@ -15,9 +15,7 @@ from .response import record_responsify, search_responsify
 from ..schemas import RecordSchemaJSONV1
 
 json_v1 = JSONSerializer(RecordSchemaJSONV1)
-"""JSON v1 serializer.
-
-It follows the schema :class:`.schemas.json.RecordSchemaJSONV1`."""
+"""JSON v1 serializer."""
 
 json_v1_response = record_responsify(json_v1, 'application/json')
 """JSON response builder that uses the JSON v1 serializer."""

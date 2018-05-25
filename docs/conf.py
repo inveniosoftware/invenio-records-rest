@@ -333,6 +333,9 @@ intersphinx_mapping = {
     'invenio-pidstore': (
         'https://invenio-pidstore.readthedocs.io/en/latest/', None
     ),
+    'invenio-records': (
+        'https://invenio-records.readthedocs.io/en/latest/', None
+    ),
     'flask': ('http://flask.pocoo.org/docs/', None),
 }
 

@@ -6,7 +6,14 @@
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
-"""Marshmallow loaders."""
+"""Marshmallow loader for record deserialization.
+
+Use marshmallow schema to transform a JSON sent via the REST API from an
+external to an internal JSON presentation. The marshmallow schema further
+allows for advanced data validation.
+"""
+
+from __future__ import absolute_import, print_function
 
 import json
 
@@ -27,7 +34,11 @@ def _flatten_marshmallow_errors(errors):
 
 
 class MarshmallowErrors(RESTValidationError):
-    """Marshmallow validation errors."""
+    """Marshmallow validation errors.
+
+    Responsible for formatting a JSON response to a user when a validation
+    error happens.
+    """
 
     def __init__(self, errors):
         """Store marshmallow errors."""

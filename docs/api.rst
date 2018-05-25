@@ -35,6 +35,84 @@ Query
 .. automodule:: invenio_records_rest.query
    :members:
 
+Serializers
+-----------
+
+.. automodule:: invenio_records_rest.serializers
+   :members:
+
+Mixins
+~~~~~~
+
+.. automodule:: invenio_records_rest.serializers.base
+   :members:
+
+Citeproc
+~~~~~~~~
+
+.. automodule:: invenio_records_rest.serializers.citeproc
+   :members:
+
+DataCite
+~~~~~~~~
+
+.. automodule:: invenio_records_rest.serializers.datacite
+   :members:
+
+DublinCore
+~~~~~~~~~~
+
+.. automodule:: invenio_records_rest.serializers.dc
+   :members:
+
+JSON
+~~~~
+
+.. automodule:: invenio_records_rest.serializers.json
+   :members:
+
+JSON-LD
+~~~~~~~
+
+.. automodule:: invenio_records_rest.serializers.jsonld
+   :members:
+
+Marshmallow
+~~~~~~~~~~~
+
+.. automodule:: invenio_records_rest.serializers.marshmallow
+   :members:
+
+Response
+~~~~~~~~
+
+.. automodule:: invenio_records_rest.serializers.response
+   :members:
+
+Loaders
+-------
+
+.. automodule:: invenio_records_rest.loaders
+   :members:
+
+Marshmallow
+~~~~~~~~~~~
+
+.. automodule:: invenio_records_rest.loaders.marshmallow
+   :members:
+
+Schemas
+-------
+
+.. automodule:: invenio_records_rest.schemas
+   :members:
+
+Fields
+~~~~~~
+.. automodule:: invenio_records_rest.schemas.fields
+   :members:
+
+
 Utils
 -----
 
