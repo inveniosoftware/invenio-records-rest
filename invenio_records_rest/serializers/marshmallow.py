@@ -11,8 +11,8 @@
 
 from __future__ import absolute_import, print_function
 
+from ..schemas.json import RecordSchemaJSONV1
 from .base import TransformerMixinInterface
-from .schemas.json import RecordSchemaJSONV1
 
 
 class MarshmallowMixin(TransformerMixinInterface):

@@ -34,7 +34,7 @@ def xml_record(*args, **kwargs):
 def json_search(pid_fetcher, search_result, **kwargs):
     """Test serializer."""
     return current_app.response_class(
-        json.dumps([{'test': 'test'}], search_result['hits']['total']),
+        json.dumps([{'test': 'test'}, search_result['hits']['total']]),
         content_type='application/json')
 
 
