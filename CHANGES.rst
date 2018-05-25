@@ -8,6 +8,15 @@
 Changes
 =======
 
+Version 1.1.0 (released 2018-05-26)
+
+- Moves RecordSchemaJSONV1 marshmallow schema from
+  invenio_records_rest.serializers.schemas to
+  invenio_records_rest.schemas.
+- Fixes missing API documentation.
+- Adds blueprint factory (requires Invenio-Base v1.0.1+).
+- Adds marshmallow loaders, fields and schemas.
+
 Version 1.0.1 (released 2018-03-27)
 
 - Fixes unicode query handling
