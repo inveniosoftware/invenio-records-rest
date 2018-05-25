@@ -22,14 +22,14 @@ class SimpleMarshmallowSerializer(MarshmallowMixin, PreprocessorMixin):
     """Simple Marshmallow serializer."""
 
 
-class TestSchema(Schema):
+class _TestSchema(Schema):
     title = fields.Str(attribute='metadata.title')
     author = fields.Function(lambda metadata, context: context['author'])
 
 
 def test_transform_record():
     """Test marshmallow serializer."""
-    serializer = SimpleMarshmallowSerializer(TestSchema)
+    serializer = SimpleMarshmallowSerializer(_TestSchema)
     data = serializer.transform_record(
         PersistentIdentifier(pid_type='recid', pid_value='1'),
         Record({'title': 'test'}),
@@ -40,7 +40,7 @@ def test_transform_record():
 
 def test_transform_search_hit():
     """Test marshmallow serializer."""
-    serializer = SimpleMarshmallowSerializer(TestSchema)
+    serializer = SimpleMarshmallowSerializer(_TestSchema)
     data = serializer.transform_record(
         PersistentIdentifier(pid_type='recid', pid_value='1'),
         Record({'title': 'test'}),

@@ -16,11 +16,11 @@ import pytest
 from helpers import get_json
 from marshmallow import Schema, fields
 
-import invenio_records_rest.serializers.loaders as loaders
-from invenio_records_rest.serializers.schemas.json import RecordSchemaJSONV1
+import invenio_records_rest.loaders as loaders
+from invenio_records_rest.schemas.json import RecordSchemaJSONV1
 
 
-class TestSchema(Schema):
+class _TestSchema(Schema):
         """Test schema."""
 
         title = fields.Str(required=True, attribute='metadata.mytitle')
@@ -28,10 +28,20 @@ class TestSchema(Schema):
         id = fields.Str(attribute='pid.pid_value')
 
 
+class _TestMetadataSchema(Schema):
+        """Test schema."""
+
+        title = fields.Str()
+        stars = fields.Integer()
+        year = fields.Integer()
+
+
 def test_marshmallow_load(app, db, es, test_data, search_url, search_class):
     """Test marshmallow loader."""
     app.config['RECORDS_REST_DEFAULT_LOADERS'] = {
-        'application/json': loaders.json_v1,
+        'application/json': loaders.marshmallow.marshmallow_loader(
+            _TestMetadataSchema
+        ),
         'application/json-patch+json': loaders.json_patch_v1,
     }
 
@@ -48,15 +58,17 @@ def test_marshmallow_load(app, db, es, test_data, search_url, search_class):
 
         # Check that the returned record matches the given data
         data = get_json(res)
-        assert RecordSchemaJSONV1().load(data)
+        data_dump = RecordSchemaJSONV1().dump(data)
+        assert data.get('metadata') == data_dump.data.get('metadata')
 
 
 def test_marshmallow_load_errors(app, db, es, test_data, search_url,
                                  search_class):
     """Test marshmallow loader."""
-
     app.config['RECORDS_REST_DEFAULT_LOADERS'] = {
-        'application/json': loaders.marshmallow.marshmallow_loader(TestSchema),
+        'application/json': loaders.marshmallow.marshmallow_loader(
+            _TestSchema
+        ),
         'application/json-patch+json': loaders.json_patch_v1,
     }
 
@@ -77,7 +89,7 @@ def test_marshmallow_load_errors(app, db, es, test_data, search_url,
 def test_marshmallow_errors(test_data):
     """Test MarshmallowErrors class."""
     incomplete_data = dict(test_data[0])
-    res = TestSchema(context={}).load(json.dumps(incomplete_data))
+    res = _TestSchema(context={}).load(json.dumps(incomplete_data))
     me = loaders.marshmallow.MarshmallowErrors(res.errors)
 
     with pytest.raises(TypeError):
