@@ -9,7 +9,7 @@
 """Loaders."""
 
 from .marshmallow import json_patch_loader, marshmallow_loader
-from ..schemas.json import RecordSchemaJSONV1
+from ..schemas import RecordSchemaJSONV1
 
 json_v1 = marshmallow_loader(RecordSchemaJSONV1)
 json_patch_v1 = json_patch_loader

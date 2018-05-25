@@ -16,8 +16,8 @@ import pytest
 from helpers import get_json
 from marshmallow import Schema, fields
 
-import invenio_records_rest.loaders as loaders
-from invenio_records_rest.schemas.json import RecordSchemaJSONV1
+from invenio_records_rest import loaders
+from invenio_records_rest.schemas import RecordSchemaJSONV1
 
 
 class _TestSchema(Schema):

@@ -10,9 +10,9 @@
 
 from invenio_records import Record
 
-from invenio_records_rest.schemas.json import StrictKeysMixin
-from invenio_records_rest.serializers.fields import DateString, \
-    SanitizedHTML, SanitizedUnicode, TrimmedString
+from invenio_records_rest.schemas import StrictKeysMixin
+from invenio_records_rest.schemas.fields import DateString, SanitizedHTML, \
+    SanitizedUnicode, TrimmedString
 
 
 class CustomFieldSchema(StrictKeysMixin):

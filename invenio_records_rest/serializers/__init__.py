@@ -12,7 +12,7 @@ from __future__ import absolute_import, print_function
 
 from .json import JSONSerializer
 from .response import record_responsify, search_responsify
-from ..schemas.json import RecordSchemaJSONV1
+from ..schemas import RecordSchemaJSONV1
 
 json_v1 = JSONSerializer(RecordSchemaJSONV1)
 """JSON v1 serializer.
