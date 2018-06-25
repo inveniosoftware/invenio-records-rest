@@ -8,6 +8,12 @@
 Changes
 =======
 
+Version 1.1.1 (released 2018-06-25)
+
+- Adds authentication to GET operation over
+  RecordsListResource.
+- Bumps invenio-db version (min v1.0.2).
+
 Version 1.1.0 (released 2018-05-26)
 
 - Moves RecordSchemaJSONV1 marshmallow schema from
