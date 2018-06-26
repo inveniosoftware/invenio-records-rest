@@ -8,6 +8,11 @@
 Changes
 =======
 
+Version 1.1.2 (released 2018-06-26)
+
+- Rename authentication of GET operation over
+  RecordsListResource from 'read_list' to 'list'.
+
 Version 1.1.1 (released 2018-06-25)
 
 - Adds authentication to GET operation over
