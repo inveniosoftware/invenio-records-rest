@@ -16,6 +16,8 @@ from invenio_pidstore.models import PersistentIdentifier
 from invenio_records import Record
 from marshmallow import Schema, fields
 
+from invenio_records_rest.schemas.fields import \
+    PersistentIdentifier as PIDField
 from invenio_records_rest.serializers.json import JSONSerializer
 
 
@@ -23,7 +25,7 @@ def test_serialize():
     """Test JSON serialize."""
     class TestSchema(Schema):
         title = fields.Str(attribute='metadata.mytitle')
-        id = fields.Str(attribute='pid.pid_value')
+        id = PIDField(attribute='pid.pid_value')
 
     data = json.loads(JSONSerializer(TestSchema).serialize(
         PersistentIdentifier(pid_type='recid', pid_value='2'),
@@ -37,7 +39,7 @@ def test_serialize_search():
     """Test JSON serialize."""
     class TestSchema(Schema):
         title = fields.Str(attribute='metadata.mytitle')
-        id = fields.Str(attribute='pid.pid_value')
+        id = PIDField(attribute='pid.pid_value')
 
     def fetcher(obj_uuid, data):
         assert obj_uuid in ['a', 'b']

@@ -18,6 +18,7 @@ from marshmallow import Schema, fields
 
 from invenio_records_rest import loaders
 from invenio_records_rest.schemas import Nested, RecordSchemaJSONV1
+from invenio_records_rest.schemas.fields import PersistentIdentifier
 
 
 class _TestSchema(Schema):
@@ -46,6 +47,7 @@ class _TestMetadataSchema(Schema):
         title = fields.Str()
         stars = fields.Integer()
         year = fields.Integer()
+        pid = PersistentIdentifier()
 
 
 def test_marshmallow_load(app, db, es, test_data, search_url, search_class):
@@ -71,6 +73,7 @@ def test_marshmallow_load(app, db, es, test_data, search_url, search_class):
         # Check that the returned record matches the given data
         data = get_json(res)
         data_dump = RecordSchemaJSONV1().dump(data)
+        assert 'pid' in data_dump.data.get('metadata')
         assert data.get('metadata') == data_dump.data.get('metadata')
 
 

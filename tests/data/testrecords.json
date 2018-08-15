@@ -2,21 +2,25 @@
   {
     "year": 2015,
     "stars": 4,
-    "title": "Back to the Future"
+    "title": "Back to the Future",
+    "pid": {"pid_value": 1, "pid_type": "recid"}
   },
   {
     "year": 2042,
     "stars": 3,
-    "title": "Back to the Past"
+    "title": "Back to the Past",
+    "pid": {"pid_value": 2, "pid_type": "recid"}
   },
   {
     "year": 1985,
     "stars": 4,
-    "title": "The Hitchhiker's Guide to the Galaxy"
+    "title": "The Hitchhiker's Guide to the Galaxy",
+    "pid": {"pid_value": 3, "pid_type": "recid"}
   },
   {
     "year": 4242,
     "stars": 5,
-    "title": "Unknown film"
+    "title": "Unknown film",
+    "pid": {"pid_value": 4, "pid_type": "recid"}
   }
 ]
