@@ -17,15 +17,27 @@ from helpers import get_json
 from marshmallow import Schema, fields
 
 from invenio_records_rest import loaders
-from invenio_records_rest.schemas import RecordSchemaJSONV1
+from invenio_records_rest.schemas import Nested, RecordSchemaJSONV1
 
 
 class _TestSchema(Schema):
-        """Test schema."""
+    """Test schema."""
 
-        title = fields.Str(required=True, attribute='metadata.mytitle')
-        random = fields.Str(required=True, attribute='metadata.nonexistant')
-        id = fields.Str(attribute='pid.pid_value')
+    title = fields.Str(required=True, attribute='metadata.mytitle')
+    random = fields.Str(required=True, attribute='metadata.nonexistant')
+    id = fields.Str(attribute='pid.pid_value')
+
+
+class NestedSchema(Schema):
+    """Test nested schema."""
+    sample = fields.Str(required=True, attribute='metadata.nested')
+
+
+class _TestSchemaNested(Schema):
+    """Test schema with custom Nested field."""
+
+    nested_field = Nested(NestedSchema, attribute='metadata.nested',
+                          many=True, required=True)
 
 
 class _TestMetadataSchema(Schema):
@@ -84,6 +96,31 @@ def test_marshmallow_load_errors(app, db, es, test_data, search_url,
         res = client.post(
             search_url, data=json.dumps(incomplete_data), headers=HEADERS)
         assert res.status_code == 400
+
+
+def test_marshmallow_load_nested_errors(app, db, es, test_data, search_url,
+                                        search_class):
+    app.config['RECORDS_REST_DEFAULT_LOADERS'] = {
+        'application/json': loaders.marshmallow.marshmallow_loader(
+            _TestSchemaNested
+        ),
+        'application/json-patch+json': loaders.json_patch_v1,
+    }
+
+    with app.test_client() as client:
+        HEADERS = [
+            ('Accept', 'application/json'),
+            ('Content-Type', 'application/json')
+        ]
+
+        # Create record
+        missing_top_most_required_field = dict(nested="test")
+        res = client.post(
+            search_url, data=json.dumps(missing_top_most_required_field),
+            headers=HEADERS)
+        assert res.status_code == 400
+        response_json = json.loads(res.data.decode('utf-8'))
+        assert response_json['errors'][0]['field'] == 'nested_field'
 
 
 def test_marshmallow_errors(test_data):

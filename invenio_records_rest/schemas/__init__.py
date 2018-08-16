@@ -10,9 +10,10 @@
 
 from __future__ import absolute_import, print_function
 
-from .json import RecordSchemaJSONV1, StrictKeysMixin
+from .json import Nested, RecordSchemaJSONV1, StrictKeysMixin
 
 __all__ = (
     'RecordSchemaJSONV1',
     'StrictKeysMixin',
+    'Nested'
 )

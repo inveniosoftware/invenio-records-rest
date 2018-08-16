@@ -10,7 +10,8 @@
 
 from __future__ import absolute_import, print_function
 
-from marshmallow import Schema, ValidationError, fields, validates_schema
+from marshmallow import Schema, ValidationError, fields, missing, \
+    validates_schema
 
 
 class StrictKeysMixin(Schema):
@@ -40,3 +41,12 @@ class RecordSchemaJSONV1(Schema):
     links = fields.Raw()
     created = fields.Str()
     updated = fields.Str()
+
+
+class Nested(fields.Nested):
+    """Custom Nested class to not recursively check errors."""
+
+    def _validate_missing(self, value):
+        if value is missing and getattr(self, 'required', False):
+            self.fail('required')
+        return super()._validate_missing(value)
