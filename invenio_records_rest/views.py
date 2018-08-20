@@ -841,7 +841,11 @@ class SuggestResource(MethodView):
         # Add completions
         s = self.search_class()
         for field, val, opts in completions:
-            s = s.suggest(field, val, **opts)
+            source = opts.pop('_source', None)
+            if source is not None and ES_VERSION[0] >= 5:
+                s = s.source(source).suggest(field, val, **opts)
+            else:
+                s = s.suggest(field, val, **opts)
 
         if ES_VERSION[0] == 2:
             # Execute search

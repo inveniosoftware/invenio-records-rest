@@ -114,6 +114,7 @@ The structure of the dictionary is as follows:
             'search_type': 'elasticsearch-doc-type',
             'suggesters': {
                 'my_url_param_to_complete': {
+                    '_source': ['specified_source_filtered_field'],
                     'completion': {
                         'field': 'suggest_byyear_elasticsearch_field',
                         'size': 10,
@@ -192,9 +193,11 @@ The structure of the dictionary is as follows:
 :param search_type: Name of the search type used when searching records.
 
 :param suggesters: Suggester fields configuration. Any element of the
-    dictionary represents a suggestion field. The key of the dictionary element
-    is used to identify the url query parameter. The ``field`` parameter
-    identifies the suggester field name in your elasticsearch schema.
+    dictionary represents a suggestion field. For each suggestion field we can
+    optionally specify the source filtering (appropriate for ES5) by using
+    ``_source``. The key of the dictionary element is used to identify the url
+    query parameter. The ``field`` parameter identifies the suggester field
+    name in your elasticsearch schema.
     To have more information about suggestion configuration, you can read
     suggesters section on ElasticSearch documentation.
 
