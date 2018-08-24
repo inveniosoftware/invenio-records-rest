@@ -8,6 +8,11 @@
 Changes
 =======
 
+Version 1.2.0 (released 2018-08-24)
+
+- Adds PersistentIdentifier field to handle record PIDs.
+- Adds Nested class to improve reporting of validation errors.
+
 Version 1.1.2 (released 2018-06-26)
 
 - Rename authentication of GET operation over

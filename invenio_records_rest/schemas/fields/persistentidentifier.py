@@ -12,7 +12,10 @@ from marshmallow import fields, missing
 
 
 class PersistentIdentifier(fields.Field):
-    """Field to handle PersistentIdentifiers in records."""
+    """Field to handle PersistentIdentifiers in records.
+
+    .. versionadded:: 1.2.0
+    """
 
     def _serialize(self, value, attr, context):
         pid = context.get('pid')

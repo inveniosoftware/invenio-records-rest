@@ -44,7 +44,10 @@ class RecordSchemaJSONV1(Schema):
 
 
 class Nested(fields.Nested):
-    """Custom Nested class to not recursively check errors."""
+    """Custom Nested class to not recursively check errors.
+
+    .. versionadded:: 1.2.0
+    """
 
     def _validate_missing(self, value):
         if value is missing and getattr(self, 'required', False):
