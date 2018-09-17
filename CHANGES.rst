@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.2.1 (released 2018-09-17)
+
+- Adds source filtering support for ES 5.
+
 Version 1.2.0 (released 2018-08-24)
 
 - Adds PersistentIdentifier field to handle record PIDs.
