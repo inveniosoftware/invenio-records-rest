@@ -53,14 +53,15 @@ def test_create_filter_dsl():
         subtype=terms_filter('type.subtype'),
     )
 
-    with app.test_request_context('?type=a&type=b&subtype=c'):
+    with app.test_request_context(u'?type=a&type=b&subtype=c&type=zażółcić'):
         filters, args = _create_filter_dsl(kwargs, defs)
         assert len(filters) == 2
         assert args == MultiDict([
-            ('a', '1'),
-            ('type', 'a'),
-            ('type', 'b'),
-            ('subtype', 'c')
+            ('a', u'1'),
+            ('type', u'a'),
+            ('type', u'b'),
+            ('subtype', u'c'),
+            ('type', u'zażółcić')
         ])
 
     kwargs = MultiDict([('a', '1')])
