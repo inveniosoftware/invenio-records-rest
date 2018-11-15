@@ -18,6 +18,7 @@ from elasticsearch_dsl import Q
 from elasticsearch_dsl.query import Range
 from flask import current_app, request
 from invenio_rest.errors import FieldError, RESTValidationError
+from six import text_type
 from werkzeug.datastructures import MultiDict
 
 
@@ -82,7 +83,7 @@ def _create_filter_dsl(urlkwargs, definitions):
     """Create a filter DSL expression."""
     filters = []
     for name, filter_factory in definitions.items():
-        values = request.values.getlist(name, type=str)
+        values = request.values.getlist(name, type=text_type)
         if values:
             filters.append(filter_factory(values))
             for v in values:
