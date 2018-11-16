@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.2.2 (released 2018-11-16)
+
+- Changes ``str`` to ``text_type`` on filter dsl.
+
 Version 1.2.1 (released 2018-09-17)
 
 - Adds source filtering support for ES 5.
