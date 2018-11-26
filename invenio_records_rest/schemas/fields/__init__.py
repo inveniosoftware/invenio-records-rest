@@ -9,6 +9,7 @@
 """Custom marshmallow fields."""
 
 from .datetime import DateString
+from .generated import Generated
 from .persistentidentifier import PersistentIdentifier
 from .sanitizedhtml import SanitizedHTML
 from .sanitizedunicode import SanitizedUnicode
@@ -19,5 +20,6 @@ __all__ = (
     'SanitizedHTML',
     'SanitizedUnicode',
     'TrimmedString',
-    'PersistentIdentifier',
+    'Generated',
+    'PersistentIdentifier'
 )

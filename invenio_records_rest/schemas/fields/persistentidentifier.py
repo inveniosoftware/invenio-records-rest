@@ -8,19 +8,33 @@
 
 """Persistent Identifier field."""
 
-from marshmallow import fields, missing
+from marshmallow import missing
+
+from invenio_records_rest.schemas.fields import Generated
 
 
-class PersistentIdentifier(fields.Field):
+def default_pid_deserializer(schema, value, attr, accesor):
+    """Custom PID deserializer function."""
+    if schema.context and schema.context.get('pid'):
+        pid = schema.context.get('pid')
+        return pid.pid_value
+    return missing
+
+
+def default_pid_serializer(schema, value, attr, data):
+    """Custom PID serializer function."""
+    pid = schema.context.get('pid')
+    return pid.pid_value
+
+
+class PersistentIdentifier(Generated):
     """Field to handle PersistentIdentifiers in records.
 
     .. versionadded:: 1.2.0
     """
 
-    def _serialize(self, value, attr, context):
-        pid = context.get('pid')
-        return pid.pid_value if pid else missing
-
-    def _deserialize(self, value, attr, context):
-        pid = context.get('pid')
-        return pid.get('pid_value') if pid else missing
+    def __init__(self, *args, **kwargs):
+        """Initialize field."""
+        super(PersistentIdentifier, self).__init__(default_pid_serializer,
+                                                   default_pid_deserializer,
+                                                   *args, **kwargs)

@@ -10,8 +10,11 @@
 
 from __future__ import absolute_import, print_function
 
-from marshmallow import Schema, ValidationError, fields, missing, \
+from flask import current_app
+from marshmallow import Schema, ValidationError, fields, missing, post_load, \
     validates_schema
+
+from invenio_records_rest.schemas.fields import PersistentIdentifier
 
 
 class StrictKeysMixin(Schema):
@@ -53,3 +56,35 @@ class Nested(fields.Nested):
         if value is missing and getattr(self, 'required', False):
             self.fail('required')
         return super()._validate_missing(value)
+
+
+class OriginalKeysMixin(Schema):
+    """Ensure all original keys are preserved on deserialization."""
+
+    @post_load(pass_original=True)
+    def load_unknown_fields(self, data, original_data):
+        """Check for unknown keys."""
+        if isinstance(original_data, list):
+            for elem in original_data:
+                self.load_unknown_fields(data, elem)
+        else:
+            for key, value in original_data.items():
+                if key not in data:
+                    data[key] = value
+        return data
+
+
+class RecordMetadataSchemaJSONV1(OriginalKeysMixin):
+    """Schema for records metadata v1 in JSON with injected PID value."""
+
+    pid = PersistentIdentifier()
+
+    @post_load()
+    def inject_pid(self, data):
+        """Inject context PID in the RECID field."""
+        # Use the already deserialized "pid" field
+        pid_value = data.get('pid')
+        if pid_value:
+            pid_field = current_app.config['PIDSTORE_RECID_FIELD']
+            data.setdefault(pid_field, pid_value)
+        return data
