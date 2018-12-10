@@ -10,24 +10,16 @@
 
 from marshmallow import missing
 
-from invenio_records_rest.schemas.fields import Generated
+from invenio_records_rest.schemas.fields.generated import GenFunction
 
 
-def default_pid_deserializer(schema, value, attr, accesor):
-    """Custom PID deserializer function."""
-    if schema.context and schema.context.get('pid'):
-        pid = schema.context.get('pid')
-        return pid.pid_value
-    return missing
+def pid_from_context(_, context):
+    """Get PID from marshmallow context."""
+    pid = (context or {}).get('pid')
+    return pid.pid_value if pid else missing
 
 
-def default_pid_serializer(schema, value, attr, data):
-    """Custom PID serializer function."""
-    pid = schema.context.get('pid')
-    return pid.pid_value
-
-
-class PersistentIdentifier(Generated):
+class PersistentIdentifier(GenFunction):
     """Field to handle PersistentIdentifiers in records.
 
     .. versionadded:: 1.2.0
@@ -35,6 +27,6 @@ class PersistentIdentifier(Generated):
 
     def __init__(self, *args, **kwargs):
         """Initialize field."""
-        super(PersistentIdentifier, self).__init__(default_pid_serializer,
-                                                   default_pid_deserializer,
-                                                   *args, **kwargs)
+        super(PersistentIdentifier, self).__init__(
+            serialize=pid_from_context, deserialize=pid_from_context,
+            *args, **kwargs)
