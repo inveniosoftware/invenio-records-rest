@@ -82,8 +82,8 @@ class RecordMetadataSchemaJSONV1(OriginalKeysMixin):
     @post_load()
     def inject_pid(self, data):
         """Inject context PID in the RECID field."""
-        # Use the already deserialized "pid" field
-        pid_value = data.get('pid')
+        # Remove already deserialized "pid" field
+        pid_value = data.pop('pid', None)
         if pid_value:
             pid_field = current_app.config['PIDSTORE_RECID_FIELD']
             data.setdefault(pid_field, pid_value)
