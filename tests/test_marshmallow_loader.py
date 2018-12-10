@@ -11,13 +11,19 @@
 from __future__ import absolute_import, print_function
 
 import json
+from copy import deepcopy
 
 import pytest
 from helpers import get_json
+from invenio_records.api import Record
+from invenio_records.models import RecordMetadata
 from marshmallow import Schema, fields
 
-from invenio_records_rest import loaders
-from invenio_records_rest.schemas import Nested, RecordSchemaJSONV1
+from invenio_records_rest.loaders import json_pid_checker
+from invenio_records_rest.loaders.marshmallow import MarshmallowErrors, \
+    marshmallow_loader
+from invenio_records_rest.schemas import Nested, RecordMetadataSchemaJSONV1, \
+    RecordSchemaJSONV1
 from invenio_records_rest.schemas.fields import PersistentIdentifier
 
 
@@ -47,17 +53,13 @@ class _TestMetadataSchema(Schema):
         title = fields.Str()
         stars = fields.Integer()
         year = fields.Integer()
-        pid = PersistentIdentifier()
+        control_number = PersistentIdentifier()
 
 
 def test_marshmallow_load(app, db, es, test_data, search_url, search_class):
     """Test marshmallow loader."""
     app.config['RECORDS_REST_DEFAULT_LOADERS'] = {
-        'application/json': loaders.marshmallow.marshmallow_loader(
-            _TestMetadataSchema
-        ),
-        'application/json-patch+json': loaders.json_patch_v1,
-    }
+        'application/json': marshmallow_loader(_TestMetadataSchema)}
 
     with app.test_client() as client:
         HEADERS = [
@@ -66,26 +68,32 @@ def test_marshmallow_load(app, db, es, test_data, search_url, search_class):
         ]
 
         # Create record
+        req_data = test_data[0]
         res = client.post(
-            search_url, data=json.dumps(test_data[0]), headers=HEADERS)
+            search_url, data=json.dumps(req_data), headers=HEADERS)
         assert res.status_code == 201
 
-        # Check that the returned record matches the given data
-        data = get_json(res)
-        data_dump = RecordSchemaJSONV1().dump(data)
-        assert 'pid' in data_dump.data.get('metadata')
-        assert data.get('metadata') == data_dump.data.get('metadata')
+        # Check that the returned response matches the stored data
+        original_res_data = get_json(res)
+        model_record = RecordMetadata.query.one()
+        assert original_res_data['metadata'] == model_record.json
+
+        # Try to modify the "control_number"
+        req_data = deepcopy(original_res_data['metadata'])
+        req_data['control_number'] = 42
+        req_url = original_res_data['links']['self']
+        res = client.put(req_url, data=json.dumps(req_data), headers=HEADERS)
+        res_data = get_json(res)
+        model_record = RecordMetadata.query.one()
+        assert res_data['metadata'] == original_res_data['metadata']
+        assert res_data['metadata'] == model_record.json
 
 
 def test_marshmallow_load_errors(app, db, es, test_data, search_url,
                                  search_class):
-    """Test marshmallow loader."""
+    """Test marshmallow loader errors."""
     app.config['RECORDS_REST_DEFAULT_LOADERS'] = {
-        'application/json': loaders.marshmallow.marshmallow_loader(
-            _TestSchema
-        ),
-        'application/json-patch+json': loaders.json_patch_v1,
-    }
+        'application/json': marshmallow_loader(_TestSchema)}
 
     with app.test_client() as client:
         HEADERS = [
@@ -103,12 +111,9 @@ def test_marshmallow_load_errors(app, db, es, test_data, search_url,
 
 def test_marshmallow_load_nested_errors(app, db, es, test_data, search_url,
                                         search_class):
+    """Test loading nested errors."""
     app.config['RECORDS_REST_DEFAULT_LOADERS'] = {
-        'application/json': loaders.marshmallow.marshmallow_loader(
-            _TestSchemaNested
-        ),
-        'application/json-patch+json': loaders.json_patch_v1,
-    }
+        'application/json': marshmallow_loader(_TestSchemaNested)}
 
     with app.test_client() as client:
         HEADERS = [
@@ -130,7 +135,7 @@ def test_marshmallow_errors(test_data):
     """Test MarshmallowErrors class."""
     incomplete_data = dict(test_data[0])
     res = _TestSchema(context={}).load(json.dumps(incomplete_data))
-    me = loaders.marshmallow.MarshmallowErrors(res.errors)
+    me = MarshmallowErrors(res.errors)
 
     with pytest.raises(TypeError):
         next(me)
@@ -138,3 +143,29 @@ def test_marshmallow_errors(test_data):
     iter(me)
     # assert __next__ method works
     assert next(me)
+
+
+def test_json_pid_checker_loader(app, db, es, search_url, search_class):
+    """Test loading using the record metadata schema."""
+    app.config['RECORDS_REST_DEFAULT_LOADERS'] = {
+        'application/json': json_pid_checker}
+
+    with app.test_client() as client:
+        HEADERS = [
+            ('Accept', 'application/json'),
+            ('Content-Type', 'application/json')
+        ]
+
+        # Create record
+        req_data = {'foo': 42, 'bar': ['here', 'it', 'comes']}
+        req_url = search_url
+        res = client.post(req_url, data=json.dumps(req_data), headers=HEADERS)
+        assert res.status_code == 201
+
+        original_res_data = get_json(res)
+        model_record = RecordMetadata.query.one()
+        assert 'control_number' in model_record.json
+        assert original_res_data['metadata'] == model_record.json
+        assert all(original_res_data['metadata'][k] == v
+                   for k, v in req_data.items())
+        assert all(model_record.json[k] == v for k, v in req_data.items())

@@ -10,7 +10,7 @@
 
 from __future__ import absolute_import, print_function
 
-from flask import current_app, json, request
+from flask import json, request
 
 from .base import PreprocessorMixin, SerializerMixinInterface
 from .marshmallow import MarshmallowMixin
