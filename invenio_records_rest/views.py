@@ -39,7 +39,7 @@ from .errors import InvalidDataRESTError, InvalidQueryRESTError, \
     JSONSchemaValidationError, MaxResultWindowRESTError, \
     PatchJSONFailureRESTError, PIDResolveRESTError, \
     SuggestMissingContextRESTError, SuggestNoCompletionsRESTError, \
-    UnsupportedMediaRESTError
+    UnhandledElasticsearchError, UnsupportedMediaRESTError
 from .links import default_links_factory
 from .proxies import current_records_rest
 from .query import es_search_factory
@@ -95,7 +95,11 @@ def create_error_handlers(blueprint, error_handlers_registry=None):
         for cause_type, handler in handlers.items():
             if cause_type in cause_types:
                 return handler(error)
-        return error
+
+        # Default exception for unhandled errors
+        exception = UnhandledElasticsearchError()
+        current_app.logger.exception(error)  # Log the original stacktrace
+        return exception.get_response()
 
     for exc_or_code, handlers in error_handlers_registry.items():
         # Build full endpoint names and resolve handlers

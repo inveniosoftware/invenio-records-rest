@@ -187,3 +187,11 @@ class JSONSchemaValidationError(RESTValidationError):
         super(RESTValidationError, self).__init__(**kwargs)
         self.description = 'Validation error: {0}.'.format(
             error.message if error else '')
+
+
+class UnhandledElasticsearchError(RESTException):
+    """Failed to handle exception."""
+
+    code = 500
+    description = 'An internal server error occurred when handling the ' \
+                  'request.'
