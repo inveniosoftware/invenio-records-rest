@@ -316,8 +316,28 @@ Its features include:
 - boosting
 
 
-A custom query parser can also be plugged in by setting the ``search_factory``
-option in ``RECORDS_REST_ENDPOINTS`` to point to the function implementing it.
+A custom query parser can also be plugged in by setting the
+``search_factory_imp`` option in ``RECORDS_REST_ENDPOINTS`` to point to the
+function implementing it:
+
+>>> from invenio_records_rest.query import default_search_factory
+>>> from elasticsearch_dsl.query import Q
+...
+>>> def my_query_parser(qstr=None):
+...     if qstr:
+...         return Q('query_string', query=qstr)
+...     return Q()
+...
+>>> def my_search_factory(*args, **kwargs):
+...     return default_search_factory(*args,
+...                                   query_parser=my_query_parser, **kwargs)
+...
+>>> RECORDS_REST_ENDPOINTS = {
+...     'recid': {
+...         # ...
+...         'search_factory_imp': my_search_factory,
+...      }
+... }
 
 Suggesters
 ~~~~~~~~~~
