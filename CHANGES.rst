@@ -8,6 +8,11 @@
 Changes
 =======
 
+Version 1.3.0 (released 2018-12-14)
+
+- Enhance Elasticsearch error handling.
+- Refactor Marshmallow schemas to allow PID injection.
+
 Version 1.2.2 (released 2018-11-16)
 
 - Changes ``str`` to ``text_type`` on filter dsl.
