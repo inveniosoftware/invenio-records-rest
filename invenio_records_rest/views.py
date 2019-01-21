@@ -43,7 +43,7 @@ from .errors import InvalidDataRESTError, InvalidQueryRESTError, \
 from .links import default_links_factory
 from .proxies import current_records_rest
 from .query import es_search_factory
-from .utils import obj_or_import_string
+from .utils import obj_or_import_string, parse_elasticsearch_index_params
 
 
 def elasticsearch_query_parsing_exception_handler(error):
@@ -594,6 +594,8 @@ class RecordsListResource(ContentNegotiatedMethodView):
         if permission_factory:
             verify_record_permission(permission_factory, data)
 
+        urlkwargs = parse_elasticsearch_index_params(request.values)
+
         # Create uuid for record
         record_uuid = uuid.uuid4()
         # Create persistent identifier
@@ -605,7 +607,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
 
         # Index the record
         if self.indexer_class:
-            self.indexer_class().index(record)
+            self.indexer_class().index(record, **urlkwargs)
 
         response = self.make_response(
             pid, record, 201, links_factory=self.item_links_factory)

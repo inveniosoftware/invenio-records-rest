@@ -112,6 +112,25 @@ def check_elasticsearch(record, *args, **kwargs):
     return type('CheckES', (), {'can': can})()
 
 
+def parse_elasticsearch_index_params(values):
+    """
+    Parses the possible parameters for indexing a record into Elasticsearch.
+
+    :param values: A dictionary with the values of the request.
+    :return: A dictionary with the parameters for indexing.
+    """
+    params_list = ['pipeline', 'refresh', 'routing', 'timeout', 'timestamp',
+                   'ttl', 'version', 'version_type', 'wait_for_active_shards']
+
+    params = {}
+    for param in params_list:
+        value = values.get(param, None)
+        if value:
+            params[param] = value
+
+    return params
+
+
 class LazyPIDValue(object):
     """Lazy PID resolver.
 
