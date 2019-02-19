@@ -196,7 +196,8 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     :param list_permission_factory_imp: Import path to factory that
         creates a list permission object for a given index/list.
     :param default_endpoint_prefix: ignored.
-    :param record_class: A record API class or importable string.
+    :param record_class: A record API class or importable string used when
+        creating new records.
     :param record_serializers: Serializers used for records.
     :param record_serializers_aliases: A mapping of query arg `format` values
         to valid mimetypes: dict(alias -> mimetype).

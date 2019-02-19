@@ -88,7 +88,8 @@ The structure of the dictionary is as follows:
             'default_endpoint_prefix': True,
             'default_media_type': 'application/json',
             'delete_permission_factory_imp': permission_check_factory(),
-            'item_route': ''/recods/<pid(record-pid-type):pid_value>'',
+            'item_route': ('/records/<pid(record-pid-type, '
+                           'record_class="mypackage.api:MyRecord"):pid_value>'),
             'links_factory_imp': ('invenio_records_rest.links:'
                                   'default_links_factory'),
             'list_route': '/records/',
