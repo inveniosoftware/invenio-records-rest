@@ -25,7 +25,6 @@ from invenio_db import db
 from invenio_indexer.api import RecordIndexer
 from invenio_pidstore import current_pidstore
 from invenio_pidstore.models import PersistentIdentifier
-from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
 from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.decorators import require_content_types
@@ -292,13 +291,8 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     search_serializers = {mime: obj_or_import_string(func)
                           for mime, func in search_serializers.items()}
 
-    resolver = Resolver(pid_type=pid_type, object_type='rec',
-                        getter=partial(record_class.get_record,
-                                       with_deleted=True))
-
     list_view = RecordsListResource.as_view(
         RecordsListResource.view_name.format(endpoint),
-        resolver=resolver,
         minter_name=pid_minter,
         pid_type=pid_type,
         pid_fetcher=pid_fetcher,
@@ -320,7 +314,6 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     )
     item_view = RecordResource.as_view(
         RecordResource.view_name.format(endpoint),
-        resolver=resolver,
         read_permission_factory=read_permission_factory,
         update_permission_factory=update_permission_factory,
         delete_permission_factory=delete_permission_factory,
@@ -468,7 +461,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
 
     view_name = '{0}_list'
 
-    def __init__(self, resolver=None, minter_name=None, pid_type=None,
+    def __init__(self, minter_name=None, pid_type=None,
                  pid_fetcher=None, read_permission_factory=None,
                  create_permission_factory=None,
                  list_permission_factory=None,
@@ -491,7 +484,6 @@ class RecordsListResource(ContentNegotiatedMethodView):
             },
             default_media_type=default_media_type,
             **kwargs)
-        self.resolver = resolver
         self.pid_type = pid_type
         self.minter = current_pidstore.minters[minter_name]
         self.pid_fetcher = current_pidstore.fetchers[pid_fetcher]
@@ -623,16 +615,13 @@ class RecordResource(ContentNegotiatedMethodView):
 
     view_name = '{0}_item'
 
-    def __init__(self, resolver=None, read_permission_factory=None,
+    def __init__(self, read_permission_factory=None,
                  update_permission_factory=None,
                  delete_permission_factory=None, default_media_type=None,
                  links_factory=None,
                  loaders=None, search_class=None, indexer_class=None,
                  **kwargs):
-        """Constructor.
-
-        :param resolver: Persistent identifier resolver instance.
-        """
+        """Constructor."""
         super(RecordResource, self).__init__(
             method_serializers={
                 'DELETE': {'*/*': lambda *args: make_response(*args), },
@@ -645,7 +634,6 @@ class RecordResource(ContentNegotiatedMethodView):
             },
             default_media_type=default_media_type,
             **kwargs)
-        self.resolver = resolver
         self.search_class = search_class
         self.read_permission_factory = read_permission_factory
         self.update_permission_factory = update_permission_factory
