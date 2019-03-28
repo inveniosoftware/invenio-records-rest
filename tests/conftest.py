@@ -130,6 +130,7 @@ def app(request, search_class):
         RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY=None,
         RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY=None,
         RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY=None,
+        RECORDS_REST_DEFAULT_RESULTS_SIZE=10,
         RECORDS_REST_DEFAULT_SEARCH_INDEX=search_class.Meta.index,
         RECORDS_REST_FACETS={
             search_class.Meta.index: {

@@ -512,8 +512,10 @@ class RecordsListResource(ContentNegotiatedMethodView):
         :returns: Search result containing hits and aggregations as
                   returned by invenio-search.
         """
+        default_results_size = current_app.config.get(
+            'RECORDS_REST_DEFAULT_RESULTS_SIZE', 10)
         page = request.values.get('page', 1, type=int)
-        size = request.values.get('size', 10, type=int)
+        size = request.values.get('size', default_results_size, type=int)
         if page * size >= self.max_result_window:
             raise MaxResultWindowRESTError()
 

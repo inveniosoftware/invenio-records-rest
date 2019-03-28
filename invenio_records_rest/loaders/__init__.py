@@ -8,8 +8,8 @@
 
 """Loaders for deserializing records in the REST API."""
 
+from ..schemas import RecordMetadataSchemaJSONV1, RecordSchemaJSONV1
 from .marshmallow import json_patch_loader, marshmallow_loader
-from ..schemas import RecordSchemaJSONV1, RecordMetadataSchemaJSONV1
 
 json_v1 = marshmallow_loader(RecordSchemaJSONV1)
 """Simple example loader that will take any JSON."""

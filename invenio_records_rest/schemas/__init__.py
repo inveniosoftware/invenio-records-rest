@@ -10,7 +10,8 @@
 
 from __future__ import absolute_import, print_function
 
-from .json import Nested, RecordSchemaJSONV1, StrictKeysMixin, RecordMetadataSchemaJSONV1
+from .json import Nested, RecordMetadataSchemaJSONV1, RecordSchemaJSONV1, \
+    StrictKeysMixin
 
 __all__ = (
     'RecordSchemaJSONV1',

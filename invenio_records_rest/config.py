@@ -363,3 +363,6 @@ RECORDS_REST_ELASTICSEARCH_ERROR_HANDLERS = {
     ),
 }
 """Handlers for ElasticSearch error codes."""
+
+RECORDS_REST_DEFAULT_RESULTS_SIZE = 10
+"""Default search results size."""

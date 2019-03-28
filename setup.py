@@ -74,6 +74,7 @@ setup_requires = [
 
 install_requires = [
     'arrow>=0.12.1',
+    'attrs>=17.4.0',
     'bleach>=2.1.3',
     'ftfy>=4.4.3,<5.0',
     'Flask>=0.11.1',
@@ -84,7 +85,7 @@ install_requires = [
     'invenio-indexer>=1.0.0',
     'marshmallow>=2.5.0',
     'python-dateutil>=2.4.2',
-    'six>=1.10',
+    'six>=1.11',
     'webargs>=1.3.2',
 ]
 
