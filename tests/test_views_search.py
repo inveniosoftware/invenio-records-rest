@@ -15,6 +15,7 @@ import re
 import pytest
 from flask import url_for
 from helpers import assert_hits_len, get_json, parse_url, to_relative_url
+from mock import patch
 
 
 def test_json_result_serializer(app, indexed_records, test_records,
@@ -54,6 +55,25 @@ def test_page_size(app, indexed_records, search_url):
         res = client.get(search_url, query_string=dict(page=100, size=100))
         assert res.status_code == 400
         assert 'message' in get_json(res)
+
+
+def test_page_size_without_size_in_request(
+        app, indexed_records, search_url):
+    """Test default size parameter."""
+    with app.test_client() as client:
+        res = client.get(search_url, query_string=dict(page=1))
+        assert_hits_len(res, len(indexed_records))
+
+
+def test_page_size_without_size_in_request_with_five_as_default(
+        app, indexed_records, search_url):
+    """Test custom default page parameter."""
+    config = {
+        'RECORDS_REST_DEFAULT_RESULTS_SIZE': 2
+    }
+    with app.test_client() as client, patch.dict(app.config, config):
+        res = client.get(search_url, query_string=dict(page=1))
+        assert_hits_len(res, 2)
 
 
 def test_pagination(app, indexed_records, search_url):
