@@ -8,6 +8,11 @@
 Changes
 =======
 
+Version 1.4.1 (released 2019-04-02)
+
+- Added ``RECORDS_REST_DEFAULT_RESULTS_SIZE`` variable to change the default
+  ``size`` of the search results. The default value remains ``10``.
+
 Version 1.4.0 (released 2019-02-22)
 
 - Removed unused resolver parameter from views classes.
