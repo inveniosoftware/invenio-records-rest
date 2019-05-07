@@ -8,6 +8,11 @@
 Changes
 =======
 
+Version 1.4.2 (released 2019-05-07)
+
+- Marshmallow JSON schema: add getter method to customize and retrieve the PID
+  field name per schema.
+
 Version 1.4.1 (released 2019-04-02)
 
 - Added ``RECORDS_REST_DEFAULT_RESULTS_SIZE`` variable to change the default
