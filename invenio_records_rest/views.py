@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015-2018 CERN.
+# Copyright (C) 2015-2019 CERN.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -371,7 +371,7 @@ def pass_record(f):
             pid, record = request.view_args['pid_value'].data
             return f(self, pid=pid, record=record, *args, **kwargs)
         except SQLAlchemyError:
-            raise PIDResolveRESTError(pid)
+            raise PIDResolveRESTError(pid_value)
 
     return inner
 
