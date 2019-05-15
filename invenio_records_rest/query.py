@@ -44,7 +44,7 @@ def default_search_factory(self, search, query_parser=None):
             exc_info=True)
         raise InvalidQueryRESTError()
 
-    search_index = search._index[0]
+    search_index = getattr(search, '_original_index', search._index)[0]
     search, urlkwargs = default_facets_factory(search, search_index)
     search, sortkwargs = default_sorter_factory(search, search_index)
     for key, value in sortkwargs.items():
