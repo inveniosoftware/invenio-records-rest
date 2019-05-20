@@ -12,6 +12,7 @@ from __future__ import absolute_import, print_function
 
 import json
 
+from elasticsearch import VERSION as ES_VERSION
 from invenio_pidstore.models import PersistentIdentifier
 from invenio_records import Record
 from marshmallow import Schema, fields
@@ -19,6 +20,8 @@ from marshmallow import Schema, fields
 from invenio_records_rest.schemas.fields import \
     PersistentIdentifier as PIDField
 from invenio_records_rest.serializers.json import JSONSerializer
+
+lt_es7 = ES_VERSION[0] < 7
 
 
 def test_serialize():
@@ -45,6 +48,7 @@ def test_serialize_search():
         assert obj_uuid in ['a', 'b']
         return PersistentIdentifier(pid_type='recid', pid_value=data['pid'])
 
+    total = 2 if lt_es7 else dict(value=2)
     data = json.loads(JSONSerializer(TestSchema).serialize_search(
         fetcher,
         dict(
@@ -55,7 +59,7 @@ def test_serialize_search():
                     {'_source': dict(mytitle='test2', pid='2'), '_id': 'b',
                      '_version': 1},
                 ],
-                total=2,
+                total=total,
             ),
             aggregations={},
         )
