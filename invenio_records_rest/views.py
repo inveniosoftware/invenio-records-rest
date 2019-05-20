@@ -44,6 +44,8 @@ from .proxies import current_records_rest
 from .query import es_search_factory
 from .utils import obj_or_import_string
 
+lt_es7 = ES_VERSION[0] < 7
+
 
 def elasticsearch_query_parsing_exception_handler(error):
     """Handle query parsing exceptions from ElasticSearch."""
@@ -539,9 +541,11 @@ class RecordsListResource(ContentNegotiatedMethodView):
         endpoint = '.{0}_list'.format(
             current_records_rest.default_endpoint_prefixes[self.pid_type])
         links = dict(self=url_for(endpoint, page=page, **urlkwargs))
+        total = search_result.hits.total if lt_es7 else \
+            search_result.hits.total['value']
         if page > 1:
             links['prev'] = url_for(endpoint, page=page - 1, **urlkwargs)
-        if size * page < search_result.hits.total and \
+        if size * page < total and \
                 size * page < self.max_result_window:
             links['next'] = url_for(endpoint, page=page + 1, **urlkwargs)
 
