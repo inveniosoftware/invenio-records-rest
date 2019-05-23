@@ -48,6 +48,7 @@ def test_serialize_search():
         assert obj_uuid in ['a', 'b']
         return PersistentIdentifier(pid_type='recid', pid_value=data['pid'])
 
+    # Search results structure changes based on ES version
     total = 2 if lt_es7 else dict(value=2)
     data = json.loads(JSONSerializer(TestSchema).serialize_search(
         fetcher,
