@@ -220,6 +220,21 @@ def es(app):
     list(current_search.delete(ignore=[404]))
 
 
+@pytest.yield_fixture()
+def prefixed_es(app):
+    """Elasticsearch fixture."""
+    app.config['SEARCH_INDEX_PREFIX'] = 'test-'
+    try:
+        list(current_search.create())
+    except RequestError:
+        list(current_search.delete(ignore=[404]))
+        list(current_search.create(ignore=[400]))
+    current_search_client.indices.refresh()
+    yield current_search_client
+    list(current_search.delete(ignore=[404]))
+    app.config['SEARCH_INDEX_PREFIX'] = ''
+
+
 def record_indexer_receiver(sender, json=None, record=None, index=None,
                             **kwargs):
     """Mock-receiver of a before_record_index signal."""
