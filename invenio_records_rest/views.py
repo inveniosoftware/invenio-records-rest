@@ -526,6 +526,8 @@ class RecordsListResource(ContentNegotiatedMethodView):
         search_obj = self.search_class()
         search = search_obj.with_preference_param().params(version=True)
         search = search[(page - 1) * size:page * size]
+        if not lt_es7:
+            search = search.extra(track_total_hits=True)
 
         search, qs_kwargs = self.search_factory(search)
         urlkwargs.update(qs_kwargs)
