@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.4.3 (released 2019-06-26)
+
+- Fixes index prefixing issues related with loading facets config.
+
 Version 1.4.2 (released 2019-05-07)
 
 - Marshmallow JSON schema: add getter method to customize and retrieve the PID
