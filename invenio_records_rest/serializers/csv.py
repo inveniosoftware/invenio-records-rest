@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2016-2018 CERN.
+# Copyright (C) 2016-2019 CERN.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -11,10 +11,25 @@
 from __future__ import absolute_import, print_function
 
 import csv
-import tempfile
 
 from .base import PreprocessorMixin, SerializerMixinInterface
 from .marshmallow import MarshmallowMixin
+
+
+class Line(object):
+    """Object that implements an interface the csv writer accepts."""
+
+    def __init__(self):
+        """Initialize."""
+        self._line = None
+
+    def write(self, line):
+        """Write a line."""
+        self._line = line
+
+    def read(self):
+        """Read a line."""
+        return self._line
 
 
 class CSVSerializer(SerializerMixinInterface, MarshmallowMixin,
@@ -28,12 +43,20 @@ class CSVSerializer(SerializerMixinInterface, MarshmallowMixin,
     def __init__(self, *args, **kwargs):
         """Initialize CSVSerializer.
 
-        :param csv_excluded_fields: list of complete paths of the fields that
+        :param csv_excluded_fields: list of paths of the fields that
                                     should be excluded from the final output
+        :param csv_included_fields: list of paths of the only fields that
+                                    should be included in the final output
         :param header_separator: separator that should be used when flattening
                                  nested dictionary keys
         """
         self.csv_excluded_fields = kwargs.pop("csv_excluded_fields", [])
+        self.csv_included_fields = kwargs.pop("csv_included_fields", [])
+
+        if self.csv_excluded_fields and self.csv_included_fields:
+            raise ValueError(
+                "Please provide only fields to either include or exclude")
+
         self.header_separator = kwargs.pop("header_separator", "_")
         super(CSVSerializer, self).__init__(*args, **kwargs)
 
@@ -47,7 +70,7 @@ class CSVSerializer(SerializerMixinInterface, MarshmallowMixin,
         record = self.process_dict(
             self.transform_record(pid, record, links_factory))
 
-        return self.format_csv([record])
+        return self._format_csv([record])
 
     def serialize_search(self, pid_fetcher, search_result, links=None,
                          item_links_factory=None):
@@ -67,49 +90,66 @@ class CSVSerializer(SerializerMixinInterface, MarshmallowMixin,
             )
             records.append(self.process_dict(processed_hit))
 
-        return self.format_csv(records)
-
-    def format_csv(self, records):
-        """Format list of flattened dictionaries into CSV format."""
-        # build a list of all the headers from all the rows
-        # and remove any duplicates with a set
-        headers = sorted(set([key for record in records for key in record]))
-
-        temp_file = tempfile.NamedTemporaryFile(suffix='.csv',
-                                                prefix='export',
-                                                mode='w+',
-                                                delete=False)
-
-        with temp_file as csv_file:
-            writer = csv.DictWriter(csv_file, fieldnames=headers)
-            writer.writeheader()
-            for record in records:
-                writer.writerow(record)
-            csv_file.seek(0)
-            return csv_file.read()
+        return self._format_csv(records)
 
     def process_dict(self, dictionary):
-        """Returns a flattened dictionary as a string."""
-        flattened = {}
+        """Transform record dict with nested keys to a flat dict."""
+        return self._flatten(dictionary)
 
-        self.flatten(dictionary, flattened)
+    def _format_csv(self, records):
+        """Return the list of records as a CSV string."""
+        # build a unique list of all records keys as CSV headers
+        headers = set()
+        for rec in records:
+            headers.update(rec.keys())
 
-        for path in self.csv_excluded_fields:
-            for key in list(flattened.keys())[:]:
-                if path in key:
-                    del flattened[key]
+        # write the CSV output in memory
+        line = Line()
+        writer = csv.DictWriter(line, fieldnames=sorted(headers))
+        writer.writeheader()
+        yield line.read()
 
-        return flattened
+        for record in records:
+            writer.writerow(record)
+            yield line.read()
 
-    def flatten(self, elem, flattened, parent_key=''):
-        """Flattens nested dictionaries."""
-        if isinstance(elem, dict):
-            for key in elem:
-                self.flatten(elem[key], flattened,
-                             parent_key + key + self.header_separator)
-        elif isinstance(elem, list):
-            for index, item in enumerate(elem):
-                self.flatten(item, flattened,
-                             parent_key + str(index) + self.header_separator)
+    def _flatten(self, value, parent_key=''):
+        """Flattens nested dict recursively, skipping excluded fields."""
+        items = []
+        sep = self.header_separator if parent_key else ''
+
+        if isinstance(value, dict):
+            for k, v in value.items():
+                # for dict, build a key field_subfield, e.g. title_subtitle
+                new_key = parent_key + sep + k
+                # skip excluded keys
+                if new_key in self.csv_excluded_fields:
+                    continue
+                if self.csv_included_fields \
+                   and not self.key_in_field(new_key,
+                                             self.csv_included_fields):
+                    continue
+                items.extend(self._flatten(v, new_key).items())
+        elif isinstance(value, list):
+            for index, item in enumerate(value):
+                # for lists, build a key with an index, e.g. title_0_subtitle
+                new_key = parent_key + sep + str(index)
+                # skip excluded keys
+                if new_key in self.csv_excluded_fields:
+                    continue
+                if self.csv_included_fields \
+                   and not self.key_in_field(parent_key,
+                                             self.csv_included_fields):
+                    continue
+                items.extend(self._flatten(item, new_key).items())
         else:
-            flattened[parent_key[0:-1]] = elem
+            items.append((parent_key, value))
+
+        return dict(items)
+
+    def key_in_field(self, key, fields):
+        """Checks if the given key is contained within any of the fields."""
+        for field in fields:
+            if key in field:
+                return True
+        return False

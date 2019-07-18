@@ -16,7 +16,7 @@ a REST API that supports features such as:
 
 - Search with sorting, filtering, aggregations and pagination, which allows the
   full capabilities of Elasticsearch to be used, such as geo-based quering.
-- Record serialization and transformation (e.g., JSON, XML, DataCite,
+- Record serialization and transformation (e.g., JSON, XML, CSV, DataCite,
   DublinCore, JSON-LD, MARCXML, Citation Style Language).
 - Pluggable query parser.
 - Tombstones and record redirection.
