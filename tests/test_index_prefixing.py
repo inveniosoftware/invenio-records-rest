@@ -9,10 +9,11 @@
 """Index prefixing tests."""
 
 import json
-from helpers import assert_hits_len, get_json, record_url
+
 from conftest import IndexFlusher
-from invenio_search import current_search
 from elasticsearch import VERSION as ES_VERSION
+from helpers import assert_hits_len, get_json, record_url
+from invenio_search import current_search
 
 lt_es7 = ES_VERSION[0] < 7
 
