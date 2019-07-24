@@ -26,15 +26,12 @@ tests_require = [
     'pydocstyle>=1.0.0',
     'pytest-cov>=1.8.0',
     'pytest-pep8>=1.0.6',
-    'pytest>=3.3.0',
+    'pytest>=4.0.0,<5.0.0',
 ]
 
 invenio_search_version = '1.0.0'
 
 extras_require = {
-    'elasticsearch2': [
-        'invenio-search[elasticsearch2]>={}'.format(invenio_search_version),
-    ],
     'elasticsearch5': [
         'invenio-search[elasticsearch5]>={}'.format(invenio_search_version),
     ],
@@ -49,7 +46,7 @@ extras_require = {
         'datacite>=1.0.1',
     ],
     'docs': [
-        'Sphinx>=1.5.1',
+        'Sphinx>=1.6.7',
     ],
     'dublincore': [
         'dcxml>=0.1.0',
@@ -63,7 +60,7 @@ extras_require = {
 extras_require['all'] = []
 for name, reqs in extras_require.items():
     if name[0] == ':' or name in (
-            'elasticsearch2', 'elasticsearch5', 'elasticsearch6'):
+            'elasticsearch5', 'elasticsearch6'):
         continue
     extras_require['all'].extend(reqs)
 
