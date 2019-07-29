@@ -29,7 +29,7 @@ tests_require = [
     'pytest>=4.0.0,<5.0.0',
 ]
 
-invenio_search_version = '1.0.0'
+invenio_search_version = '1.2.0'
 
 extras_require = {
     'elasticsearch5': [
@@ -81,7 +81,7 @@ install_requires = [
     'invenio-pidstore>=1.0.0',
     'invenio-records>=1.0.0',
     'invenio-rest>=1.0.0',
-    'invenio-indexer>=1.0.0',
+    'invenio-indexer>=1.1.0',
     'marshmallow>=2.5.0',
     'python-dateutil>=2.4.2',
     'six>=1.11',
