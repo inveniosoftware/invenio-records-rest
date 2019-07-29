@@ -21,6 +21,8 @@ from invenio_rest.errors import FieldError, RESTValidationError
 from six import text_type
 from werkzeug.datastructures import MultiDict
 
+from invenio_records_rest.utils import make_comma_list_a_list
+
 
 def terms_filter(field):
     """Create a term filter.
@@ -123,6 +125,9 @@ def _aggregations(search, definitions):
 def default_facets_factory(search, index):
     """Add a default facets to query.
 
+    It's possible to select facets which should be added to query
+    by passing their name in `facets` parameter.
+
     :param search: Basic search object.
     :param index: Index name.
     :returns: A tuple containing the new search object and a dictionary with
@@ -131,10 +136,26 @@ def default_facets_factory(search, index):
     urlkwargs = MultiDict()
 
     facets = current_app.config['RECORDS_REST_FACETS'].get(index)
-
     if facets is not None:
         # Aggregations.
-        search = _aggregations(search, facets.get("aggs", {}))
+        # First get requested facets, also split by ',' to get facets names
+        # if they were provided as list separated by comma.
+        selected_facets = make_comma_list_a_list(
+            request.args.getlist('facets', None)
+        )
+        all_aggs = facets.get("aggs", {})
+
+        # If no facets were requested, assume default behaviour - Take all.
+        if not selected_facets:
+            search = _aggregations(search, all_aggs)
+        # otherwise, check if there are facets to chose
+        elif selected_facets and all_aggs:
+            aggs = {}
+            # Go through all available facets and check if they were requested.
+            for facet_name, facet_body in all_aggs.items():
+                if facet_name in selected_facets:
+                    aggs.update({facet_name: facet_body})
+            search = _aggregations(search, aggs)
 
         # Query filter
         search, urlkwargs = _query_filter(

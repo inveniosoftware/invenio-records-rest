@@ -263,3 +263,69 @@ def test_dynamic_aggregation(app, indexed_records, search_url):
                           key=lambda x: x['doc_count'])
         assert sorted(data['aggregations']['test']['buckets'],
                       key=lambda x: x['doc_count']) == expected
+
+
+def test_from_parameter_pagination(app, indexed_records, search_url):
+    """Test "from" parameter pagination."""
+    with app.test_client() as client:
+        res = client.get(search_url, query_string={'size': 1, 'from': 1})
+        assert_hits_len(res, 1)
+        data = get_json(res)
+        assert 'self' in data['links']
+        assert 'next' in data['links']
+        assert 'prev' not in data['links']
+
+        next_url = get_json(res)['links']['next']
+        parsed_url = parse_url(next_url)
+
+        assert parsed_url['qs']['size'] == ['1']
+        assert parsed_url['qs']['from'] == ['2']
+        assert 'page' not in parsed_url['qs']
+
+        self_url = get_json(res)['links']['self']
+        parsed_url = parse_url(self_url)
+
+        assert parsed_url['qs']['size'] == ['1']
+        assert parsed_url['qs']['from'] == ['1']
+        assert 'page' not in parsed_url['qs']
+
+        res = client.get(next_url)
+        assert_hits_len(res, 1)
+        data = get_json(res)
+
+        assert data['links']['self'] == next_url
+        assert 'next' in data['links']
+        assert 'prev' in data['links']
+
+        next_url = get_json(res)['links']['next']
+        parsed_url = parse_url(next_url)
+
+        assert parsed_url['qs']['size'] == ['1']
+        assert parsed_url['qs']['from'] == ['3']
+        assert 'page' not in parsed_url['qs']
+
+
+def test_from_parameter_invalid_pagination(
+    app, indexed_records, search_url
+):
+    """Test edge values for "from" parameter pagination."""
+    with app.test_client() as client:
+        res = client.get(search_url, query_string={'size': 1, 'from': 0})
+        data = get_json(res)
+        assert res.status_code == 400
+        assert data['message'] == 'Invalid pagination parameters.'
+        assert {(e['field'], e['message']) for e in data['errors']} == \
+            {('from', 'Must be at least 1.'), }
+
+        res = client.get(search_url, query_string={'size': 1, 'from': 9999})
+        assert_hits_len(res, 0)
+        data = get_json(res)
+        assert 'self' in data['links']
+        assert 'next' not in data['links']
+        assert 'prev' in data['links']
+
+        res = client.get(search_url, query_string={'size': 1, 'from': 10000})
+        assert res.status_code == 400
+        data = get_json(res)
+        assert data['message'] == \
+            'Maximum number of 10000 results have been reached.'

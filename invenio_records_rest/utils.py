@@ -112,6 +112,21 @@ def check_elasticsearch(record, *args, **kwargs):
     return type('CheckES', (), {'can': can})()
 
 
+def make_comma_list_a_list(elements_to_rocess):
+    """Process a list with commas to simple list.
+
+    For example:
+    ['elem1','elem2,elem3'] => ['elem1', 'elem2', 'elem3']
+
+    :param elements_to_rocess: list to process
+    :return: processed list with elemnts separated
+    """
+    output_list = []
+    for element in elements_to_rocess:
+        output_list.extend(element.split(','))
+    return list(set(output_list))
+
+
 class LazyPIDValue(object):
     """Lazy PID resolver.
 

@@ -16,17 +16,25 @@ All error classes in this module are inheriting from
 from __future__ import absolute_import, print_function
 
 from flask import request
-from invenio_rest.errors import RESTException, RESTValidationError
+from invenio_rest.errors import FieldError, RESTException, RESTValidationError
 
 
 #
 # Search
 #
-class MaxResultWindowRESTError(RESTException):
-    """Maximum number of results have been reached."""
+class SearchPaginationRESTError(RESTException):
+    """Search pagination error."""
 
     code = 400
-    description = 'Maximum number of results have been reached.'
+
+    def __init__(self, errors=None, **kwargs):
+        """Initialize exception."""
+        _errors = []
+        if errors:
+            for field, messages in errors.items():
+                _errors.extend([FieldError(field, msg) for msg in messages])
+        super(SearchPaginationRESTError, self).__init__(
+            errors=_errors, **kwargs)
 
 
 #
