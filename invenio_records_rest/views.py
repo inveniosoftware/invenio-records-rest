@@ -32,11 +32,15 @@ from invenio_search import RecordsSearch
 from jsonpatch import JsonPatchException, JsonPointerException
 from jsonschema.exceptions import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
+from webargs import ValidationError as WebargsValidationError
+from webargs import fields, validate
+from webargs.flaskparser import parser
+from werkzeug.exceptions import BadRequest
 
 from ._compat import wrap_links_factory
 from .errors import InvalidDataRESTError, InvalidQueryRESTError, \
-    JSONSchemaValidationError, MaxResultWindowRESTError, \
-    PatchJSONFailureRESTError, PIDResolveRESTError, \
+    JSONSchemaValidationError, PatchJSONFailureRESTError, \
+    PIDResolveRESTError, SearchPaginationRESTError, \
     SuggestMissingContextRESTError, SuggestNoCompletionsRESTError, \
     UnhandledElasticsearchError, UnsupportedMediaRESTError
 from .links import default_links_factory
@@ -421,6 +425,88 @@ def need_record_permission(factory_name):
     return need_record_permission_builder
 
 
+def _validate_pagination_args(args):
+    if args.get('page') and args.get('from'):
+        raise WebargsValidationError(
+            'The query parameters from and page must not be '
+            'used at the same time.',
+            field_names=['page', 'from']
+        )
+
+
+def use_paginate_args(default_size=25, max_results=10000):
+    """Get and validate pagination arguments."""
+    def decorator(f):
+        @wraps(f)
+        def inner(self, *args, **kwargs):
+
+            _default_size = default_size(self) \
+                if callable(default_size) else default_size
+            _max_results = max_results(self) \
+                if callable(max_results) else max_results
+
+            try:
+                req = parser.parse(
+                    {
+                        'page': fields.Int(
+                            validate=validate.Range(min=1),
+                        ),
+                        'from': fields.Int(
+                            load_from='from',
+                            validate=validate.Range(min=1),
+                        ),
+                        'size': fields.Int(
+                            validate=validate.Range(min=1),
+                            missing=_default_size
+                        ),
+                    },
+                    locations=['querystring'],
+                    validate=_validate_pagination_args,
+                    error_status_code=400,
+                )
+            # For validation errors, webargs raises an enhanced BadRequest
+            except BadRequest as err:
+                raise SearchPaginationRESTError(
+                    description='Invalid pagination parameters.',
+                    errors=err.data.get('messages'))
+
+            # Default if neither page nor from is specified
+            if not (req.get('page') or req.get('from')):
+                req['page'] = 1
+
+            if req.get('page'):
+                req.update(dict(
+                    from_idx=(req['page'] - 1) * req['size'],
+                    to_idx=req['page'] * req['size'],
+                    links=dict(
+                        prev={'page': req['page'] - 1},
+                        self={'page': req['page']},
+                        next={'page': req['page'] + 1},
+                    )
+                ))
+            elif req.get('from'):
+                req.update(dict(
+                    from_idx=req['from'] - 1,
+                    to_idx=req['from'] - 1 + req['size'],
+                    links=dict(
+                        prev={'from': max(1, req['from'] - req['size'])},
+                        self={'from': req['from']},
+                        next={'from': req['from'] + req['size']},
+                    )
+                ))
+
+            if req['to_idx'] >= _max_results:
+                raise SearchPaginationRESTError(
+                    description=(
+                        'Maximum number of {} results have been reached.'
+                        .format(_max_results))
+                )
+
+            return f(self, pagination=req, *args, **kwargs)
+        return inner
+    return decorator
+
+
 class RecordsListOptionsResource(MethodView):
     """Resource for displaying options about records list/item views."""
 
@@ -505,7 +591,12 @@ class RecordsListResource(ContentNegotiatedMethodView):
         self.indexer_class = indexer_class
 
     @need_record_permission('list_permission_factory')
-    def get(self, **kwargs):
+    @use_paginate_args(
+        default_size=lambda self: current_app.config.get(
+            'RECORDS_REST_DEFAULT_RESULTS_SIZE', 10),
+        max_results=lambda self: self.max_result_window,
+    )
+    def get(self, pagination=None, **kwargs):
         """Search records.
 
         Permissions: the `list_permission_factory` permissions are
@@ -514,18 +605,11 @@ class RecordsListResource(ContentNegotiatedMethodView):
         :returns: Search result containing hits and aggregations as
                   returned by invenio-search.
         """
-        default_results_size = current_app.config.get(
-            'RECORDS_REST_DEFAULT_RESULTS_SIZE', 10)
-        page = request.values.get('page', 1, type=int)
-        size = request.values.get('size', default_results_size, type=int)
-        if page * size >= self.max_result_window:
-            raise MaxResultWindowRESTError()
-
         # Arguments that must be added in prev/next links
         urlkwargs = dict()
         search_obj = self.search_class()
         search = search_obj.with_preference_param().params(version=True)
-        search = search[(page - 1) * size:page * size]
+        search = search[pagination['from_idx']:pagination['to_idx']]
         if not lt_es7:
             search = search.extra(track_total_hits=True)
 
@@ -535,21 +619,24 @@ class RecordsListResource(ContentNegotiatedMethodView):
         # Execute search
         search_result = search.execute()
 
-        # Generate links for prev/next
-        urlkwargs.update(
-            size=size,
-            _external=True,
-        )
-        endpoint = '.{0}_list'.format(
-            current_records_rest.default_endpoint_prefixes[self.pid_type])
-        links = dict(self=url_for(endpoint, page=page, **urlkwargs))
+        # Generate links for self/prev/next
         total = search_result.hits.total if lt_es7 else \
             search_result.hits.total['value']
-        if page > 1:
-            links['prev'] = url_for(endpoint, page=page - 1, **urlkwargs)
-        if size * page < total and \
-                size * page < self.max_result_window:
-            links['next'] = url_for(endpoint, page=page + 1, **urlkwargs)
+        endpoint = '.{0}_list'.format(
+            current_records_rest.default_endpoint_prefixes[self.pid_type])
+        urlkwargs.update(size=pagination['size'], _external=True)
+
+        links = {}
+
+        def _link(name):
+            urlkwargs.update(pagination['links'][name])
+            links[name] = url_for(endpoint, **urlkwargs)
+
+        _link('self')
+        if pagination['from_idx'] >= 1:
+            _link('prev')
+        if pagination['to_idx'] < min(total, self.max_result_window):
+            _link('next')
 
         return self.make_response(
             pid_fetcher=self.pid_fetcher,

@@ -154,7 +154,6 @@ def test_default_facets_factory(app):
         ),
     )
     app.config['RECORDS_REST_FACETS']['testidx'] = defs
-
     with app.test_request_context('?type=a&subtype=b'):
         search = Search().query(Q(query='value'))
         search, urlkwargs = default_facets_factory(search, 'testidx')
@@ -168,3 +167,134 @@ def test_default_facets_factory(app):
         assert 'aggs' not in search.to_dict()
         assert 'post_filter' not in search.to_dict()
         assert 'bool' not in search.to_dict()['query']
+
+
+def test_selecting_one_specified_facet(app):
+    defs = dict(
+        aggs=dict(
+            facet_1=dict(
+                terms=dict(field='one_field'),
+            ),
+            facet_2=dict(
+                terms=dict(field='other_field'),
+
+            ),
+            facet_3=dict(
+                terms=dict(field='some_other_field')
+            )
+        ),
+        filters=dict(
+            subtype=terms_filter('subtype'),
+        ),
+        post_filters=dict(
+            type=terms_filter('type'),
+        ),
+    )
+
+    expected_agg = dict(
+        facet_2=dict(
+            terms=dict(field='other_field')
+        )
+    )
+    app.config['RECORDS_REST_FACETS']['test_facet_names'] = defs
+    with app.test_request_context('?type=a&subtype=b&facets=facet_2'):
+        search = Search().query(Q(query='value'))
+        search, urlkwargs = default_facets_factory(search, 'test_facet_names')
+        assert search.to_dict().get('aggs') == expected_agg
+
+
+def test_selecting_specified_facet(app):
+    defs = dict(
+        aggs=dict(
+            facet_1=dict(
+                terms=dict(field='one_field'),
+            ),
+            facet_2=dict(
+                terms=dict(field='other_field'),
+
+            ),
+            facet_3=dict(
+                terms=dict(field='some_other_field')
+            )
+        ),
+        filters=dict(
+            subtype=terms_filter('subtype'),
+        ),
+        post_filters=dict(
+            type=terms_filter('type'),
+        ),
+    )
+
+    expected_agg = dict(
+        facet_1=dict(
+            terms=dict(field='one_field'),
+        ),
+        facet_3=dict(
+            terms=dict(field='some_other_field')
+        )
+
+    )
+    app.config['RECORDS_REST_FACETS']['test_facet_names'] = defs
+    with app.test_request_context('?type=a&subtype=b&facets=facet_1,facet_3'):
+        search = Search().query(Q(query='value'))
+        search, urlkwargs = default_facets_factory(search, 'test_facet_names')
+        assert search.to_dict().get('aggs') == expected_agg
+
+
+def test_turn_off_facets(app):
+    defs = dict(
+        aggs=dict(
+            facet_1=dict(
+                terms=dict(field='one_field'),
+            ),
+            facet_2=dict(
+                terms=dict(field='other_field'),
+
+            ),
+            facet_3=dict(
+                terms=dict(field='some_other_field')
+            )
+        ),
+        filters=dict(
+            subtype=terms_filter('subtype'),
+        ),
+        post_filters=dict(
+            type=terms_filter('type'),
+        ),
+    )
+
+    app.config['RECORDS_REST_FACETS']['test_facet_names'] = defs
+    with app.test_request_context('?type=a&subtype=b&facets=null'):
+        search = Search().query(Q(query='value'))
+        search, urlkwargs = default_facets_factory(search, 'test_facet_names')
+        assert search.to_dict().get('aggs') is None
+
+
+def test_selecting_all_facets_by_default(app):
+    defs = dict(
+        aggs=dict(
+            facet_1=dict(
+                terms=dict(field='one_field'),
+            ),
+            facet_2=dict(
+                terms=dict(field='other_field'),
+
+            ),
+            facet_3=dict(
+                terms=dict(field='some_other_field')
+            )
+        ),
+        filters=dict(
+            subtype=terms_filter('subtype'),
+        ),
+        post_filters=dict(
+            type=terms_filter('type'),
+        ),
+    )
+
+    expected_agg = defs['aggs']
+    app.config['RECORDS_REST_FACETS']['test_facet_names'] = defs
+    with app.test_request_context('?type=a&subtype=b'):
+        search = Search().query(Q(query='value'))
+        search, urlkwargs = default_facets_factory(search, 'test_facet_names')
+        assert search.to_dict().get('aggs') == expected_agg
