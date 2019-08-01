@@ -61,6 +61,13 @@ extras_require = {
         'pyld>=0.7.1',
     ],
     'tests': tests_require,
+    # Marshmallow v3.x drops support for Python 2
+    ':python_version<"3.0.0"': [
+        'marshmallow>=2.15.2,<3.0.0',
+    ],
+    ':python_version>="3.0.0"': [
+        'marshmallow>=2.15.2',
+    ],
 }
 
 extras_require['all'] = []
@@ -86,10 +93,9 @@ install_requires = [
     'invenio-records>=1.0.0',
     'invenio-rest>=1.0.0',
     'invenio-indexer>=1.1.0',
-    'marshmallow>=2.5.0',
     'python-dateutil>=2.4.2',
     'six>=1.11',
-    'webargs>=1.3.2',
+    'webargs>=5.1.3',
 ]
 
 packages = find_packages()
