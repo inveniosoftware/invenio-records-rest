@@ -336,7 +336,7 @@ intersphinx_mapping = {
     'invenio-records': (
         'https://invenio-records.readthedocs.io/en/latest/', None
     ),
-    'flask': ('http://flask.pocoo.org/docs/', None),
+    'flask': ('https://flask.readthedocs.io/', None),
 }
 
 # Autodoc configuraton.
