@@ -86,8 +86,9 @@ def marshmallow_loader(schema_class):
         context = {}
         pid_data = request.view_args.get('pid_value')
         if pid_data:
-            pid, _ = pid_data.data
+            pid, record = pid_data.data
             context['pid'] = pid
+            context['record'] = record
 
         result = schema_class(context=context).load(request_json)
 
