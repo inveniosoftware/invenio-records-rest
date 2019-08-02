@@ -90,6 +90,7 @@ import os
 
 from flask import Flask
 from flask_celeryext import FlaskCeleryExt
+from invenio_config import InvenioConfigDefault
 from invenio_db import InvenioDB, db
 from invenio_indexer import InvenioIndexer
 from invenio_indexer.api import RecordIndexer
@@ -176,6 +177,7 @@ InvenioDB(app)
 InvenioREST(app)
 InvenioPIDStore(app)
 InvenioRecords(app)
+InvenioConfigDefault(app)
 search = InvenioSearch(app)
 search.register_mappings('testrecords', 'data')
 InvenioIndexer(app)
