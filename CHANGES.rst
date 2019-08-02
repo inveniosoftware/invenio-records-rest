@@ -8,6 +8,14 @@
 Changes
 =======
 
+Version 1.5.0 (released 2019-08-02)
+
+- Adds improved support for infinite scroll
+- Adds ES7 support
+- Adds CSV serializer
+- Adds ``record`` to marshmallow context
+- Uses html allowed tags and attributes for bleach from config
+
 Version 1.4.2 (released 2019-05-07)
 
 - Marshmallow JSON schema: add getter method to customize and retrieve the PID
