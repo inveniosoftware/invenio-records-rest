@@ -30,6 +30,7 @@ def record_responsify(serializer, mimetype):
         response.status_code = code
         response.set_etag(str(record.revision_id))
         response.last_modified = record.updated
+        response.vary = 'Content-Type, Accept'
         if headers is not None:
             response.headers.extend(headers)
 

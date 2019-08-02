@@ -10,6 +10,7 @@
 
 from __future__ import absolute_import, print_function
 
+import pytest
 from flask import url_for
 from helpers import get_json, record_url, to_relative_url
 
@@ -75,3 +76,49 @@ def test_item_get_invalid_mimetype(app, test_records):
         # Check that GET with non accepted format will return 406
         res = client.get(record_url(pid), headers=[('Accept', 'video/mp4')])
         assert res.status_code == 406
+
+
+@pytest.mark.skip
+def test_item_get_cached(app, test_records):
+    """Test to emulate different content types and caching issue."""
+    with app.test_client() as client:
+        pid, record = test_records[0]
+        res = client.get(record_url(pid),
+                         headers=[('Accept', 'application/json'),
+                                  ])
+
+        etag_one = res.headers['ETag']
+        last_modified = res.headers['Last-Modified']
+        assert res.status_code == 200
+        res = client.get(record_url(pid),
+                         headers=[('Accept', 'application/x-custom')])
+        etag_two = res.headers['ETag']
+        assert res.status_code == 200
+
+        res = client.get(record_url(pid),
+                         headers=[('Accept', 'application/json'),
+                                  ('If-Match', etag_one),
+                                  ('If-Modified-Since',
+                                   last_modified),
+                                  ])
+
+        assert res.status_code == 304
+
+        res = client.get(record_url(pid),
+                         headers=[('Accept', 'application/x-custom'),
+                                  ('If-Match', etag_two),
+                                  ('If-Modified-Since',
+                                   last_modified),
+                                  ])
+
+        assert res.status_code == 304
+
+        res = client.get(record_url(pid),
+                         headers=[('Accept', 'application/x-custom'),
+                                  ('If-Match', etag_one),
+                                  ('If-Modified-Since',
+                                   last_modified),
+                                  ])
+        # this reveals the problem, should be 200,
+        # can be tested with a browser
+        assert res.status_code == 304
