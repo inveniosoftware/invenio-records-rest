@@ -24,6 +24,7 @@ from elasticsearch.exceptions import RequestError
 from flask import Flask, url_for
 from flask_login import LoginManager, UserMixin
 from helpers import create_record
+from invenio_config import InvenioConfigDefault
 from invenio_db import InvenioDB
 from invenio_db import db as db_
 from invenio_indexer import InvenioIndexer
@@ -181,6 +182,7 @@ def app(request, search_class):
     InvenioRecords(app)
     InvenioIndexer(app)
     InvenioPIDStore(app)
+    InvenioConfigDefault(app)
     search = InvenioSearch(app)
     search.register_mappings(search_class.Meta.index, 'mock_module.mappings')
     InvenioRecordsREST(app)

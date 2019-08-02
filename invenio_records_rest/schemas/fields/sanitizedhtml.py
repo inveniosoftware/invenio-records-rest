@@ -11,6 +11,7 @@
 from __future__ import absolute_import, print_function
 
 import bleach
+from flask import current_app
 
 from .sanitizedunicode import SanitizedUnicode
 
@@ -21,43 +22,17 @@ class SanitizedHTML(SanitizedUnicode):
     def __init__(self, tags=None, attrs=None, *args, **kwargs):
         """Initialize field."""
         super(SanitizedHTML, self).__init__(*args, **kwargs)
-        self.tags = tags or [
-            'a',
-            'abbr',
-            'acronym',
-            'b',
-            'blockquote',
-            'br',
-            'code',
-            'div',
-            'em',
-            'i',
-            'li',
-            'ol',
-            'p',
-            'pre',
-            'span',
-            'strike',
-            'strong',
-            'sub',
-            'sup',
-            'u',
-            'ul',
-        ]
+        self.tags = tags
 
-        self.attrs = attrs or {
-            '*': ['class'],
-            'a': ['href', 'title', 'name', 'class', 'rel'],
-            'abbr': ['title'],
-            'acronym': ['title'],
-        }
+        self.attrs = attrs
 
     def _deserialize(self, value, attr, data):
         """Deserialize string by sanitizing HTML."""
         value = super(SanitizedHTML, self)._deserialize(value, attr, data)
         return bleach.clean(
             value,
-            tags=self.tags,
-            attributes=self.attrs,
+            tags=self.tags or current_app.config.get('ALLOWED_HTML_TAGS', []),
+            attributes=self.attrs or current_app.config.get(
+                'ALLOWED_HTML_ATTRS', {}),
             strip=True,
         ).strip()
