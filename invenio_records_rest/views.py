@@ -907,13 +907,20 @@ class SuggestResource(MethodView):
             if val:
                 # Get completion suggestions
                 opts = copy.deepcopy(self.suggesters[k])
-
+                # Context suggester compatibility adjustment
                 if 'context' in opts.get('completion', {}):
-                    ctx_field = opts['completion']['context']
+                    context_key = 'context'
+                elif 'contexts' in opts.get('completion', {}):
+                    context_key = 'contexts'
+                else:
+                    context_key = None
+
+                if context_key:
+                    ctx_field = opts['completion'][context_key]
                     ctx_val = request.values.get(ctx_field)
                     if not ctx_val:
                         raise SuggestMissingContextRESTError
-                    opts['completion']['context'] = {
+                    opts['completion'][context_key] = {
                         ctx_field: ctx_val
                     }
 
