@@ -17,7 +17,10 @@ import pytest
 from helpers import get_json
 from invenio_records.api import Record
 from invenio_records.models import RecordMetadata
-from marshmallow import Schema, fields
+from invenio_rest.serializer import BaseSchema as Schema
+from marshmallow import ValidationError
+from marshmallow import __version_info__ as marshmallow_version
+from marshmallow import fields
 
 from invenio_records_rest.loaders import json_pid_checker
 from invenio_records_rest.loaders.marshmallow import MarshmallowErrors, \
@@ -128,14 +131,23 @@ def test_marshmallow_load_nested_errors(app, db, es, test_data, search_url,
             headers=HEADERS)
         assert res.status_code == 400
         response_json = json.loads(res.data.decode('utf-8'))
-        assert response_json['errors'][0]['field'] == 'nested_field'
+        assert \
+            response_json['errors'][0]['field'] in ('nested_field', 'nested')
 
 
 def test_marshmallow_errors(test_data):
     """Test MarshmallowErrors class."""
     incomplete_data = dict(test_data[0])
-    res = _TestSchema(context={}).load(json.dumps(incomplete_data))
-    me = MarshmallowErrors(res.errors)
+    if marshmallow_version[0] >= 3:
+        try:
+            res = _TestSchema(context={}).load(json.dumps(incomplete_data))
+        except ValidationError as error:
+            errors = error.messages
+    else:
+        res = _TestSchema(context={}).load(json.dumps(incomplete_data))
+        errors = res.errors
+
+    me = MarshmallowErrors(errors)
 
     with pytest.raises(TypeError):
         next(me)

@@ -26,9 +26,10 @@ class SanitizedHTML(SanitizedUnicode):
 
         self.attrs = attrs
 
-    def _deserialize(self, value, attr, data):
+    def _deserialize(self, value, attr, data, **kwargs):
         """Deserialize string by sanitizing HTML."""
-        value = super(SanitizedHTML, self)._deserialize(value, attr, data)
+        value = super(SanitizedHTML, self)._deserialize(
+            value, attr, data, **kwargs)
         return bleach.clean(
             value,
             tags=self.tags or current_app.config.get('ALLOWED_HTML_TAGS', []),
