@@ -19,6 +19,8 @@ import json
 
 from flask import request
 from invenio_rest.errors import RESTValidationError
+from marshmallow import ValidationError
+from marshmallow import __version_info__ as marshmallow_version
 
 
 def _flatten_marshmallow_errors(errors):
@@ -89,11 +91,19 @@ def marshmallow_loader(schema_class):
             pid, record = pid_data.data
             context['pid'] = pid
             context['record'] = record
+        if marshmallow_version[0] < 3:
+            result = schema_class(context=context).load(request_json)
+            if result.errors:
+                raise MarshmallowErrors(result.errors)
+        else:
+            # From Marshmallow 3 the errors on .load() are being raised rather
+            # than returned. To adjust this change to our flow we catch these
+            # errors and reraise them instead.
+            try:
+                result = schema_class(context=context).load(request_json)
+            except ValidationError as error:
+                raise MarshmallowErrors(error.messages)
 
-        result = schema_class(context=context).load(request_json)
-
-        if result.errors:
-            raise MarshmallowErrors(result.errors)
         return result.data
     return json_loader
 

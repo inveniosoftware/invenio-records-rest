@@ -72,7 +72,7 @@ class Function(fields.Function):
         }}
     """
 
-    def _deserialize(self, value, attr, data):
+    def _deserialize(self, value, attr, data, **kwargs):
         if self.deserialize_func:
             return self._call_or_raise(
                 self.deserialize_func, value, attr, data)
@@ -125,7 +125,7 @@ class Method(fields.Method):
         }}
     """
 
-    def _deserialize(self, value, attr, data):
+    def _deserialize(self, value, attr, data, **kwargs):
         if self.deserialize_method_name:
             try:
                 method = utils.callable_or_raise(

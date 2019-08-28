@@ -12,7 +12,8 @@ from __future__ import absolute_import, print_function
 
 from invenio_pidstore.models import PersistentIdentifier
 from invenio_records import Record
-from marshmallow import Schema, fields
+from invenio_rest.serializer import BaseSchema as Schema
+from marshmallow import fields
 
 from invenio_records_rest.serializers.dc import DublinCoreSerializer
 

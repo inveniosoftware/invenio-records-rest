@@ -314,8 +314,9 @@ def test_from_parameter_invalid_pagination(
         data = get_json(res)
         assert res.status_code == 400
         assert data['message'] == 'Invalid pagination parameters.'
-        assert {(e['field'], e['message']) for e in data['errors']} == \
-            {('from', 'Must be at least 1.'), }
+        errors = {(e['field'], e['message']) for e in data['errors']}
+        assert errors == {('from', 'Must be at least 1.'), } or \
+            errors == {('from', 'Must be greater than or equal to 1.'), }
 
         res = client.get(search_url, query_string={'size': 1, 'from': 9999})
         assert_hits_len(res, 0)

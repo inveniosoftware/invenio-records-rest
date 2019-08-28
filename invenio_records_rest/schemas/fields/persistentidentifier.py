@@ -13,7 +13,7 @@ from marshmallow import missing
 from invenio_records_rest.schemas.fields.generated import GenFunction
 
 
-def pid_from_context(_, context):
+def pid_from_context(_, context, **kwargs):
     """Get PID from marshmallow context."""
     pid = (context or {}).get('pid')
     return pid.pid_value if pid else missing

@@ -11,6 +11,8 @@
 import pytest
 from invenio_pidstore.models import PersistentIdentifier as PIDModel
 from invenio_records import Record
+from invenio_rest.serializer import BaseSchema as Schema
+from marshmallow import __version_info__ as marshmallow_version
 from marshmallow import missing
 
 from invenio_records_rest.schemas import StrictKeysMixin
@@ -18,9 +20,22 @@ from invenio_records_rest.schemas.fields import DateString, GenFunction, \
     GenMethod, PersistentIdentifier, SanitizedHTML, SanitizedUnicode, \
     TrimmedString
 
+if marshmallow_version[0] >= 3:
+    schema_to_use = Schema
+    from marshmallow import EXCLUDE
+else:
+    schema_to_use = StrictKeysMixin
 
-class CustomFieldSchema(StrictKeysMixin):
+
+class CustomFieldSchema(schema_to_use):
     """Test schema."""
+
+    if marshmallow_version[0] >= 3:
+
+        class Meta:
+            """."""
+
+            unknown = EXCLUDE
 
     date_string_field = DateString(attribute='date_string_field')
     sanitized_html_field = SanitizedHTML(attribute='sanitized_html_field')
@@ -48,14 +63,12 @@ class CustomFieldSchema(StrictKeysMixin):
 
 def test_load_custom_fields(app):
     """Test loading of custom fields."""
-    rec = Record({'date_string_field': '27.10.1999',
+    rec = Record({'date_string_field': '1999-10-27',
                   'sanitized_html_field': 'an <script>evil()</script> example',
                   # Zero-width space, Line Tabulation, Escape, Cancel
                   'sanitized_unicode_field': u'\u200b\u000b\u001b\u0018',
                   'trimmed_string_field': 'so much trailing whitespace    '})
     recid = PIDModel(pid_type='recid', pid_value='12345')
-    # ensure only valid keys are given
-    CustomFieldSchema().check_unknown_fields(rec, rec)
     loaded_data = CustomFieldSchema(context={'pid': recid}).load(rec).data
     if 'metadata' in loaded_data:
         values = loaded_data['metadata'].values()
@@ -70,36 +83,42 @@ def test_load_custom_fields(app):
 def test_custom_generated_fields():
     """Test fields.generated fields."""
 
-    with pytest.warns(RuntimeWarning):
-        def serialize_func(obj, ctx):
-            return ctx.get('func-foo', obj.get('func-bar', missing))
+    def serialize_func(obj, ctx):
+        return ctx.get('func-foo', obj.get('func-bar', missing))
 
-        def deserialize_func(value, ctx, data):
-            return ctx.get('func-foo', data.get('func-bar', missing))
+    def deserialize_func(value, ctx, data):
+        return ctx.get('func-foo', data.get('func-bar', missing))
 
-        class GeneratedFieldsSchema(StrictKeysMixin):
-            """Test schema."""
+    class GeneratedFieldsSchema(schema_to_use):
+        """Test schema."""
 
-            gen_function = GenFunction(
-                serialize=serialize_func,
-                deserialize=deserialize_func,
-            )
+        if marshmallow_version[0] >= 3:
 
-            gen_method = GenMethod(
-                serialize='_serialize_gen_method',
-                deserialize='_desererialize_gen_method',
-                missing='raises-warning',
-            )
+            class Meta:
+                """Meta attributes for the schema."""
 
-            def _serialize_gen_method(self, obj):
-                # "meth-foo" from context or "meth-bar" from the object
-                return self.context.get(
-                    'meth-foo', obj.get('meth-bar', missing))
+                unknown = EXCLUDE
 
-            def _desererialize_gen_method(self, value, data):
-                # "meth-foo" from context or "meth-bar" from the data
-                return self.context.get(
-                    'meth-foo', data.get('meth-bar', missing))
+        gen_function = GenFunction(
+            serialize=serialize_func,
+            deserialize=deserialize_func,
+        )
+
+        gen_method = GenMethod(
+            serialize='_serialize_gen_method',
+            deserialize='_desererialize_gen_method',
+            missing='raises-warning',
+        )
+
+        def _serialize_gen_method(self, obj):
+            # "meth-foo" from context or "meth-bar" from the object
+            return self.context.get(
+                'meth-foo', obj.get('meth-bar', missing))
+
+        def _desererialize_gen_method(self, value, data):
+            # "meth-foo" from context or "meth-bar" from the data
+            return self.context.get(
+                'meth-foo', data.get('meth-bar', missing))
 
     ctx = {
         'func-foo': 'ctx-func-value',
