@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015-2018 CERN.
+# Copyright (C) 2015-2019 CERN.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -177,6 +177,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
                      search_class=None,
                      indexer_class=RecordIndexer,
                      search_serializers=None,
+                     search_serializers_aliases=None,
                      search_index=None, search_type=None,
                      default_media_type=None,
                      max_result_window=None, use_options_view=True,
@@ -205,10 +206,11 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     :param record_class: A record API class or importable string used when
         creating new records.
     :param record_serializers: Serializers used for records.
-    :param record_serializers_aliases: A mapping of query arg `format` values
-        to valid mimetypes: dict(alias -> mimetype).
+    :param record_serializers_aliases: A mapping of values of the defined
+        query arg (see `config.REST_MIMETYPE_QUERY_ARG_NAME`) to valid
+        mimetypes for record item serializers: dict(alias -> mimetype).
     :param record_loaders: It contains the list of record deserializers for
-        supperted formats.
+        supported formats.
     :param search_class: Import path or class object for the object in charge
         of execute the search queries. The default search class is
         :class:`invenio_search.api.RecordsSearch`.
@@ -218,6 +220,9 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         of indexing records. The default indexer is
         :class:`invenio_indexer.api.RecordIndexer`.
     :param search_serializers: Serializers used for search results.
+    :param search_serializers_aliases: A mapping of values of the defined
+        query arg (see `config.REST_MIMETYPE_QUERY_ARG_NAME`) to valid
+        mimetypes for records search serializers: dict(alias -> mimetype).
     :param search_index: Name of the search index used when searching records.
     :param search_type: Name of the search type used when searching records.
     :param default_media_type: Default media type for both records and search.
@@ -227,7 +232,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         for the index.
     :param use_options_view: Determines if a special option view should be
         installed.
-    :param search_factory_imp: Factory to parse quieries.
+    :param search_factory_imp: Factory to parse queries.
     :param links_factory_imp: Factory for record links generation.
     :param suggesters: Suggester fields configuration.
 
@@ -309,6 +314,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         record_serializers=record_serializers,
         record_loaders=record_loaders,
         search_serializers=search_serializers,
+        serializers_query_aliases=search_serializers_aliases,
         search_class=search_class,
         indexer_class=indexer_class,
         default_media_type=default_media_type,

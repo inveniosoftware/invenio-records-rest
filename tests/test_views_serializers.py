@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2016-2018 CERN.
+# Copyright (C) 2016-2019 CERN.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -88,3 +88,42 @@ def test_default_serializer(app, db, es, indexed_records):
         res = client.get('/records/1')
         assert res.status_code == 200
         assert res.content_type == 'application/xml'
+
+
+@pytest.mark.parametrize('app', [dict(
+    endpoint=dict(
+        record_serializers={
+            'application/json': 'test_views_serializers:json_record',
+            'application/xml': 'test_views_serializers.xml_record',
+        },
+        record_serializers_aliases={
+            'get-json': 'application/json',
+        },
+        search_serializers={
+            'application/json': 'test_views_serializers:json_search',
+            'application/xml': 'test_views_serializers.xml_search',
+        },
+        search_serializers_aliases={
+            'list-json': 'application/json',
+        },
+        default_media_type='application/xml',
+    ),
+)], indirect=['app'], scope='function')
+def test_serializer_aliases(app, db, es, indexed_records):
+    """Test serializers aliases."""
+    with app.test_client() as client:
+        res = client.get('/records/')
+        assert res.status_code == 200
+        assert res.content_type == 'application/xml'
+
+        res = client.get('/records/?format=list-json')
+        assert res.status_code == 200
+        assert res.content_type == 'application/json'
+
+        res = client.get('/records/1')
+        assert res.status_code == 200
+        assert res.content_type == 'application/xml'
+
+        res = client.get('/records/1?format=get-json')
+        assert res.status_code == 200
+        assert res.content_type == 'application/json'
