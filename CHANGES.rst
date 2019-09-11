@@ -8,6 +8,11 @@
 Changes
 =======
 
+Version 1.6.0 (released 2019-09-11)
+
+- Adds support to serialization using Marshmallow with versions 2 and 3
+- Enables to choose response search serializer via url argument
+
 Version 1.5.0 (released 2019-08-02)
 
 - Adds improved support for infinite scroll
