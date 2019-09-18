@@ -51,8 +51,16 @@ def test_page_size(app, indexed_records, search_url):
         res = client.get(search_url, query_string=dict(page=1, size=10))
         assert_hits_len(res, len(indexed_records))
 
-        # Exceed max result window
+        # Last page
         res = client.get(search_url, query_string=dict(page=100, size=100))
+        assert_hits_len(res, 0)
+
+        # Exceed max result window
+        res = client.get(search_url, query_string=dict(page=100, size=101))
+        assert res.status_code == 400
+        assert 'message' in get_json(res)
+
+        res = client.get(search_url, query_string=dict(page=101, size=100))
         assert res.status_code == 400
         assert 'message' in get_json(res)
 
@@ -305,10 +313,28 @@ def test_from_parameter_pagination(app, indexed_records, search_url):
         assert 'page' not in parsed_url['qs']
 
 
+def test_from_parameter_edges(app, indexed_records, search_url):
+    """Test first and last values for "from" parameter pagination."""
+    with app.test_client() as client:
+        res = client.get(search_url, query_string={'size': 1, 'from': 1})
+        assert_hits_len(res, 1)
+        data = get_json(res)
+        assert 'self' in data['links']
+        assert 'next' in data['links']
+        assert 'prev' not in data['links']
+
+        res = client.get(search_url, query_string={'size': 1, 'from': 4})
+        assert_hits_len(res, 1)
+        data = get_json(res)
+        assert 'self' in data['links']
+        assert 'next' not in data['links']
+        assert 'prev' in data['links']
+
+
 def test_from_parameter_invalid_pagination(
     app, indexed_records, search_url
 ):
-    """Test edge values for "from" parameter pagination."""
+    """Test invalid edge values for "from" parameter pagination."""
     with app.test_client() as client:
         res = client.get(search_url, query_string={'size': 1, 'from': 0})
         data = get_json(res)
@@ -318,15 +344,66 @@ def test_from_parameter_invalid_pagination(
         assert errors == {('from', 'Must be at least 1.'), } or \
             errors == {('from', 'Must be greater than or equal to 1.'), }
 
-        res = client.get(search_url, query_string={'size': 1, 'from': 9999})
-        assert_hits_len(res, 0)
+        res = client.get(search_url, query_string={'size': 1, 'from': 10001})
+        assert res.status_code == 400
+        data = get_json(res)
+        assert data['message'] == \
+            'Maximum number of 10000 results have been reached.'
+
+
+@pytest.mark.parametrize('app', [dict(
+    records_rest_endpoints=dict(
+        recid=dict(
+            pid_type='recid',
+            max_result_window=3,
+        )
+    ),
+)], indirect=['app'])
+def test_max_result_window_valid_params(app, indexed_records, search_url):
+    """Test max_result_window with a valid page/from/size parameters."""
+    with app.test_client() as client:
+        res = client.get(search_url, query_string={'size': 3})
+        assert_hits_len(res, 3)
+
+        res = client.get(search_url, query_string={'page': 1, 'size': 3})
+        assert_hits_len(res, 3)
+        data = get_json(res)
+
+        res = client.get(search_url, query_string={'from': 3, 'size': 1})
+        assert_hits_len(res, 1)
         data = get_json(res)
         assert 'self' in data['links']
         assert 'next' not in data['links']
         assert 'prev' in data['links']
 
-        res = client.get(search_url, query_string={'size': 1, 'from': 10000})
+
+@pytest.mark.parametrize('app', [dict(
+    records_rest_endpoints=dict(
+        recid=dict(
+            pid_type='recid',
+            max_result_window=3,
+        )
+    ),
+)], indirect=['app'])
+def test_max_result_window_invalid_params(app, indexed_records, search_url):
+    """Test max_result_window with an invalid page/from/size parameters."""
+    with app.test_client() as client:
+        res = client.get(search_url, query_string={'size': 4})
         assert res.status_code == 400
-        data = get_json(res)
-        assert data['message'] == \
-            'Maximum number of 10000 results have been reached.'
+        assert ('Maximum number of 3 results have been reached.' in
+                res.get_data(as_text=True))
+
+        res = client.get(search_url, query_string={'page': 1, 'size': 4})
+        assert res.status_code == 400
+        assert ('Maximum number of 3 results have been reached.' in
+                res.get_data(as_text=True))
+
+        res = client.get(search_url, query_string={'from': 4, 'size': 1})
+        assert res.status_code == 400
+        assert ('Maximum number of 3 results have been reached.' in
+                res.get_data(as_text=True))
+
+        res = client.get(search_url, query_string={'from': 3, 'size': 2})
+        assert res.status_code == 400
+        assert ('Maximum number of 3 results have been reached.' in
+                res.get_data(as_text=True))

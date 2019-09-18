@@ -501,7 +501,7 @@ def use_paginate_args(default_size=25, max_results=10000):
                     )
                 ))
 
-            if req['to_idx'] >= _max_results:
+            if req['to_idx'] > _max_results:
                 raise SearchPaginationRESTError(
                     description=(
                         'Maximum number of {} results have been reached.'
