@@ -8,6 +8,11 @@
 Changes
 =======
 
+Version 1.6.1 (released 2019-09-23)
+
+- Fixes wrong `size` url arg upper limit
+- Upgrades `invenio-rest` dependency
+
 Version 1.6.0 (released 2019-09-11)
 
 - Adds support to serialization using Marshmallow with versions 2 and 3
