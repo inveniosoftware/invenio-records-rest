@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.6.2 (released 2019-10-02)
+
+- Changes PID field in Marshmallow Schema to String instead of Integer.
+
 Version 1.6.1 (released 2019-09-23)
 
 - Fixes wrong `size` url arg upper limit
