@@ -58,7 +58,7 @@ def test_transform_record_default_schema():
         Record({'title': 'test'})
     )
     assert data == {
-        'id': 1,
+        'id': '1',
         'created': None,
         'links': {},
         'metadata': {'title': 'test'},

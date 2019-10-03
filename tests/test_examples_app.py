@@ -60,7 +60,7 @@ def test_example_app(example_app):
     output = json.loads(
         subprocess.check_output(cmd, shell=True).decode("utf-8")
     )
-    assert output['id'] == 1
+    assert output['id'] == '1'
     assert output['metadata']['control_number'] == '1'
     assert output['metadata']['description'] == \
         "This is an awesome description"

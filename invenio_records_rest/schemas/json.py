@@ -41,7 +41,7 @@ class StrictKeysMixin(Schema):
 class RecordSchemaJSONV1(Schema):
     """Schema for records v1 in JSON."""
 
-    id = fields.Integer(attribute='pid.pid_value')
+    id = fields.String(attribute='pid.pid_value')
     metadata = fields.Raw()
     links = fields.Raw()
     created = fields.Str()

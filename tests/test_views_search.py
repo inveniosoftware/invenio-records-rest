@@ -34,7 +34,7 @@ def test_json_result_serializer(app, indexed_records, test_records,
             assert k in record
 
         pid, db_record = test_records[0]
-        assert record['id'] == int(pid.pid_value)
+        assert record['id'] == pid.pid_value
         db_record_dump = db_record.dumps()
         for k in ['title', 'year', 'stars', 'control_number']:
             assert record['metadata'][k] == db_record_dump[k]

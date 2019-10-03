@@ -28,7 +28,7 @@ def test_item_get(app, test_records):
         for k in ['id', 'created', 'updated', 'metadata', 'links']:
             assert k in data
 
-        assert data['id'] == int(pid.pid_value)
+        assert data['id'] == pid.pid_value
         assert data['metadata'] == record.dumps()
 
         # Check self links
