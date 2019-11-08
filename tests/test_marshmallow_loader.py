@@ -48,6 +48,7 @@ class _TestSchemaNested(Schema):
 
     nested_field = Nested(NestedSchema, attribute='metadata.nested',
                           many=True, required=True)
+    non_list = Nested(_TestSchema)
 
 
 class _TestMetadataSchema(Schema):
@@ -133,6 +134,41 @@ def test_marshmallow_load_nested_errors(app, db, es, test_data, search_url,
         response_json = json.loads(res.data.decode('utf-8'))
         assert \
             response_json['errors'][0]['field'] in ('nested_field', 'nested')
+
+
+def test_marshmallow_load_nested_subfield_errors(app, db, es, test_data,
+                                                 search_url, search_class):
+    """Test loading nested subfield errors."""
+    app.config['RECORDS_REST_DEFAULT_LOADERS'] = {
+        'application/json': marshmallow_loader(_TestSchemaNested)}
+
+    with app.test_client() as client:
+        HEADERS = [
+            ('Accept', 'application/json'),
+            ('Content-Type', 'application/json')
+        ]
+
+        # Create record
+        missing_top_most_required_field = dict(
+            nested_field=[{}],
+            non_list=dict(random='a', id='b')
+        )
+        res = client.post(
+            search_url, data=json.dumps(missing_top_most_required_field),
+            headers=HEADERS)
+        assert res.status_code == 400
+        response_json = json.loads(res.data.decode('utf-8'))
+
+        # Error order is not deterministic from marshmallow
+        def has_error(field, parents):
+            for error in response_json['errors']:
+                if error['field'] == field and error['parents'] == parents:
+                    return True
+            return False
+
+        assert len(response_json['errors']) == 2
+        assert has_error(field='title', parents=['non_list'])
+        assert has_error(field='sample', parents=['nested_field', 0])
 
 
 def test_marshmallow_errors(test_data):
