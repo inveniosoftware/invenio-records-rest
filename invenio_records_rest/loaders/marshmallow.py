@@ -23,15 +23,23 @@ from marshmallow import ValidationError
 from marshmallow import __version_info__ as marshmallow_version
 
 
-def _flatten_marshmallow_errors(errors):
+def _flatten_marshmallow_errors(errors, parents=()):
     """Flatten marshmallow errors."""
     res = []
     for field, error in errors.items():
         if isinstance(error, list):
             res.append(
-                dict(field=field, message=' '.join([str(x) for x in error])))
+                dict(
+                    parents=parents,
+                    field=field,
+                    message=' '.join(str(x) for x in error)
+                )
+            )
         elif isinstance(error, dict):
-            res.extend(_flatten_marshmallow_errors(error))
+            res.extend(_flatten_marshmallow_errors(
+                error,
+                parents=parents + (field,)
+            ))
     return res
 
 
