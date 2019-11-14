@@ -14,6 +14,8 @@ import pytest
 from flask import url_for
 from helpers import get_json, record_url, to_relative_url
 
+from invenio_rest.views import create_etag
+
 
 def test_item_get(app, test_records):
     """Test record retrieval."""
@@ -21,8 +23,9 @@ def test_item_get(app, test_records):
         pid, record = test_records[0]
 
         res = client.get(record_url(pid))
+        expected_etag = create_etag(record.revision_id, "application/json")
         assert res.status_code == 200
-        assert res.headers['ETag'] == '"{}"'.format(record.revision_id)
+        assert res.headers['ETag'] == '"{}"'.format(expected_etag)
 
         # Check metadata
         data = get_json(res)
