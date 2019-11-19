@@ -88,7 +88,7 @@ install_requires = [
     'invenio-rest>=1.1.2',
     'invenio-indexer>=1.1.0',
     'python-dateutil>=2.4.2',
-    'six>=1.11',
+    'six>=1.12',
 ]
 
 packages = find_packages()
