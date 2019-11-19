@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.6.3 (released 2019-11-19)
+
+- upgrades `six` package minimal version
+
 Version 1.6.2 (released 2019-10-02)
 
 - Changes PID field in Marshmallow Schema to String instead of Integer.
