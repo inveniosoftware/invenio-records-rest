@@ -83,6 +83,12 @@ Marshmallow
 .. automodule:: invenio_records_rest.serializers.marshmallow
    :members:
 
+CSV
+~~~
+
+.. automodule:: invenio_records_rest.serializers.csv
+   :members:
+
 Response
 ~~~~~~~~
 
