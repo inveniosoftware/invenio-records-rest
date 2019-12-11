@@ -8,9 +8,13 @@
 Changes
 =======
 
+Version 1.6.4 (released 2019-12-11)
+
+- Fixes loaders error payload to add support for nested fields
+
 Version 1.6.3 (released 2019-11-19)
 
-- upgrades `six` package minimal version
+- Upgrades `six` package minimal version
 
 Version 1.6.2 (released 2019-10-02)
 
