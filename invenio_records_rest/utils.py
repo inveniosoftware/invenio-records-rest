@@ -202,14 +202,15 @@ class PIDConverter(BaseConverter):
     will match and resolve a path: ``/record/123456``.
     """
 
-    def __init__(self, url_map, pid_type, getter=None, record_class=None):
+    def __init__(self, url_map, pid_type, getter=None, record_class=None,
+                 object_type='rec'):
         """Initialize the converter."""
         super(PIDConverter, self).__init__(url_map)
         getter = obj_or_import_string(getter, default=partial(
             obj_or_import_string(record_class, default=Record).get_record,
             with_deleted=True
         ))
-        self.resolver = Resolver(pid_type=pid_type, object_type='rec',
+        self.resolver = Resolver(pid_type=pid_type, object_type=object_type,
                                  getter=getter)
 
     def to_python(self, value):
