@@ -21,7 +21,11 @@ from .marshmallow_contrib import Function, Method
 class GeneratedValue(object):
     """Sentinel value class forcing marshmallow missing field generation."""
 
-    pass
+    def __bool__(self):
+        """Override bool()."""
+        return False
+
+    __nonzero__ = __bool__
 
 
 class ForcedFieldDeserializeMixin(object):
