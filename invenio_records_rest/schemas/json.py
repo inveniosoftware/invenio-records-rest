@@ -22,6 +22,18 @@ from invenio_records_rest.schemas.fields import PersistentIdentifier
 class StrictKeysMixin(Schema):
     """Ensure only valid keys exists."""
 
+    def _calculate_field_list(self):
+        _fields = []
+        if marshmallow_version[0] < 3:
+            for name, field in self.fields.iteritems():
+                aux = self.fields[name].attribute or field
+                _fields.append(aux.load_from or name)
+        else:
+            for name, field in self.fields.items():
+                aux = self.fields[name].attribute or field
+                _fields.append(aux.data_key or name)
+        return _fields
+
     @validates_schema(pass_original=True)
     def check_unknown_fields(self, data, original_data, **kwargs):
         """Check for unknown keys."""
@@ -29,11 +41,9 @@ class StrictKeysMixin(Schema):
             for elem in original_data:
                 self.check_unknown_fields(data, elem, **kwargs)
         else:
+            field_list = self._calculate_field_list()
             for key in original_data:
-                if key not in [
-                        self.fields[field].attribute or field
-                        for field in self.fields
-                ]:
+                if key not in field_list:
                     raise ValidationError(
                         'Unknown field name {}'.format(key), field_names=[key])
 
