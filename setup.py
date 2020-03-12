@@ -81,14 +81,13 @@ install_requires = [
     'attrs>=17.4.0',
     'bleach>=2.1.3',
     'ftfy>=4.4.3,<5.0',
-    'Flask>=0.11.1',
-    'Flask-BabelEx>=0.9.2',
-    'invenio-pidstore>=1.0.0',
+    'invenio-base>=1.2.2',
+    'invenio-pidstore>=1.2.0',
     'invenio-records>=1.0.0',
-    'invenio-rest>=1.1.2',
+    'invenio-rest>=1.2.0',
     'invenio-indexer>=1.1.0',
+    'invenio-i18n>=1.2.0',
     'python-dateutil>=2.4.2',
-    'six>=1.12',
 ]
 
 packages = find_packages()

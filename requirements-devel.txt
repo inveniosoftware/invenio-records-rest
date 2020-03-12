@@ -13,3 +13,4 @@
 -e git+git://github.com/inveniosoftware/invenio-records.git#egg=invenio-records
 -e git+git://github.com/inveniosoftware/invenio-rest.git#egg=invenio-rest
 -e git+git://github.com/inveniosoftware/invenio-search.git#egg=invenio-search
+-e git+https://github.com/inveniosoftware/invenio-base.git#egg=invenio-base
