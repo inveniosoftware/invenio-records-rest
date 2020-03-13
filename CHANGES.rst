@@ -8,6 +8,11 @@
 Changes
 =======
 
+Version 1.7.0 (released 2020-03-13)
+
+- Removes support for python 2.7
+- Centralises management of Flask dependency by invenio-base
+
 Version 1.6.4 (released 2019-12-11)
 
 - Fixes loaders error payload to add support for nested fields
