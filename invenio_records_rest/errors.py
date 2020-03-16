@@ -203,3 +203,11 @@ class UnhandledElasticsearchError(RESTException):
     code = 500
     description = 'An internal server error occurred when handling the ' \
                   'request.'
+
+
+class DatabaseErrorRESTError(RESTException):
+    """Database general exception."""
+
+    code = 500
+    description = 'An internal server error occurred when handling the ' \
+                  'request.'

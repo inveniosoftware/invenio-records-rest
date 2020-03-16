@@ -38,9 +38,9 @@ from webargs.flaskparser import parser
 from werkzeug.exceptions import BadRequest
 
 from ._compat import wrap_links_factory
-from .errors import InvalidDataRESTError, InvalidQueryRESTError, \
-    JSONSchemaValidationError, PatchJSONFailureRESTError, \
-    PIDResolveRESTError, SearchPaginationRESTError, \
+from .errors import DatabaseErrorRESTError, InvalidDataRESTError, \
+    InvalidQueryRESTError, JSONSchemaValidationError, \
+    PatchJSONFailureRESTError, SearchPaginationRESTError, \
     SuggestMissingContextRESTError, SuggestNoCompletionsRESTError, \
     UnhandledElasticsearchError, UnsupportedMediaRESTError
 from .links import default_links_factory
@@ -383,7 +383,7 @@ def pass_record(f):
             pid, record = request.view_args['pid_value'].data
             return f(self, pid=pid, record=record, *args, **kwargs)
         except SQLAlchemyError:
-            raise PIDResolveRESTError(pid)
+            raise DatabaseErrorRESTError()
 
     return inner
 
