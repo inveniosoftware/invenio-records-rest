@@ -206,12 +206,23 @@ class PIDConverter(BaseConverter):
                  object_type='rec'):
         """Initialize the converter."""
         super(PIDConverter, self).__init__(url_map)
-        getter = obj_or_import_string(getter, default=partial(
-            obj_or_import_string(record_class, default=Record).get_record,
-            with_deleted=True
-        ))
-        self.resolver = Resolver(pid_type=pid_type, object_type=object_type,
-                                 getter=getter)
+        self.pid_type = pid_type
+        self.getter = getter
+        self.record_class = record_class
+        self.object_type = object_type
+
+    @cached_property
+    def resolver(self):
+        """PID resolver."""
+        record_cls = obj_or_import_string(self.record_class, default=Record)
+        getter = obj_or_import_string(
+            self.getter,
+            default=partial(record_cls.get_record, with_deleted=True))
+        return Resolver(
+            pid_type=self.pid_type,
+            object_type=self.object_type,
+            getter=getter
+        )
 
     def to_python(self, value):
         """Resolve PID value."""
