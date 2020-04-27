@@ -383,8 +383,7 @@ def pass_record(f):
             pid, record = request.view_args['pid_value'].data
             return f(self, pid=pid, record=record, *args, **kwargs)
         except SQLAlchemyError:
-            raise PIDResolveRESTError(pid)
-
+            raise PIDResolveRESTError(pid_value)
     return inner
 
 
