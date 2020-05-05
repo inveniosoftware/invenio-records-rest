@@ -53,13 +53,13 @@ extras_require = {
         'datacite>=1.0.1',
     ],
     'docs': [
-        'Sphinx>=1.6.7',
+        'Sphinx>=1.6.7,<3',
     ],
     'dublincore': [
         'dcxml>=0.1.0',
     ],
     'jsonld': [
-        'pyld>=0.7.1',
+        'pyld>=0.7.1,<2',
     ],
     'tests': tests_require,
 }
