@@ -21,10 +21,6 @@ recursive-include docs *.bat
 recursive-include docs *.py
 recursive-include docs *.rst
 recursive-include docs Makefile
-recursive-include examples *.json
-recursive-include examples *.py
-recursive-include examples *.txt
-recursive-include examples *.sh
 recursive-include invenio_records_rest *.po *.pot *.mo
 recursive-include misc *.py
 recursive-include misc *.rst

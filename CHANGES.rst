@@ -11,6 +11,7 @@ Changes
 Version 1.6.5 (released 2020-05-07)
 
 - Sphinx set to ``<3`` because of errors related to application context
+- Stop using example app
 
 Version 1.6.4 (released 2019-12-11)
 
