@@ -61,7 +61,3 @@ target/
 
 # Vim swapfiles
 .*.sw?
-
-# Examples instance directories
-examples/*_instance
-examples/*.db
