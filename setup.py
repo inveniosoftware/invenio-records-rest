@@ -30,7 +30,7 @@ tests_require = [
     'invenio-config>=1.0.2',
 ]
 
-invenio_search_version = '1.2.0'
+invenio_search_version = '1.2.3'
 
 extras_require = {
     'elasticsearch2': [
@@ -53,13 +53,13 @@ extras_require = {
         'datacite>=1.0.1',
     ],
     'docs': [
-        'Sphinx>=1.6.7',
+        'Sphinx>=1.6.7,<3',
     ],
     'dublincore': [
         'dcxml>=0.1.0',
     ],
     'jsonld': [
-        'pyld>=0.7.1',
+        'pyld>=0.7.1,<2',
     ],
     'tests': tests_require,
 }
@@ -82,11 +82,11 @@ install_requires = [
     'bleach>=2.1.3',
     'ftfy>=4.4.3,<5.0',
     'Flask>=0.11.1',
-    'Flask-BabelEx>=0.9.2',
-    'invenio-pidstore>=1.0.0',
-    'invenio-records>=1.0.0',
-    'invenio-rest>=1.1.2',
-    'invenio-indexer>=1.1.0',
+    'Flask-BabelEx>=0.9.4',
+    'invenio-pidstore>=1.1.0',
+    'invenio-records>=1.3.0',
+    'invenio-rest>=1.1.3',
+    'invenio-indexer>=1.1.1',
     'python-dateutil>=2.4.2',
     'six>=1.12',
 ]
