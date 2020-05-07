@@ -5,15 +5,15 @@
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
-dist: trusty
 
 addons:
   postgresql: 9.4
+  apt:
+    packages:
+      - rabbitmq-server
 
 notifications:
   email: false
-
-sudo: false
 
 language: python
 
@@ -21,13 +21,13 @@ matrix:
   fast_finish: true
   allow_failures:
     - env: REQUIREMENTS=devel EXTRAS=all,elasticsearch7 ES_URL=$ES7_DOWNLOAD_URL
+    - python: 3.8
 
 cache:
   - pip
 
 services:
   - postgresql
-  - rabbitmq
   - redis
 
 env:
@@ -46,10 +46,12 @@ env:
 
 
 python:
-  - "2.7"
-  - "3.5"
+  - "3.6"
+  - "3.7"
+  - "3.8"
 
 before_install:
+  - "pip uninstall -y six"
   - "mkdir /tmp/elasticsearch"
   - "wget -O - $ES_URL | tar xz --directory=/tmp/elasticsearch --strip-components=1"
   - "/tmp/elasticsearch/bin/elasticsearch > /tmp/local-es.log &"
@@ -81,8 +83,8 @@ deploy:
   password:
     secure: "EYDHlsJ2JLUuO4bqre5bLliHO3ga/c5gBnIMyyFTMXEjxmRpvZ9JkCYkCEtwD5OIBXEplRdLv19Q2E+yfUDtBtN/BPALiGoHnkH78IfLab0ZmlFYESinI4ChwluS++uYi8dijdzwfVQyjTcrQzwpfHiU8wcUZdX0zBr+G1Zlk7MQWIN03cvlAi0Qxoevj/SJB5aL3q2sw+fjP+zLFap0b94q3lWLLAB3Oivtd7ujMTbRzaFW7XB8pcop7rMTrw7+A3/5bmzvZ4uc82VY44XNEP5/Fb0+jSx5l6c9ndXBQXVeHNgQrxbluaMqISmPhsUug4BfoRpabn9tD5xjjqaXrdZGo6cP0xCzGJJdv205IeJu7cV74A6B2O5pNSpZEu/Hn2aq0BYaYn3TDJ5UbO4rGprH8jqZwhSzL5fQvHeULzTLJfTWw07O9KXapQME9kx1qmZycqj+CA81MeYR1AeoERk9smB+k3Pv9IcFQPvMsgRyB0LhIi8bcygc1BGPWRTA1Qbk2p8/xdqgLjMRy2rsDA/+x3ftflBp0CwFU/UoTVEfGOx+mEapyGw8Tx0pijyU+r1t7jgNWnqEupVlHQq4wof4DFZYFAVuWk24SrHiwuaXS+l+uXtusvBodBa3NWfYdfZyASqREAvnRSIkTfF7J/0DpEkWDLiDU8AhgutvLno="
   distributions: "compile_catalog sdist bdist_wheel"
+  skip_existing: true
   on:
     tags: true
-    python: "3.5"
-    repo: inveniosoftware/invenio-records-rest
-    condition: $DEPLOY = true
+    python: "3.6"
+
