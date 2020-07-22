@@ -28,6 +28,7 @@ def record_responsify(serializer, mimetype):
             serializer.serialize(pid, record, links_factory=links_factory),
             mimetype=mimetype)
         response.status_code = code
+        response.cache_control.no_cache = True
         response.set_etag(str(record.revision_id))
         response.last_modified = record.updated
         if headers is not None:

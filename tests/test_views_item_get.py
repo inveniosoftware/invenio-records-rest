@@ -21,6 +21,7 @@ def test_item_get(app, test_records):
 
         res = client.get(record_url(pid))
         assert res.status_code == 200
+        assert res.cache_control.no_cache
         assert res.headers['ETag'] == '"{}"'.format(record.revision_id)
 
         # Check metadata
@@ -44,17 +45,21 @@ def test_item_get_etag(app, test_records):
 
         res = client.get(record_url(pid))
         assert res.status_code == 200
+        assert res.cache_control.no_cache
+
         etag = res.headers['ETag']
         last_modified = res.headers['Last-Modified']
 
         # Test request via etag
         res = client.get(record_url(pid), headers={'If-None-Match': etag})
         assert res.status_code == 304
+        assert res.cache_control.no_cache
 
         # Test request via last-modified.
         res = client.get(
             record_url(pid), headers={'If-Modified-Since': last_modified})
         assert res.status_code == 304
+        assert res.cache_control.no_cache
 
 
 def test_item_get_norecord(app, test_records):
