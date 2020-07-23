@@ -28,6 +28,7 @@ from invenio_pidstore.models import PersistentIdentifier
 from invenio_records.api import Record
 from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.decorators import require_content_types
+from invenio_rest.views import create_etag
 from invenio_search import RecordsSearch
 from jsonpatch import JsonPatchException, JsonPointerException
 from jsonschema.exceptions import ValidationError
@@ -800,12 +801,16 @@ class RecordResource(ContentNegotiatedMethodView):
         :param record: Record object.
         :returns: The requested record.
         """
-        etag = str(record.revision_id)
-        self.check_etag(str(record.revision_id))
+        serializer = self.find_method_serializer()
+
+        etag = create_etag(record.revision_id, serializer.mimetype)
+        self.check_etag(etag)
         self.check_if_modified_since(record.updated, etag=etag)
 
         return self.make_response(
-            pid, record, links_factory=self.links_factory
+            pid, record,
+            links_factory=self.links_factory,
+            serializer=serializer
         )
 
     @require_content_types('application/json-patch+json')
