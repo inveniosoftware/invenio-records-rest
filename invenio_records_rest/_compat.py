@@ -9,7 +9,7 @@
 """Python 2/3 compatibility helpers."""
 
 try:  # Python 3 way of inspecting functions
-    from inspect import signature, Parameter
+    from inspect import Parameter, signature
 
     def wrap_links_factory(links_factory):
         """Test if the links_factory function accepts kwargs."""
