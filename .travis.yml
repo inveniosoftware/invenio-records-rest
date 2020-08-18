@@ -14,7 +14,7 @@ language: python
 matrix:
   fast_finish: true
   allow_failures:
-    - env: REQUIREMENTS=devel EXTRAS=all,elasticsearch7 ES_URL=$ES7_DOWNLOAD_URL
+    - env: REQUIREMENTS=devel EXTRAS=all,elasticsearch7 ES_VERSION=ES_7_LATEST
     - python: 3.8
 
 cache:
@@ -24,12 +24,14 @@ services:
   - docker
 
 env:
+  global:
+    - DOCKER_COMPOSE_VERSION=1.26.2
   matrix:
-    - REQUIREMENTS=lowest EXTRAS=all,elasticsearch5 ES_VERSION=5.6.16
-    - REQUIREMENTS=lowest EXTRAS=all,elasticsearch6 ES_VERSION=6.8.2
-    - REQUIREMENTS=release EXTRAS=all,elasticsearch6 ES_VERSION=6.8.2
-    - REQUIREMENTS=release EXTRAS=all,elasticsearch7 ES_VERSION=7.3.0
-    - REQUIREMENTS=devel EXTRAS=all,elasticsearch7 ES_VERSION=7.3.0
+    - REQUIREMENTS=lowest EXTRAS=all,elasticsearch5 ES_VERSION=ES_5_LATEST
+    - REQUIREMENTS=lowest EXTRAS=all,elasticsearch6 ES_VERSION=ES_6_LATEST
+    - REQUIREMENTS=release EXTRAS=all,elasticsearch6 ES_VERSION=ES_6_LATEST
+    - REQUIREMENTS=release EXTRAS=all,elasticsearch7 ES_VERSION=ES_7_LATEST
+    - REQUIREMENTS=devel EXTRAS=all,elasticsearch7 ES_VERSION=ES_7_LATEST
 
 python:
   - "3.6"
@@ -37,6 +39,10 @@ python:
   - "3.8"
 
 before_install:
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
   - "pip uninstall -y six"
   - "travis_retry pip install --upgrade pip setuptools py"
   - "travis_retry pip install twine wheel coveralls requirements-builder"
@@ -47,7 +53,10 @@ before_install:
 install:
   - "travis_retry pip install -r .travis-${REQUIREMENTS}-requirements.txt"
   - "travis_retry pip install -e .[$EXTRAS]"
+  - "travis_retry pip install git+https://github.com/ppanero/docker-services.git#egg=docker-services"
   - "pip freeze"
+  - "docker --version"
+  - "docker-compose --version"
 
 script:
   - "./run-tests.sh"
