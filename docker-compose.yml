@@ -9,17 +9,17 @@ version: '2.3'
 services:
   es:
     extends:
-      file: ../invenio-services/docker-services.yml
+      file: ./docker-services.yml
       service: es
   psql:
     extends:
-      file: ../invenio-services/docker-services.yml
+      file: ./docker-services.yml
       service: psql
   mysql:
     extends:
-      file: ../invenio-services/docker-services.yml
+      file: ./docker-services.yml
       service: mysql
   redis:
     extends:
-      file: ../invenio-services/docker-services.yml
+      file: ./docker-services.yml
       service: redis
