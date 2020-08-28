@@ -8,8 +8,11 @@
 Changes
 =======
 
-Version 1.7.2 (to-be-determined)
+Version 1.7.2 (2020-08-28)
 
+- Fixes an issue with record PID resolution error handling.
+- URL PID converter is now "lazier" and initializes its internal resolver via a
+  property.
 - Fixes classifiers to reflect Python verisons
 
 Version 1.7.1 (released 2020-05-07)
