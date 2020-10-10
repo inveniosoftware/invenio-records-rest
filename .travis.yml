@@ -20,8 +20,12 @@ language: python
 matrix:
   fast_finish: true
   allow_failures:
-    - env: REQUIREMENTS=devel EXTRAS=all,elasticsearch7 ES_URL=$ES7_DOWNLOAD_URL
+    - python: 3.6
+      env: REQUIREMENTS=devel EXTRAS=elasticsearch7 ES_URL=$ES7_DOWNLOAD_URL
+    - python: 3.7
+      env: REQUIREMENTS=devel EXTRAS=elasticsearch7 ES_URL=$ES7_DOWNLOAD_URL
     - python: 3.8
+      env: REQUIREMENTS=devel EXTRAS=elasticsearch7 ES_URL=$ES7_DOWNLOAD_URL
 
 cache:
   - pip

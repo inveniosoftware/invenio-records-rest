@@ -68,5 +68,5 @@ def test_delete_with_sqldatabase_error(app, indexed_records):
             assert res.status_code == 500
 
     with app.test_client() as client:
-            res = client.get(record_url(pid))
-            assert res.status_code == 200
+        res = client.get(record_url(pid))
+        assert res.status_code == 200

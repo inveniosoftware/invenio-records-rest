@@ -52,12 +52,12 @@ class _TestSchemaNested(Schema):
 
 
 class _TestMetadataSchema(Schema):
-        """Test schema."""
+    """Test schema."""
 
-        title = fields.Str()
-        stars = fields.Integer()
-        year = fields.Integer()
-        control_number = PersistentIdentifier()
+    title = fields.Str()
+    stars = fields.Integer()
+    year = fields.Integer()
+    control_number = PersistentIdentifier()
 
 
 def test_marshmallow_load(app, db, es, test_data, search_url, search_class):
