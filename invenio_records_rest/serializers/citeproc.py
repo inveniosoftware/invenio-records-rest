@@ -26,7 +26,7 @@ from ..errors import StyleNotFoundRESTError
 try:
     from citeproc_styles import get_style_filepath
     from citeproc_styles.errors import StyleNotFoundError
-except:
+except Exception:
     import warnings
     warnings.warn('citeproc_styles not found. '
                   'Please install to enable Citeproc Serialization.')
@@ -110,8 +110,8 @@ class CiteprocSerializer(object):
 
     def _clean_result(self, text):
         """Remove double spaces, punctuation and escapes apostrophes."""
-        text = re.sub('\s\s+', ' ', text)
-        text = re.sub('\.\.+', '.', text)
+        text = re.sub(r'\s\s+', ' ', text)
+        text = re.sub(r'\.\.+', '.', text)
         text = text.replace("'", "\\'")
         return text
 

@@ -22,6 +22,7 @@ def _(x):
     """Identity function for string extraction."""
     return x
 
+
 RECORDS_REST_ENDPOINTS = dict(
     recid=dict(
         pid_type='recid',

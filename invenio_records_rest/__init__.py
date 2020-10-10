@@ -134,7 +134,8 @@ The just above mentioned persistent identifiers need ``minters`` and
 is a small function which makes a record unique under a given schema
 (i.e. DOI, ORCID), so this identifier and any other field needed will be added
 to the record metadata. A
-`fetcher <http://invenio-pidstore.readthedocs.io/en/latest/usage.html#fetchers>`_
+`fetcher
+<http://invenio-pidstore.readthedocs.io/en/latest/usage.html#fetchers>`_
 on the other hand, is a small function that retrieves records minted
 following a certain persistent identifier schema such as DOI.
 
@@ -212,19 +213,23 @@ Aggregations
 ++++++++++++
 By exposing the Elasticsearch API by default, we can use the advanced
 features it provides, such as the `aggregations framework
-<https://www.elastic.co/guide/en/elasticsearch/reference/5.6/search-aggregations.html>`_.
+<https://www.elastic.co/guide/en/elasticsearch/reference/5.6/
+search-aggregations.html>`_.
 
 These features include:
 
-- `bucketing <https://www.elastic.co/guide/en/elasticsearch/reference/5.6/search-aggregations-bucket.html>`_
-  "used to group the documents by a certain criterion".
-- `metric <https://www.elastic.co/guide/en/elasticsearch/reference/5.6/search-aggregations-metrics.html>`_
-  "used to create different types of metrics from values extracted from the documents
-  being aggregated".
-- `matrix <https://www.elastic.co/guide/en/elasticsearch/reference/5.6/search-aggregations-matrix.html>`_
-  "used to produce a matrix result based on the values extracted from the requested document fields".
-- `pipeline <https://www.elastic.co/guide/en/elasticsearch/reference/5.6/search-aggregations-pipeline.html>`_
-  "used to aggregate the output of other aggregations and their associated metrics".
+- `bucketing <https://www.elastic.co/guide/en/elasticsearch/reference/5.6/
+  search-aggregations-bucket.html>`_ "used to group the documents
+  by a certain criterion".
+- `metric <https://www.elastic.co/guide/en/elasticsearch/reference/5.6/
+  search-aggregations-metrics.html>`_ "used to create different types of
+  metrics from values extracted from the documents being aggregated".
+- `matrix <https://www.elastic.co/guide/en/elasticsearch/reference/5.6/
+  search-aggregations-matrix.html>`_ "used to produce a matrix result based
+  on the values extracted from the requested document fields".
+- `pipeline <https://www.elastic.co/guide/en/elasticsearch/reference/5.6/
+  search-aggregations-pipeline.html>`_ "used to aggregate the output of other
+  aggregations and their associated metrics".
 
 
 Filters
@@ -236,7 +241,7 @@ for aggregations, but not for search queries.
 To set the aggregations and filters you want you can modify the
 `RECORDS_REST_FACETS`.
 
->>> from .facets import terms_filter
+>>> from invenio_records_rest.facets import terms_filter
 >>> app.config['RECORDS_REST_FACETS'] = {
 ...     'index_name': {
 ...         'aggs': {
@@ -261,9 +266,12 @@ Sorting
 Sorting is based by default on a relevance score, but this can
 be configured as well. The following ways are possible:
 
-- `Sorting by field values <https://www.elastic.co/guide/en/elasticsearch/guide/current/_sorting.html#_sorting_by_field_values>`_
-- `Multilevel sorting <https://www.elastic.co/guide/en/elasticsearch/guide/current/_sorting.html#_multilevel_sorting>`_
-- `Sorting on multilevel fields <https://www.elastic.co/guide/en/elasticsearch/guide/current/_sorting.html#_sorting_on_multivalue_fields>`_
+- `Sorting by field values <https://www.elastic.co/guide/en/elasticsearch/
+  guide/current/_sorting.html#_sorting_by_field_values>`_
+- `Multilevel sorting <https://www.elastic.co/guide/en/elasticsearch/
+  guide/current/_sorting.html#_multilevel_sorting>`_
+- `Sorting on multilevel fields <https://www.elastic.co/guide/en/elasticsearch/
+  guide/current/_sorting.html#_sorting_on_multivalue_fields>`_
 
 This can be configured through the `RECORDS_REST_SORT_OPTIONS`:
 
@@ -300,8 +308,9 @@ Query parser
 
 The search syntax for the various queries is powered by the query parser used.
 Internally the query parser is referred to as the search factory.
-This defaults to the `Q() <https://www.elastic.co/guide/en/elasticsearch/reference/2.4/query-dsl-query-string-query.html>`_ parser
-from elasticsearch_dsl.
+This defaults to the `Q() <https://www.elastic.co/guide/en/elasticsearch/
+reference/2.4/query-dsl-query-string-query.html>`_ parser from
+elasticsearch_dsl.
 
 ``/records/?q=``
 
@@ -368,8 +377,8 @@ Advanced customization
   Creating a custom search factory can enable full control over Elasticsearch's
   Search API. Some of the features available include rank evaluation, post
   filters, highlighting, index boosting among others. For the full list see
-  the full Elasticsearch documentation for the `Search API
-  <https://www.elastic.co/guide/en/elasticsearch/reference/current/search.html>`_.
+  the full Elasticsearch documentation for the `Search API <https://
+  www.elastic.co/guide/en/elasticsearch/reference/current/search.html>`_.
 
 - As the default search behaviour can be adjusted, Invenio-Records-REST
   also offers the possibility to define custom search exceptions.
@@ -398,7 +407,8 @@ Advanced customization
   fetcher, add the ``invenio_pidstore.fetchers`` entrypoint in the
   ``setup.py`` of a module and point it to the fetcher function. For more
   information on fetchers, see the corresponding paragraph in
-  `Invenio-PIDStore <https://invenio-pidstore.readthedocs.io/en/latest/api.html#module-invenio_pidstore.fetchers>`_.
+  `Invenio-PIDStore <https://invenio-pidstore.readthedocs.io/en/latest/
+  api.html#module-invenio_pidstore.fetchers>`_.
 
   The fetchers by default will query the database, but this can be redirected
   to Elasticsearch according to the needs of the application. More
@@ -508,7 +518,7 @@ Also, we need to create a serializer to use the serializer
 >>> from invenio_records_rest.serializers.response import record_responsify
 >>> csl_v1 = JSONSerializer(SimpleRecordSchema, replace_refs=True)
 >>> citeproc_v1 = CiteprocSerializer(csl_v1)
->>> citeproc_v1_response = record_responsify(citeproc_v1, 'text/x-bibliography')
+>>> citeproc_v1_resp = record_responsify(citeproc_v1, 'text/x-bibliography')
 
 and register it in our ``RECORDS_REST_ENDPOINTS``
 for ``Accept:text/x-bibliography``:
@@ -519,7 +529,7 @@ for ``Accept:text/x-bibliography``:
 ...          'application/json':('invenio_records_rest.serializers'
 ...                              ':json_v1_response'),
 ...          'text/x-bibliography':('invenio_records_rest.serializers'
-...                                 ':citeproc_v1_response'),
+...                                 ':citeproc_v1_resp'),
 ...       }
 ...    )
 ... )
@@ -555,8 +565,10 @@ Typical serialization formats are:
 For some examples on the implementation of these serializers you can see
 the ones present in different invenio instances such as:
 
-- `CDS-Videos <https://github.com/CERNDocumentServer/cds-videos/tree/cdslabs_qa/cds/modules/records/serializers>`_
-- `Zenodo <https://github.com/zenodo/zenodo/tree/master/zenodo/modules/records/serializers>`_
+- `CDS-Videos <https://github.com/CERNDocumentServer/cds-videos/tree/master
+  /cds/modules/records/serializers>`_
+- `Zenodo <https://github.com/zenodo/zenodo/tree/master/zenodo/modules/
+  records/serializers>`_
 
 
 Tombstones and redirection
@@ -649,8 +661,10 @@ The following section shows the way to create permission factories, and for
 more examples you can directly see the ones used in production in the
 Invenio instances:
 
-- `CDS's permission factories <https://github.com/CERNDocumentServer/cds-videos/blob/cdslabs_qa/cds/modules/records/permissions.py>`_
-- `Zenodo's permission factories <https://github.com/zenodo/zenodo/blob/master/zenodo/modules/records/permissions.py>`_
+- `CDS's permission factories <https://github.com/CERNDocumentServer/
+  cds-videos/blob/master/cds/modules/records/permissions.py>`_
+- `Zenodo's permission factories <https://github.com/zenodo/zenodo/blob/
+  master/zenodo/modules/records/permissions.py>`_
 
 Factories
 ~~~~~~~~~
