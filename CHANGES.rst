@@ -8,6 +8,13 @@
 Changes
 =======
 
+Version 1.8.0 (2020-12-09)
+
+- Adds Cache-Control: 'no-cache' header to 200 responses to
+  ensure that browsers will not cache responses client side.
+
+- Unpins the ftfy library.
+
 Version 1.7.2 (2020-08-28)
 
 - Fixes an issue with record PID resolution error handling.
