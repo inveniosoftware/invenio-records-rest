@@ -116,7 +116,7 @@ def test_invalid_create(app, db, es, test_data, search_url, content_type):
                 headers=HEADERS)
 
 
-@mock.patch('invenio_records.api.Record.validate', _mock_validate_fail)
+@mock.patch('invenio_records.api.Record.create', _mock_validate_fail)
 @pytest.mark.parametrize('content_type', [
     'application/json', 'application/json;charset=utf-8'
 ])

@@ -141,7 +141,7 @@ def test_invalid_patch(app, es, test_records, test_patch, charset, search_url,
         assert res.status_code == 412
 
 
-@mock.patch('invenio_records.api.Record.validate', _mock_validate_fail)
+@mock.patch('invenio_records.api.Record.commit', _mock_validate_fail)
 @pytest.mark.parametrize('content_type', [
     'application/json-patch+json', 'application/json-patch+json;charset=utf-8'
 ])
