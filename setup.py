@@ -36,20 +36,20 @@ extras_require = {
         'invenio-search[elasticsearch7]>={}'.format(invenio_search_version),
     ],
     'citeproc': [
-        'citeproc-py>=0.3.0',
-        'citeproc-py-styles>=0.1.0',
+        'citeproc-py>=0.5.1',
+        'citeproc-py-styles>=0.1.2',
     ],
     'datacite': [
         'datacite>=1.0.1',
     ],
     'docs': [
-        'Sphinx>=3',
+        'Sphinx>=3.3.1',
     ],
     'dublincore': [
-        'dcxml>=0.1.0',
+        'dcxml>=0.1.2',
     ],
     'jsonld': [
-        'pyld>=0.7.1,<2',
+        'pyld>=1.0.5,<2',
     ],
     'tests': tests_require,
 }
