@@ -66,17 +66,14 @@ setup_requires = [
 ]
 
 install_requires = [
-    'arrow>=0.12.1',
-    'attrs>=17.4.0',
     'bleach>=2.1.3',
     'ftfy>=4.4.3',
     'invenio-base>=1.2.3',
-    'invenio-pidstore>=1.2.0',
+    'invenio-pidstore>=1.2.1',
     'invenio-records>=1.4.0',
-    'invenio-rest>=1.2.2',
+    'invenio-rest>=1.2.3',
     'invenio-indexer>=1.2.0',
-    'invenio-i18n>=1.2.0',
-    'python-dateutil>=2.4.2',
+    'invenio-i18n>=1.3.0',
 ]
 
 packages = find_packages()
