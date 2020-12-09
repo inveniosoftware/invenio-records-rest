@@ -18,18 +18,14 @@ history = open('CHANGES.rst').read()
 
 tests_require = [
     'Flask-Login>=0.3.2',
-    'invenio-db[all]>=1.0.2',
-    'invenio-indexer>=1.0.0',
     'invenio-config>=1.0.2',
+    'invenio-db[all]>=1.0.8',
     'pytest-invenio>=1.4.0',
 ]
 
 invenio_search_version = '1.2.0'
 
 extras_require = {
-    'elasticsearch2': [
-        'invenio-search[elasticsearch2]>={}'.format(invenio_search_version),
-    ],
     'elasticsearch5': [
         'invenio-search[elasticsearch5]>={}'.format(invenio_search_version),
     ],
@@ -60,7 +56,7 @@ extras_require = {
 
 extras_require['all'] = []
 for name, reqs in extras_require.items():
-    if name[0] == ':' or name in ('elasticsearch2', 'elasticsearch5',
+    if name[0] == ':' or name in ('elasticsearch5',
                                   'elasticsearch6', 'elasticsearch7'):
         continue
     extras_require['all'].extend(reqs)
@@ -76,9 +72,9 @@ install_requires = [
     'ftfy>=4.4.3',
     'invenio-base>=1.2.3',
     'invenio-pidstore>=1.2.0',
-    'invenio-records>=1.0.0',
+    'invenio-records>=1.4.0',
     'invenio-rest>=1.2.2',
-    'invenio-indexer>=1.1.0',
+    'invenio-indexer>=1.2.0',
     'invenio-i18n>=1.2.0',
     'python-dateutil>=2.4.2',
 ]

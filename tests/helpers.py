@@ -79,6 +79,6 @@ def record_url(pid):
     return url_for('invenio_records_rest.recid_item', pid_value=val)
 
 
-def _mock_validate_fail(self):
+def _mock_validate_fail(self, **kwargs):
     """Simulate a validation fail."""
     raise ValidationError("")
