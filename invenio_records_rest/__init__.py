@@ -348,6 +348,13 @@ function implementing it:
 ...      }
 ... }
 
+If there is a `boosted_fields` attribute in the search class that is passed in
+the `default_search_factory`, then those fields will be boosted at index time 
+according to the weights they were given. An example could be:
+`boosted_fields=["field1^5,field2^2]` which means that field1 and field2 were 
+given a weight of 5 and 2 respectively and all the other fields have a default 
+weight 1.
+
 Suggesters
 ~~~~~~~~~~
 Through the ``/records/_suggest?text=`` entrypoint the suggest feature of
