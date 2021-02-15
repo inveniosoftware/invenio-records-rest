@@ -143,11 +143,21 @@ def default_facets_factory(search, index):
         selected_facets = make_comma_list_a_list(
             request.args.getlist('facets', None)
         )
-        all_aggs = facets.get("aggs", {})
-
-        # If no facets were requested, assume default behaviour - Take all.
+        all_aggs = facets.get('aggs', {})
+        default_aggs = facets.get('default_aggs')
+        # If no facets were requested
         if not selected_facets:
-            search = _aggregations(search, all_aggs)
+            if default_aggs:
+                # If the default facets are defined , pick these
+                aggs = {}
+                for facet_name, facet_body in all_aggs.items():
+                    if facet_name in default_aggs:
+                        aggs.update({facet_name: facet_body})
+                search = _aggregations(search, aggs)
+            else:
+                # If no default facets are defined , assume default behaviour
+                # Take all.
+                search = _aggregations(search, all_aggs)
         # otherwise, check if there are facets to chose
         elif selected_facets and all_aggs:
             aggs = {}
@@ -159,10 +169,10 @@ def default_facets_factory(search, index):
 
         # Query filter
         search, urlkwargs = _query_filter(
-            search, urlkwargs, facets.get("filters", {}))
+            search, urlkwargs, facets.get('filters', {}))
 
         # Post filter
         search, urlkwargs = _post_filter(
-            search, urlkwargs, facets.get("post_filters", {}))
+            search, urlkwargs, facets.get('post_filters', {}))
 
     return (search, urlkwargs)
