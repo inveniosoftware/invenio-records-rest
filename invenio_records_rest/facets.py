@@ -148,15 +148,14 @@ def default_facets_factory(search, index):
         # If no facets were requested
         if not selected_facets:
             if default_aggs:
-                # If the default facets are defined , pick these
+                # If default facets are defined , pick these
                 aggs = {}
                 for facet_name, facet_body in all_aggs.items():
                     if facet_name in default_aggs:
                         aggs.update({facet_name: facet_body})
                 search = _aggregations(search, aggs)
             else:
-                # If no default facets are defined , assume default behaviour
-                # Take all.
+                # If no default facets are defined, use all of them
                 search = _aggregations(search, all_aggs)
         # otherwise, check if there are facets to chose
         elif selected_facets and all_aggs:
@@ -174,5 +173,6 @@ def default_facets_factory(search, index):
         # Post filter
         search, urlkwargs = _post_filter(
             search, urlkwargs, facets.get('post_filters', {}))
-
+        if selected_facets:
+            urlkwargs.add('facets', ','.join(selected_facets))
     return (search, urlkwargs)
