@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 1.8.1 (2021-11-25)
+
+- Fixes `MarshmallowErrors.get_body` due to Werkzeug 2.0.x changes
+
 Version 1.8.0 (2020-12-09)
 
 - Adds Cache-Control: 'no-cache' header to 200 responses to

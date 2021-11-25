@@ -23,7 +23,7 @@ tests_require = [
     'pytest-invenio>=1.4.0',
 ]
 
-invenio_search_version = '1.2.0'
+invenio_search_version = '1.4.2'
 
 extras_require = {
     'elasticsearch5': [
@@ -43,7 +43,7 @@ extras_require = {
         'datacite>=1.0.1',
     ],
     'docs': [
-        'Sphinx>=3.3.1',
+        'Sphinx>=4.2.0',
     ],
     'dublincore': [
         'dcxml>=0.1.2',
