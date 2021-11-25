@@ -75,7 +75,7 @@ class MarshmallowErrors(RESTValidationError):
         """Get next file item."""
         return next(self._it)
 
-    def get_body(self, environ=None):
+    def get_body(self, environ=None, scope=None):
         """Get the request body."""
         body = dict(
             status=self.code,
