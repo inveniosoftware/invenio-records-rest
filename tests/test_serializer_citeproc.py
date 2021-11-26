@@ -58,8 +58,8 @@ def test_serialize():
     data = serializer.serialize(pid, record)
     assert 'Citeproc test' in data
     assert 'Doe, J.' in data
-    assert '& Smith, J.' in data
-    assert '2016.' in data
+    assert 'and Smith, J.' in data
+    assert '(2016)' in data
 
 
 def test_serializer_args():

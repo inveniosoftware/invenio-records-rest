@@ -19,11 +19,11 @@ history = open('CHANGES.rst').read()
 tests_require = [
     'Flask-Login>=0.3.2',
     'invenio-config>=1.0.2',
-    'invenio-db[all]>=1.0.8',
+    'invenio-db[all]>=1.0.9',
     'pytest-invenio>=1.4.0',
 ]
 
-invenio_search_version = '1.2.0'
+invenio_search_version = '1.4.2'
 
 extras_require = {
     'elasticsearch5': [
@@ -36,14 +36,14 @@ extras_require = {
         'invenio-search[elasticsearch7]>={}'.format(invenio_search_version),
     ],
     'citeproc': [
-        'citeproc-py>=0.5.1',
-        'citeproc-py-styles>=0.1.2',
+        'citeproc-py>=0.6.0',
+        'citeproc-py-styles>=0.1.3',
     ],
     'datacite': [
         'datacite>=1.0.1',
     ],
     'docs': [
-        'Sphinx>=3.3.1',
+        'Sphinx>=4.2.0',
     ],
     'dublincore': [
         'dcxml>=0.1.2',
@@ -68,10 +68,10 @@ setup_requires = [
 install_requires = [
     'bleach>=2.1.3',
     'ftfy>=4.4.3',
-    'invenio-base>=1.2.3',
+    'invenio-base>=1.2.5',
     'invenio-pidstore>=1.2.1',
-    'invenio-records>=1.4.0',
-    'invenio-rest>=1.2.3',
+    'invenio-records>=1.6.0',
+    'invenio-rest>=1.2.4',
     'invenio-indexer>=1.2.0',
     'invenio-i18n>=1.3.0',
 ]
