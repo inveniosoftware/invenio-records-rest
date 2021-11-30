@@ -8,6 +8,12 @@
 Changes
 =======
 
+Version 1.9.0 (2021-11-29)
+
+- Fixes `MarshmallowErrors.get_body` due to Werkzeug 2.0.x changes
+- Upgrade invenio packages
+- Upgrade cite-proc
+
 Version 1.8.0 (2020-12-09)
 
 - Adds Cache-Control: 'no-cache' header to 200 responses to
