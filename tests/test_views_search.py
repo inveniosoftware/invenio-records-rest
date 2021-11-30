@@ -207,7 +207,7 @@ def test_aggregations_info(app, indexed_records, search_url):
         data = get_json(res)
         assert 'aggregations' in data
         # len 3 because testrecords.json have three diff values for "stars"
-        assert len(data['aggregations']['stars']['buckets']) == 3
+        assert len(data['aggregations']['stars']['buckets']) == 4
         assert data['aggregations']['stars']['buckets'][0] == dict(
             key=4, doc_count=2
         )
@@ -323,7 +323,7 @@ def test_from_parameter_edges(app, indexed_records, search_url):
         assert 'next' in data['links']
         assert 'prev' not in data['links']
 
-        res = client.get(search_url, query_string={'size': 1, 'from': 4})
+        res = client.get(search_url, query_string={'size': 1, 'from': 5})
         assert_hits_len(res, 1)
         data = get_json(res)
         assert 'self' in data['links']

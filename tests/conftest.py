@@ -49,6 +49,8 @@ sys.path.append(os.path.dirname(__file__))
 class TestSearch(RecordsSearch):
     """Test record search."""
 
+    boosted_fields = ["title^5"]
+
     class Meta:
         """Test configuration."""
 

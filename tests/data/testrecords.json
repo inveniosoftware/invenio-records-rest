@@ -12,7 +12,14 @@
   {
     "year": 1985,
     "stars": 4,
-    "title": "The Hitchhiker's Guide to the Galaxy"
+    "title": "A Guide",
+    "abstract": "This is an abstract"
+  },
+  {
+    "year": 1985,
+    "stars": 1,
+    "title": "A Book",
+    "abstract": "A guide on how to guide"
   },
   {
     "year": 4242,
