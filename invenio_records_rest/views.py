@@ -15,7 +15,6 @@ import uuid
 from collections import defaultdict
 from functools import partial, wraps
 
-from elasticsearch import VERSION as ES_VERSION
 from elasticsearch.exceptions import RequestError
 from flask import Blueprint, abort, current_app, jsonify, make_response, \
     request, url_for
@@ -47,8 +46,6 @@ from .links import default_links_factory
 from .proxies import current_records_rest
 from .query import es_search_factory
 from .utils import obj_or_import_string
-
-lt_es7 = ES_VERSION[0] < 7
 
 
 def elasticsearch_query_parsing_exception_handler(error):
@@ -615,8 +612,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         search_obj = self.search_class()
         search = search_obj.with_preference_param().params(version=True)
         search = search[pagination['from_idx']:pagination['to_idx']]
-        if not lt_es7:
-            search = search.extra(track_total_hits=True)
+        search = search.extra(track_total_hits=True)
 
         search, qs_kwargs = self.search_factory(search)
         urlkwargs.update(qs_kwargs)
@@ -625,8 +621,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         search_result = search.execute()
 
         # Generate links for self/prev/next
-        total = search_result.hits.total if lt_es7 else \
-            search_result.hits.total['value']
+        total = search_result.hits.total['value']
         endpoint = '.{0}_list'.format(
             current_records_rest.default_endpoint_prefixes[self.pid_type])
         urlkwargs.update(size=pagination['size'], _external=True)
@@ -942,21 +937,12 @@ class SuggestResource(MethodView):
         s = self.search_class()
         for field, val, opts in completions:
             source = opts.pop('_source', None)
-            if source is not None and ES_VERSION[0] >= 5:
+            if source is not None:
                 s = s.source(source).suggest(field, val, **opts)
             else:
                 s = s.suggest(field, val, **opts)
 
-        if ES_VERSION[0] == 2:
-            # Execute search
-            response = s.execute_suggest().to_dict()
-            for field, _, _ in completions:
-                for resp in response[field]:
-                    for op in resp['options']:
-                        if 'payload' in op:
-                            op['_source'] = copy.deepcopy(op['payload'])
-        elif ES_VERSION[0] >= 5:
-            response = s.execute().to_dict()['suggest']
+        response = s.execute().to_dict()['suggest']
 
         result = dict()
         for field, val, opts in completions:

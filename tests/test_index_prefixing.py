@@ -11,11 +11,8 @@
 import json
 
 from conftest import IndexFlusher
-from elasticsearch import VERSION as ES_VERSION
 from helpers import assert_hits_len, get_json, record_url
 from invenio_search import current_search
-
-lt_es7 = ES_VERSION[0] < 7
 
 
 def test_index_creation(app, prefixed_es):
@@ -59,7 +56,7 @@ def test_api_views(app, prefixed_es, db, test_data, search_url, search_class):
         record_doc = result['hits']['hits'][0]
         assert record_doc['_index'] == \
             'test-invenio-records-rest-testrecord' + suffix
-        assert record_doc['_type'] == 'testrecord' if lt_es7 else '_doc'
+        assert record_doc['_type'] == '_doc'
 
         # Fetch the record
         assert client.get(record_url(recid)).status_code == 200

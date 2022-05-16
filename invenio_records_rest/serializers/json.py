@@ -10,13 +10,10 @@
 
 from __future__ import absolute_import, print_function
 
-from elasticsearch import VERSION as ES_VERSION
 from flask import json, request
 
 from .base import PreprocessorMixin, SerializerMixinInterface
 from .marshmallow import MarshmallowMixin
-
-lt_es7 = ES_VERSION[0] < 7
 
 
 class JSONSerializerMixin(SerializerMixinInterface):
@@ -55,8 +52,7 @@ class JSONSerializerMixin(SerializerMixinInterface):
         :param search_result: Elasticsearch search result.
         :param links: Dictionary of links to add to response.
         """
-        total = search_result['hits']['total'] if lt_es7 else \
-            search_result['hits']['total']['value']
+        total = search_result['hits']['total']['value']
         return json.dumps(dict(
             hits=dict(
                 hits=[self.transform_search_hit(

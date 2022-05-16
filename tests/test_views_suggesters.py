@@ -14,7 +14,6 @@ from __future__ import absolute_import, print_function
 import json
 
 import pytest
-from elasticsearch import VERSION as ES_VERSION
 from flask import url_for
 
 
@@ -83,8 +82,8 @@ def test_valid_suggest(app, db, es, indexed_records):
         options = data['text_filtered_source'][0]['options']
         assert all('_source' in op for op in options)
 
-        exp_fi1 = exp1_es5 if ES_VERSION[0] >= 5 else exp1
-        exp_fi2 = exp2_es5 if ES_VERSION[0] >= 5 else exp2
+        exp_fi1 = exp1_es5
+        exp_fi2 = exp2_es5
         assert all(is_option(exp, options) for exp in [exp_fi1, exp_fi2])
 
         # Valid simple completion suggester with size

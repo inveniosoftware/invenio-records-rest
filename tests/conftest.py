@@ -19,7 +19,6 @@ import tempfile
 from os.path import dirname, join
 
 import pytest
-from elasticsearch import VERSION as ES_VERSION
 from elasticsearch.exceptions import RequestError
 from flask import Flask, url_for
 from flask_login import LoginManager, UserMixin
@@ -242,34 +241,16 @@ def prefixed_es(app):
 def record_indexer_receiver(sender, json=None, record=None, index=None,
                             **kwargs):
     """Mock-receiver of a before_record_index signal."""
-    if ES_VERSION[0] == 2:
-        suggest_byyear = {}
-        suggest_byyear['context'] = {
-            'year': json['year']
-        }
-        suggest_byyear['input'] = [json['title'], ]
-        suggest_byyear['output'] = json['title']
-        suggest_byyear['payload'] = copy.deepcopy(json)
+    suggest_byyear = {}
+    suggest_byyear['contexts'] = {
+        'year': [str(json['year'])]
+    }
+    suggest_byyear['input'] = [json['title'], ]
 
-        suggest_title = {}
-        suggest_title['input'] = [json['title'], ]
-        suggest_title['output'] = json['title']
-        suggest_title['payload'] = copy.deepcopy(json)
-
-        json['suggest_byyear'] = suggest_byyear
-        json['suggest_title'] = suggest_title
-
-    elif ES_VERSION[0] >= 5:
-        suggest_byyear = {}
-        suggest_byyear['contexts'] = {
-            'year': [str(json['year'])]
-        }
-        suggest_byyear['input'] = [json['title'], ]
-
-        suggest_title = {}
-        suggest_title['input'] = [json['title'], ]
-        json['suggest_byyear'] = suggest_byyear
-        json['suggest_title'] = suggest_title
+    suggest_title = {}
+    suggest_title['input'] = [json['title'], ]
+    json['suggest_byyear'] = suggest_byyear
+    json['suggest_title'] = suggest_title
 
     return json
 
