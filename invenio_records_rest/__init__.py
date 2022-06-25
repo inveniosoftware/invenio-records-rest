@@ -713,6 +713,7 @@ from __future__ import absolute_import, print_function
 
 from .ext import InvenioRecordsREST
 from .proxies import current_records_rest
-from .version import __version__
+
+__version__ = '1.9.0'
 
 __all__ = ('__version__', 'current_records_rest', 'InvenioRecordsREST')
