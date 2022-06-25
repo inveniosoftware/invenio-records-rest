@@ -33,8 +33,7 @@ class SearchPaginationRESTError(RESTException):
         if errors:
             for field, messages in errors.items():
                 _errors.extend([FieldError(field, msg) for msg in messages])
-        super(SearchPaginationRESTError, self).__init__(
-            errors=_errors, **kwargs)
+        super(SearchPaginationRESTError, self).__init__(errors=_errors, **kwargs)
 
 
 #
@@ -44,7 +43,7 @@ class InvalidQueryRESTError(RESTException):
     """Invalid query syntax."""
 
     code = 400
-    description = 'Invalid query syntax.'
+    description = "Invalid query syntax."
 
 
 #
@@ -58,8 +57,9 @@ class StyleNotFoundRESTError(RESTException):
     def __init__(self, style=None, **kwargs):
         """Initialize exception."""
         super(RESTException, self).__init__(**kwargs)
-        self.description = 'Style{0}could not be found.'.format(
-            ' "{0}" '.format(style) if style else ' ')
+        self.description = "Style{0}could not be found.".format(
+            ' "{0}" '.format(style) if style else " "
+        )
 
 
 #
@@ -78,21 +78,21 @@ class PIDDoesNotExistRESTError(PIDRESTException):
     """Non-existent PID."""
 
     code = 404
-    description = 'PID does not exist.'
+    description = "PID does not exist."
 
 
 class PIDUnregisteredRESTError(PIDRESTException):
     """Unregistered PID."""
 
     code = 404
-    description = 'PID is not registered.'
+    description = "PID is not registered."
 
 
 class PIDDeletedRESTError(PIDRESTException):
     """Deleted PID."""
 
     code = 410
-    description = 'PID has been deleted.'
+    description = "PID has been deleted."
 
 
 class PIDMissingObjectRESTError(PIDRESTException):
@@ -103,7 +103,7 @@ class PIDMissingObjectRESTError(PIDRESTException):
     def __init__(self, pid, **kwargs):
         """Initialize exception."""
         super(PIDMissingObjectRESTError, self).__init__(**kwargs)
-        self.description = 'No object assigned to {0}.'.format(pid)
+        self.description = "No object assigned to {0}.".format(pid)
 
 
 class PIDRedirectedRESTError(PIDRESTException):
@@ -114,9 +114,8 @@ class PIDRedirectedRESTError(PIDRESTException):
     def __init__(self, pid_type=None, **kwargs):
         """Initialize exception."""
         super(PIDRedirectedRESTError, self).__init__(**kwargs)
-        self.description = (
-            'Invalid redirect - pid_type{0}endpoint missing.'.format(
-                ' "{0}" '.format(pid_type) if pid_type else ' ')
+        self.description = "Invalid redirect - pid_type{0}endpoint missing.".format(
+            ' "{0}" '.format(pid_type) if pid_type else " "
         )
 
 
@@ -131,8 +130,9 @@ class PIDResolveRESTError(RESTException):
     def __init__(self, pid=None, **kwargs):
         """Initialize exception."""
         super(RESTException, self).__init__(**kwargs)
-        self.description = 'PID{0}could not be resolved.'.format(
-            ' #{0} '.format(pid) if pid else ' ')
+        self.description = "PID{0}could not be resolved.".format(
+            " #{0} ".format(pid) if pid else " "
+        )
 
 
 class UnsupportedMediaRESTError(RESTException):
@@ -151,14 +151,14 @@ class InvalidDataRESTError(RESTException):
     """Invalid request body."""
 
     code = 400
-    description = 'Could not load data.'
+    description = "Could not load data."
 
 
 class PatchJSONFailureRESTError(RESTException):
     """Failed to patch JSON."""
 
     code = 400
-    description = 'Could not patch JSON.'
+    description = "Could not patch JSON."
 
 
 class SuggestMissingContextRESTError(RESTException):
@@ -169,8 +169,9 @@ class SuggestMissingContextRESTError(RESTException):
     def __init__(self, ctx_field=None, **kwargs):
         """Initialize exception."""
         super(RESTException, self).__init__(**kwargs)
-        self.description = 'Missing{0}context'.format(
-            ' "{0}" '.format(ctx_field) if ctx_field else ' ')
+        self.description = "Missing{0}context".format(
+            ' "{0}" '.format(ctx_field) if ctx_field else " "
+        )
 
 
 class SuggestNoCompletionsRESTError(RESTException):
@@ -181,8 +182,9 @@ class SuggestNoCompletionsRESTError(RESTException):
     def __init__(self, options=None, **kwargs):
         """Initialize exception."""
         super(RESTException, self).__init__(**kwargs)
-        self.description = 'No completions requested.{0}'.format(
-            ' (options: {0})'.format(options) if options else '')
+        self.description = "No completions requested.{0}".format(
+            " (options: {0})".format(options) if options else ""
+        )
 
 
 class JSONSchemaValidationError(RESTValidationError):
@@ -193,13 +195,13 @@ class JSONSchemaValidationError(RESTValidationError):
     def __init__(self, error=None, **kwargs):
         """Initialize exception."""
         super(RESTValidationError, self).__init__(**kwargs)
-        self.description = 'Validation error: {0}.'.format(
-            error.message if error else '')
+        self.description = "Validation error: {0}.".format(
+            error.message if error else ""
+        )
 
 
 class UnhandledElasticsearchError(RESTException):
     """Failed to handle exception."""
 
     code = 500
-    description = 'An internal server error occurred when handling the ' \
-                  'request.'
+    description = "An internal server error occurred when handling the " "request."

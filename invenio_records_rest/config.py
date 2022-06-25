@@ -25,24 +25,24 @@ def _(x):
 
 RECORDS_REST_ENDPOINTS = dict(
     recid=dict(
-        pid_type='recid',
-        pid_minter='recid',
-        pid_fetcher='recid',
+        pid_type="recid",
+        pid_minter="recid",
+        pid_fetcher="recid",
         search_class=RecordsSearch,
         indexer_class=RecordIndexer,
         search_index=None,
         search_type=None,
         record_serializers={
-            'application/json': ('invenio_records_rest.serializers'
-                                 ':json_v1_response'),
+            "application/json": (
+                "invenio_records_rest.serializers" ":json_v1_response"
+            ),
         },
         search_serializers={
-            'application/json': ('invenio_records_rest.serializers'
-                                 ':json_v1_search'),
+            "application/json": ("invenio_records_rest.serializers" ":json_v1_search"),
         },
-        list_route='/records/',
-        item_route='/records/<pid(recid):pid_value>',
-        default_media_type='application/json',
+        list_route="/records/",
+        item_route="/records/<pid(recid):pid_value>",
+        default_media_type="application/json",
         max_result_window=10000,
         error_handlers=dict(),
     ),
@@ -234,8 +234,8 @@ The structure of the dictionary is as follows:
 """
 
 RECORDS_REST_DEFAULT_LOADERS = {
-    'application/json': lambda: request.get_json(),
-    'application/json-patch+json': lambda: request.get_json(force=True),
+    "application/json": lambda: request.get_json(),
+    "application/json-patch+json": lambda: request.get_json(force=True),
 }
 """Default data loaders per request mime type.
 
@@ -258,15 +258,15 @@ This option can be overritten in each REST endpoint as follows:
 RECORDS_REST_SORT_OPTIONS = dict(
     records=dict(
         bestmatch=dict(
-            title=_('Best match'),
-            fields=['_score'],
-            default_order='desc',
+            title=_("Best match"),
+            fields=["_score"],
+            default_order="desc",
             order=1,
         ),
         mostrecent=dict(
-            title=_('Most recent'),
-            fields=['-_created'],
-            default_order='asc',
+            title=_("Most recent"),
+            fields=["-_created"],
+            default_order="asc",
             order=2,
         ),
     )
@@ -300,8 +300,8 @@ Each search field can be either:
 
 RECORDS_REST_DEFAULT_SORT = dict(
     records=dict(
-        query='bestmatch',
-        noquery='mostrecent',
+        query="bestmatch",
+        noquery="mostrecent",
     )
 )
 """Default sort option per index with/without query string.
@@ -320,12 +320,10 @@ The structure of the dictionary is as follows:
 
 RECORDS_REST_FACETS = dict(
     records=dict(
-        aggs=dict(
-            type=dict(terms=dict(field='type'))
-        ),
+        aggs=dict(type=dict(terms=dict(field="type"))),
         post_filters=dict(
-            type=terms_filter('type'),
-        )
+            type=terms_filter("type"),
+        ),
     )
 )
 """Facets per index for the default facets factory.
@@ -368,13 +366,11 @@ RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY = deny_all
 """Default delete permission factory: reject any request."""
 
 RECORDS_REST_ELASTICSEARCH_ERROR_HANDLERS = {
-    'query_parsing_exception': (
-        'invenio_records_rest.views'
-        ':elasticsearch_query_parsing_exception_handler'
+    "query_parsing_exception": (
+        "invenio_records_rest.views" ":elasticsearch_query_parsing_exception_handler"
     ),
-    'query_shard_exception': (
-        'invenio_records_rest.views'
-        ':elasticsearch_query_parsing_exception_handler'
+    "query_shard_exception": (
+        "invenio_records_rest.views" ":elasticsearch_query_parsing_exception_handler"
     ),
 }
 """Handlers for ElasticSearch error codes."""

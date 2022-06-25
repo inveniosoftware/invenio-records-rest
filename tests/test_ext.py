@@ -20,14 +20,15 @@ from invenio_records_rest.utils import PIDConverter
 def test_version():
     """Test version import."""
     from invenio_records_rest import __version__
+
     assert __version__
 
 
 def test_init():
     """Test extension initialization."""
-    app = Flask('testapp')
-    app.url_map.converters['pid'] = PIDConverter
+    app = Flask("testapp")
+    app.url_map.converters["pid"] = PIDConverter
     ext = InvenioRecordsREST()
-    assert 'invenio-records-rest' not in app.extensions
+    assert "invenio-records-rest" not in app.extensions
     ext.init_app(app)
-    assert 'invenio-records-rest' in app.extensions
+    assert "invenio-records-rest" in app.extensions

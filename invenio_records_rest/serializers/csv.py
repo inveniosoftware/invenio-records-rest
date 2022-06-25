@@ -32,8 +32,7 @@ class Line(object):
         return self._line
 
 
-class CSVSerializer(SerializerMixinInterface, MarshmallowMixin,
-                    PreprocessorMixin):
+class CSVSerializer(SerializerMixinInterface, MarshmallowMixin, PreprocessorMixin):
     """CSV serializer for records.
 
     Note: This serializer is not suitable for serializing large number of
@@ -54,8 +53,7 @@ class CSVSerializer(SerializerMixinInterface, MarshmallowMixin,
         self.csv_included_fields = kwargs.pop("csv_included_fields", [])
 
         if self.csv_excluded_fields and self.csv_included_fields:
-            raise ValueError(
-                "Please provide only fields to either include or exclude")
+            raise ValueError("Please provide only fields to either include or exclude")
 
         self.header_separator = kwargs.pop("header_separator", "_")
         super(CSVSerializer, self).__init__(*args, **kwargs)
@@ -67,13 +65,13 @@ class CSVSerializer(SerializerMixinInterface, MarshmallowMixin,
         :param record: Record instance.
         :param links_factory: Factory function for record links.
         """
-        record = self.process_dict(
-            self.transform_record(pid, record, links_factory))
+        record = self.process_dict(self.transform_record(pid, record, links_factory))
 
         return self._format_csv([record])
 
-    def serialize_search(self, pid_fetcher, search_result, links=None,
-                         item_links_factory=None):
+    def serialize_search(
+        self, pid_fetcher, search_result, links=None, item_links_factory=None
+    ):
         """Serialize a search result.
 
         :param pid_fetcher: Persistent identifier fetcher.
@@ -82,9 +80,9 @@ class CSVSerializer(SerializerMixinInterface, MarshmallowMixin,
         :param item_links_factory: Factory function for record links.
         """
         records = []
-        for hit in search_result['hits']['hits']:
+        for hit in search_result["hits"]["hits"]:
             processed_hit = self.transform_search_hit(
-                pid_fetcher(hit['_id'], hit['_source']),
+                pid_fetcher(hit["_id"], hit["_source"]),
                 hit,
                 links_factory=item_links_factory,
             )
@@ -113,10 +111,10 @@ class CSVSerializer(SerializerMixinInterface, MarshmallowMixin,
             writer.writerow(record)
             yield line.read()
 
-    def _flatten(self, value, parent_key=''):
+    def _flatten(self, value, parent_key=""):
         """Flattens nested dict recursively, skipping excluded fields."""
         items = []
-        sep = self.header_separator if parent_key else ''
+        sep = self.header_separator if parent_key else ""
 
         if isinstance(value, dict):
             for k, v in value.items():
@@ -125,9 +123,9 @@ class CSVSerializer(SerializerMixinInterface, MarshmallowMixin,
                 # skip excluded keys
                 if new_key in self.csv_excluded_fields:
                     continue
-                if self.csv_included_fields \
-                   and not self.key_in_field(new_key,
-                                             self.csv_included_fields):
+                if self.csv_included_fields and not self.key_in_field(
+                    new_key, self.csv_included_fields
+                ):
                     continue
                 items.extend(self._flatten(v, new_key).items())
         elif isinstance(value, list):
@@ -137,9 +135,9 @@ class CSVSerializer(SerializerMixinInterface, MarshmallowMixin,
                 # skip excluded keys
                 if new_key in self.csv_excluded_fields:
                     continue
-                if self.csv_included_fields \
-                   and not self.key_in_field(parent_key,
-                                             self.csv_included_fields):
+                if self.csv_included_fields and not self.key_in_field(
+                    parent_key, self.csv_included_fields
+                ):
                     continue
                 items.extend(self._flatten(item, new_key).items())
         else:

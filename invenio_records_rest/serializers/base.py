@@ -39,8 +39,9 @@ class SerializerMixinInterface(object):
         """
         raise NotImplementedError()
 
-    def serialize_search(self, pid_fetcher, search_result, links=None,
-                         item_links_factory=None, **kwargs):
+    def serialize_search(
+        self, pid_fetcher, search_result, links=None, item_links_factory=None, **kwargs
+    ):
         """Serialize a search result.
 
         This method should delegate each record search hit transformation
@@ -85,8 +86,7 @@ class TransformerMixinInterface(object):
         """
         raise NotImplementedError()
 
-    def transform_search_hit(self, pid, record_hit, links_factory=None,
-                             **kwargs):
+    def transform_search_hit(self, pid, record_hit, links_factory=None, **kwargs):
         """Transform search result hit into an intermediate representation.
 
         This method should delegate the record preprocessing to the
@@ -140,17 +140,26 @@ class PreprocessorMixin(PreprocessorMixinInterface):
     def preprocess_record(self, pid, record, links_factory=None, **kwargs):
         """Prepare a record and persistent identifier for serialization."""
         links_factory = links_factory or (lambda x, record=None, **k: dict())
-        metadata = copy.deepcopy(record.replace_refs()) if self.replace_refs \
+        metadata = (
+            copy.deepcopy(record.replace_refs())
+            if self.replace_refs
             else record.dumps()
+        )
         return dict(
             pid=pid,
             metadata=metadata,
             links=links_factory(pid, record=record, **kwargs),
             revision=record.revision_id,
-            created=(pytz.utc.localize(record.created).isoformat()
-                     if record.created else None),
-            updated=(pytz.utc.localize(record.updated).isoformat()
-                     if record.updated else None),
+            created=(
+                pytz.utc.localize(record.created).isoformat()
+                if record.created
+                else None
+            ),
+            updated=(
+                pytz.utc.localize(record.updated).isoformat()
+                if record.updated
+                else None
+            ),
         )
 
     @staticmethod
@@ -159,15 +168,15 @@ class PreprocessorMixin(PreprocessorMixinInterface):
         links_factory = links_factory or (lambda x, **k: dict())
         record = dict(
             pid=pid,
-            metadata=record_hit['_source'],
+            metadata=record_hit["_source"],
             links=links_factory(pid, record_hit=record_hit, **kwargs),
-            revision=record_hit['_version'],
+            revision=record_hit["_version"],
             created=None,
             updated=None,
         )
         # Move created/updated attrs from source to object.
-        for key in ['_created', '_updated']:
-            if key in record['metadata']:
-                record[key[1:]] = record['metadata'][key]
-                del record['metadata'][key]
+        for key in ["_created", "_updated"]:
+            if key in record["metadata"]:
+                record[key[1:]] = record["metadata"][key]
+                del record["metadata"][key]
         return record

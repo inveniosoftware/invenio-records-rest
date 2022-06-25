@@ -12,16 +12,25 @@ from functools import partial
 
 import six
 from flask import abort, current_app, jsonify, make_response, request, url_for
-from invenio_pidstore.errors import PIDDeletedError, PIDDoesNotExistError, \
-    PIDMissingObjectError, PIDRedirectedError, PIDUnregistered
+from invenio_pidstore.errors import (
+    PIDDeletedError,
+    PIDDoesNotExistError,
+    PIDMissingObjectError,
+    PIDRedirectedError,
+    PIDUnregistered,
+)
 from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
 from werkzeug.routing import BaseConverter, BuildError, PathConverter
 from werkzeug.utils import cached_property, import_string
 
-from .errors import PIDDeletedRESTError, PIDDoesNotExistRESTError, \
-    PIDMissingObjectRESTError, PIDRedirectedRESTError, \
-    PIDUnregisteredRESTError
+from .errors import (
+    PIDDeletedRESTError,
+    PIDDoesNotExistRESTError,
+    PIDMissingObjectRESTError,
+    PIDRedirectedRESTError,
+    PIDUnregisteredRESTError,
+)
 from .proxies import current_records_rest
 
 
@@ -32,16 +41,14 @@ def build_default_endpoint_prefixes(records_rest_endpoints):
     endpoint_prefixes = {}
 
     for key, endpoint in records_rest_endpoints.items():
-        pid_type = endpoint['pid_type']
+        pid_type = endpoint["pid_type"]
         pid_types.add(pid_type)
         is_guessed = key == pid_type
-        is_default = endpoint.get('default_endpoint_prefix', False)
+        is_default = endpoint.get("default_endpoint_prefix", False)
 
         if is_default:
             if pid_type in endpoint_prefixes and pid_type not in guessed:
-                raise ValueError('More than one "{0}" defined.'.format(
-                    pid_type
-                ))
+                raise ValueError('More than one "{0}" defined.'.format(pid_type))
             endpoint_prefixes[pid_type] = key
             guessed -= {pid_type}
         elif is_guessed and pid_type not in endpoint_prefixes:
@@ -50,9 +57,7 @@ def build_default_endpoint_prefixes(records_rest_endpoints):
 
     not_found = pid_types - set(endpoint_prefixes.keys())
     if not_found:
-        raise ValueError('No endpoint-prefix for {0}.'.format(
-            ', '.join(not_found)
-        ))
+        raise ValueError("No endpoint-prefix for {0}.".format(", ".join(not_found)))
 
     return endpoint_prefixes
 
@@ -86,7 +91,7 @@ def allow_all(*args, **kwargs):
 
     :returns: A object instance with a ``can()`` method.
     """
-    return type('Allow', (), {'can': lambda self: True})()
+    return type("Allow", (), {"can": lambda self: True})()
 
 
 def deny_all(*args, **kwargs):
@@ -94,7 +99,7 @@ def deny_all(*args, **kwargs):
 
     :returns: A object instance with a ``can()`` method.
     """
-    return type('Deny', (), {'can': lambda self: False})()
+    return type("Deny", (), {"can": lambda self: False})()
 
 
 def check_elasticsearch(record, *args, **kwargs):
@@ -103,13 +108,14 @@ def check_elasticsearch(record, *args, **kwargs):
     :params record: A record object.
     :returns: A object instance with a ``can()`` method.
     """
+
     def can(self):
         """Try to search for given record."""
         search = request._methodview.search_class()
         search = search.get_record(str(record.id))
         return search.count() == 1
 
-    return type('CheckES', (), {'can': can})()
+    return type("CheckES", (), {"can": can})()
 
 
 def make_comma_list_a_list(elements_to_rocess):
@@ -123,7 +129,7 @@ def make_comma_list_a_list(elements_to_rocess):
     """
     output_list = []
     for element in elements_to_rocess:
-        output_list.extend(element.split(','))
+        output_list.extend(element.split(","))
     return list(set(output_list))
 
 
@@ -160,35 +166,40 @@ class LazyPIDValue(object):
             raise PIDDeletedRESTError(pid_error=pid_error)
         except PIDMissingObjectError as pid_error:
             current_app.logger.exception(
-                'No object assigned to {0}.'.format(pid_error.pid),
-                extra={'pid': pid_error.pid})
+                "No object assigned to {0}.".format(pid_error.pid),
+                extra={"pid": pid_error.pid},
+            )
             raise PIDMissingObjectRESTError(pid_error.pid, pid_error=pid_error)
         except PIDRedirectedError as pid_error:
             try:
                 location = url_for(
-                    '.{0}_item'.format(
+                    ".{0}_item".format(
                         current_records_rest.default_endpoint_prefixes[
-                            pid_error.destination_pid.pid_type]),
-                    pid_value=pid_error.destination_pid.pid_value)
+                            pid_error.destination_pid.pid_type
+                        ]
+                    ),
+                    pid_value=pid_error.destination_pid.pid_value,
+                )
                 data = dict(
                     status=301,
-                    message='Moved Permanently',
+                    message="Moved Permanently",
                     location=location,
                 )
-                response = make_response(jsonify(data), data['status'])
-                response.headers['Location'] = location
+                response = make_response(jsonify(data), data["status"])
+                response.headers["Location"] = location
                 abort(response)
             except (BuildError, KeyError):
                 current_app.logger.exception(
                     'Invalid redirect - pid_type "{0}" '
-                    'endpoint missing.'.format(
-                        pid_error.destination_pid.pid_type),
+                    "endpoint missing.".format(pid_error.destination_pid.pid_type),
                     extra={
-                        'pid': pid_error.pid,
-                        'destination_pid': pid_error.destination_pid,
-                    })
+                        "pid": pid_error.pid,
+                        "destination_pid": pid_error.destination_pid,
+                    },
+                )
                 raise PIDRedirectedRESTError(
-                    pid_error.destination_pid.pid_type, pid_error=pid_error)
+                    pid_error.destination_pid.pid_type, pid_error=pid_error
+                )
 
 
 class PIDConverter(BaseConverter):
@@ -202,8 +213,9 @@ class PIDConverter(BaseConverter):
     will match and resolve a path: ``/record/123456``.
     """
 
-    def __init__(self, url_map, pid_type, getter=None, record_class=None,
-                 object_type='rec'):
+    def __init__(
+        self, url_map, pid_type, getter=None, record_class=None, object_type="rec"
+    ):
         """Initialize the converter."""
         super(PIDConverter, self).__init__(url_map)
         self.pid_type = pid_type
@@ -216,12 +228,10 @@ class PIDConverter(BaseConverter):
         """PID resolver."""
         record_cls = obj_or_import_string(self.record_class, default=Record)
         getter = obj_or_import_string(
-            self.getter,
-            default=partial(record_cls.get_record, with_deleted=True))
+            self.getter, default=partial(record_cls.get_record, with_deleted=True)
+        )
         return Resolver(
-            pid_type=self.pid_type,
-            object_type=self.object_type,
-            getter=getter
+            pid_type=self.pid_type, object_type=self.object_type, getter=getter
         )
 
     def to_python(self, value):

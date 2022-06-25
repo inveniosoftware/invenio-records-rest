@@ -28,24 +28,30 @@ class ForcedFieldDeserializeMixin(object):
     """Mixin that forces deserialization of marshmallow fields."""
 
     if marshmallow_version[0] < 3:
+
         def __init__(self, *args, **kwargs):
             """Override the "missing" parameter."""
-            if 'missing' in kwargs:
-                obj_name = '{self.__module__}.{self.__class__.__name__}'\
-                    .format(self=self)
-                mixin_name = '{mixin.__module__}.{mixin.__name__}'.format(
-                    mixin=ForcedFieldDeserializeMixin)
+            if "missing" in kwargs:
+                obj_name = "{self.__module__}.{self.__class__.__name__}".format(
+                    self=self
+                )
+                mixin_name = "{mixin.__module__}.{mixin.__name__}".format(
+                    mixin=ForcedFieldDeserializeMixin
+                )
                 warnings.warn(
                     '[{obj_name}] is overriding the "missing" argument via '
-                    '[{mixin_name}] in order to enforce deserialization of'
+                    "[{mixin_name}] in order to enforce deserialization of"
                     'the Marshmallow field. The value "{original_missing}"'
-                    'will be overridden.'.format(
-                        obj_name=obj_name, mixin_name=mixin_name,
-                        original_missing=kwargs['missing']),
-                    RuntimeWarning)
+                    "will be overridden.".format(
+                        obj_name=obj_name,
+                        mixin_name=mixin_name,
+                        original_missing=kwargs["missing"],
+                    ),
+                    RuntimeWarning,
+                )
             # Setting "missing" to some value forces the call
             # to ``.deserialize``
-            kwargs['missing'] = GeneratedValue
+            kwargs["missing"] = GeneratedValue
             super(ForcedFieldDeserializeMixin, self).__init__(*args, **kwargs)
 
     # Overriding default deserializer since we need to deserialize an

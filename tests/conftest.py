@@ -33,8 +33,12 @@ from invenio_indexer.signals import before_record_index
 from invenio_pidstore import InvenioPIDStore
 from invenio_records import InvenioRecords
 from invenio_rest import InvenioREST
-from invenio_search import InvenioSearch, RecordsSearch, current_search, \
-    current_search_client
+from invenio_search import (
+    InvenioSearch,
+    RecordsSearch,
+    current_search,
+    current_search_client,
+)
 from invenio_search.errors import IndexAlreadyExistsError
 from sqlalchemy_utils.functions import create_database, database_exists
 
@@ -52,13 +56,13 @@ class TestSearch(RecordsSearch):
     class Meta:
         """Test configuration."""
 
-        index = 'invenio-records-rest'
+        index = "invenio-records-rest"
         doc_types = None
 
     def __init__(self, **kwargs):
         """Add extra options."""
         super(TestSearch, self).__init__(**kwargs)
-        self._extra.update(**{'_source': {'excludes': ['_access']}})
+        self._extra.update(**{"_source": {"excludes": ["_access"]}})
 
 
 class IndexFlusher(object):
@@ -73,7 +77,7 @@ class IndexFlusher(object):
         current_search.flush_and_refresh(self.search_class.Meta.index)
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.yield_fixture(scope="session")
 def search_class():
     """Search class."""
     yield TestSearch
@@ -82,7 +86,7 @@ def search_class():
 @pytest.yield_fixture()
 def search_url():
     """Search class."""
-    yield url_for('invenio_records_rest.recid_list')
+    yield url_for("invenio_records_rest.recid_list")
 
 
 @pytest.yield_fixture()
@@ -122,12 +126,12 @@ def app(request, search_class):
     This will fully parameterize RECORDS_REST_ENDPOINTS.
     """
     instance_path = tempfile.mkdtemp()
-    app = Flask('testapp', instance_path=instance_path)
+    app = Flask("testapp", instance_path=instance_path)
     app.config.update(
         ACCOUNTS_JWT_ENABLE=False,
-        INDEXER_DEFAULT_DOC_TYPE='testrecord',
+        INDEXER_DEFAULT_DOC_TYPE="testrecord",
         INDEXER_DEFAULT_INDEX=search_class.Meta.index,
-        REST_MIMETYPE_QUERY_ARG_NAME='format',
+        REST_MIMETYPE_QUERY_ARG_NAME="format",
         RECORDS_REST_ENDPOINTS=copy.deepcopy(config.RECORDS_REST_ENDPOINTS),
         RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY=None,
         RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY=None,
@@ -137,47 +141,45 @@ def app(request, search_class):
         RECORDS_REST_DEFAULT_SEARCH_INDEX=search_class.Meta.index,
         RECORDS_REST_FACETS={
             search_class.Meta.index: {
-                'aggs': {
-                    'stars': {'terms': {'field': 'stars'}}
+                "aggs": {"stars": {"terms": {"field": "stars"}}},
+                "post_filters": {
+                    "stars": terms_filter("stars"),
                 },
-                'post_filters': {
-                    'stars': terms_filter('stars'),
-                }
             }
         },
         RECORDS_REST_SORT_OPTIONS={
             search_class.Meta.index: dict(
                 year=dict(
-                    fields=['year'],
+                    fields=["year"],
                 )
             )
         },
-        SERVER_NAME='localhost:5000',
+        SERVER_NAME="localhost:5000",
         SQLALCHEMY_DATABASE_URI=os.environ.get(
-            'SQLALCHEMY_DATABASE_URI', 'sqlite:///test.db'
+            "SQLALCHEMY_DATABASE_URI", "sqlite:///test.db"
         ),
         SQLALCHEMY_TRACK_MODIFICATIONS=True,
         TESTING=True,
     )
-    app.config['RECORDS_REST_ENDPOINTS']['recid']['search_class'] = \
-        search_class
+    app.config["RECORDS_REST_ENDPOINTS"]["recid"]["search_class"] = search_class
 
     # Parameterize application.
-    if hasattr(request, 'param'):
-        if 'endpoint' in request.param:
-            app.config['RECORDS_REST_ENDPOINTS']['recid'].update(
-                request.param['endpoint'])
-        if 'records_rest_endpoints' in request.param:
-            original_endpoint = app.config['RECORDS_REST_ENDPOINTS']['recid']
-            del app.config['RECORDS_REST_ENDPOINTS']['recid']
-            for new_endpoint_prefix, new_endpoint_value in \
-                    request.param['records_rest_endpoints'].items():
+    if hasattr(request, "param"):
+        if "endpoint" in request.param:
+            app.config["RECORDS_REST_ENDPOINTS"]["recid"].update(
+                request.param["endpoint"]
+            )
+        if "records_rest_endpoints" in request.param:
+            original_endpoint = app.config["RECORDS_REST_ENDPOINTS"]["recid"]
+            del app.config["RECORDS_REST_ENDPOINTS"]["recid"]
+            for new_endpoint_prefix, new_endpoint_value in request.param[
+                "records_rest_endpoints"
+            ].items():
                 new_endpoint = dict(original_endpoint)
                 new_endpoint.update(new_endpoint_value)
-                app.config['RECORDS_REST_ENDPOINTS'][new_endpoint_prefix] = \
-                    new_endpoint
+                app.config["RECORDS_REST_ENDPOINTS"][new_endpoint_prefix] = new_endpoint
 
-    app.url_map.converters['pid'] = PIDConverter
+    app.url_map.converters["pid"] = PIDConverter
 
     InvenioDB(app)
     InvenioREST(app)
@@ -186,7 +188,7 @@ def app(request, search_class):
     InvenioPIDStore(app)
     InvenioConfigDefault(app)
     search = InvenioSearch(app)
-    search.register_mappings(search_class.Meta.index, 'mock_module.mappings')
+    search.register_mappings(search_class.Meta.index, "mock_module.mappings")
     InvenioRecordsREST(app)
     app.register_blueprint(create_blueprint_from_app(app))
 
@@ -200,8 +202,10 @@ def app(request, search_class):
 @pytest.yield_fixture()
 def db(app):
     """Database fixture."""
-    if not database_exists(str(db_.engine.url)) and \
-            app.config['SQLALCHEMY_DATABASE_URI'] != 'sqlite://':
+    if (
+        not database_exists(str(db_.engine.url))
+        and app.config["SQLALCHEMY_DATABASE_URI"] != "sqlite://"
+    ):
         create_database(db_.engine.url)
     db_.create_all()
 
@@ -227,7 +231,7 @@ def es(app):
 @pytest.yield_fixture()
 def prefixed_es(app):
     """Elasticsearch fixture."""
-    app.config['SEARCH_INDEX_PREFIX'] = 'test-'
+    app.config["SEARCH_INDEX_PREFIX"] = "test-"
     try:
         list(current_search.create())
     except (RequestError, IndexAlreadyExistsError):
@@ -236,40 +240,43 @@ def prefixed_es(app):
     current_search_client.indices.refresh()
     yield current_search_client
     list(current_search.delete(ignore=[404]))
-    app.config['SEARCH_INDEX_PREFIX'] = ''
+    app.config["SEARCH_INDEX_PREFIX"] = ""
 
 
-def record_indexer_receiver(sender, json=None, record=None, index=None,
-                            **kwargs):
+def record_indexer_receiver(sender, json=None, record=None, index=None, **kwargs):
     """Mock-receiver of a before_record_index signal."""
     if ES_VERSION[0] == 2:
         suggest_byyear = {}
-        suggest_byyear['context'] = {
-            'year': json['year']
-        }
-        suggest_byyear['input'] = [json['title'], ]
-        suggest_byyear['output'] = json['title']
-        suggest_byyear['payload'] = copy.deepcopy(json)
+        suggest_byyear["context"] = {"year": json["year"]}
+        suggest_byyear["input"] = [
+            json["title"],
+        ]
+        suggest_byyear["output"] = json["title"]
+        suggest_byyear["payload"] = copy.deepcopy(json)
 
         suggest_title = {}
-        suggest_title['input'] = [json['title'], ]
-        suggest_title['output'] = json['title']
-        suggest_title['payload'] = copy.deepcopy(json)
+        suggest_title["input"] = [
+            json["title"],
+        ]
+        suggest_title["output"] = json["title"]
+        suggest_title["payload"] = copy.deepcopy(json)
 
-        json['suggest_byyear'] = suggest_byyear
-        json['suggest_title'] = suggest_title
+        json["suggest_byyear"] = suggest_byyear
+        json["suggest_title"] = suggest_title
 
     elif ES_VERSION[0] >= 5:
         suggest_byyear = {}
-        suggest_byyear['contexts'] = {
-            'year': [str(json['year'])]
-        }
-        suggest_byyear['input'] = [json['title'], ]
+        suggest_byyear["contexts"] = {"year": [str(json["year"])]}
+        suggest_byyear["input"] = [
+            json["title"],
+        ]
 
         suggest_title = {}
-        suggest_title['input'] = [json['title'], ]
-        json['suggest_byyear'] = suggest_byyear
-        json['suggest_title'] = suggest_title
+        suggest_title["input"] = [
+            json["title"],
+        ]
+        json["suggest_byyear"] = suggest_byyear
+        json["suggest_title"] = suggest_title
 
     return json
 
@@ -282,10 +289,10 @@ def indexer(app, es):
     yield RecordIndexer()
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.yield_fixture(scope="session")
 def test_data():
     """Load test records."""
-    path = 'data/testrecords.json'
+    path = "data/testrecords.json"
     with open(join(dirname(__file__), path)) as fp:
         records = json.load(fp)
     yield records
@@ -310,19 +317,21 @@ def indexed_records(search_class, indexer, test_records):
     yield test_records
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.yield_fixture(scope="session")
 def test_patch():
     """A JSON patch."""
-    yield [{'op': 'replace', 'path': '/year', 'value': 1985}]
+    yield [{"op": "replace", "path": "/year", "value": 1985}]
 
 
 @pytest.yield_fixture
 def default_permissions(app):
     """Test default deny all permission."""
-    for key in ['RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY',
-                'RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY',
-                'RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY',
-                'RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY']:
+    for key in [
+        "RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY",
+        "RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY",
+        "RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY",
+        "RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY",
+    ]:
         app.config[key] = getattr(config, key)
 
     lm = LoginManager(app)
@@ -334,11 +343,11 @@ def default_permissions(app):
 
     @lm.request_loader
     def load_user(request):
-        uid = request.args.get('user', type=int)
+        uid = request.args.get("user", type=int)
         if uid:
             return User(uid)
         return None
 
     yield app
 
-    app.extensions['invenio-records-rest'].reset_permission_factories()
+    app.extensions["invenio-records-rest"].reset_permission_factories()

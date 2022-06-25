@@ -30,8 +30,10 @@ def terms_filter(field):
     :param field: Field name.
     :returns: Function that returns the Terms query.
     """
+
     def inner(values):
-        return Q('terms', **{field: values})
+        return Q("terms", **{field: values})
+
     return inner
 
 
@@ -44,32 +46,37 @@ def range_filter(field, start_date_math=None, end_date_math=None, **kwargs):
     :param kwargs: Addition arguments passed to the Range query.
     :returns: Function that returns the Range query.
     """
-    def inner(values):
-        if len(values) != 1 or values[0].count('--') != 1 or values[0] == '--':
-            raise RESTValidationError(
-                errors=[FieldError(field, 'Invalid range format.')])
 
-        range_ends = values[0].split('--')
+    def inner(values):
+        if len(values) != 1 or values[0].count("--") != 1 or values[0] == "--":
+            raise RESTValidationError(
+                errors=[FieldError(field, "Invalid range format.")]
+            )
+
+        range_ends = values[0].split("--")
         range_args = dict()
 
-        ineq_opers = [{'strict': 'gt', 'nonstrict': 'gte'},
-                      {'strict': 'lt', 'nonstrict': 'lte'}]
+        ineq_opers = [
+            {"strict": "gt", "nonstrict": "gte"},
+            {"strict": "lt", "nonstrict": "lte"},
+        ]
         date_maths = [start_date_math, end_date_math]
 
         # Add the proper values to the dict
-        for (range_end, strict, opers,
-             date_math) in zip(range_ends, ['>', '<'], ineq_opers, date_maths):
+        for (range_end, strict, opers, date_math) in zip(
+            range_ends, [">", "<"], ineq_opers, date_maths
+        ):
 
-            if range_end != '':
+            if range_end != "":
                 # If first char is '>' for start or '<' for end
                 if range_end[0] == strict:
-                    dict_key = opers['strict']
+                    dict_key = opers["strict"]
                     range_end = range_end[1:]
                 else:
-                    dict_key = opers['nonstrict']
+                    dict_key = opers["nonstrict"]
 
                 if date_math:
-                    range_end = '{0}||{1}'.format(range_end, date_math)
+                    range_end = "{0}||{1}".format(range_end, date_math)
 
                 range_args[dict_key] = range_end
 
@@ -135,14 +142,12 @@ def default_facets_factory(search, index):
     """
     urlkwargs = MultiDict()
 
-    facets = current_app.config['RECORDS_REST_FACETS'].get(index)
+    facets = current_app.config["RECORDS_REST_FACETS"].get(index)
     if facets is not None:
         # Aggregations.
         # First get requested facets, also split by ',' to get facets names
         # if they were provided as list separated by comma.
-        selected_facets = make_comma_list_a_list(
-            request.args.getlist('facets', None)
-        )
+        selected_facets = make_comma_list_a_list(request.args.getlist("facets", None))
         all_aggs = facets.get("aggs", {})
 
         # If no facets were requested, assume default behaviour - Take all.
@@ -158,11 +163,11 @@ def default_facets_factory(search, index):
             search = _aggregations(search, aggs)
 
         # Query filter
-        search, urlkwargs = _query_filter(
-            search, urlkwargs, facets.get("filters", {}))
+        search, urlkwargs = _query_filter(search, urlkwargs, facets.get("filters", {}))
 
         # Post filter
         search, urlkwargs = _post_filter(
-            search, urlkwargs, facets.get("post_filters", {}))
+            search, urlkwargs, facets.get("post_filters", {})
+        )
 
     return (search, urlkwargs)

@@ -29,20 +29,25 @@ class MarshmallowMixin(TransformerMixinInterface):
 
     def transform_record(self, pid, record, links_factory=None, **kwargs):
         """Transform record into an intermediate representation."""
-        context = kwargs.get('marshmallow_context', {})
-        context.setdefault('pid', pid)
-        context.setdefault('record', record)
-        return self.dump(self.preprocess_record(pid, record,
-                         links_factory=links_factory, **kwargs), context)
+        context = kwargs.get("marshmallow_context", {})
+        context.setdefault("pid", pid)
+        context.setdefault("record", record)
+        return self.dump(
+            self.preprocess_record(pid, record, links_factory=links_factory, **kwargs),
+            context,
+        )
 
-    def transform_search_hit(self, pid, record_hit, links_factory=None,
-                             **kwargs):
+    def transform_search_hit(self, pid, record_hit, links_factory=None, **kwargs):
         """Transform search result hit into an intermediate representation."""
-        context = kwargs.get('marshmallow_context', {})
-        context.setdefault('pid', pid)
-        context.setdefault('record', record_hit['_source'])
-        return self.dump(self.preprocess_search_hit(pid, record_hit,
-                         links_factory=links_factory, **kwargs), context)
+        context = kwargs.get("marshmallow_context", {})
+        context.setdefault("pid", pid)
+        context.setdefault("record", record_hit["_source"])
+        return self.dump(
+            self.preprocess_search_hit(
+                pid, record_hit, links_factory=links_factory, **kwargs
+            ),
+            context,
+        )
 
 
 MarshmallowSerializer = MarshmallowMixin

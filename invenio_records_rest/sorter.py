@@ -26,8 +26,7 @@ import six
 from flask import current_app, request
 
 
-def geolocation_sort(field_name, argument, unit, mode=None,
-                     distance_type=None):
+def geolocation_sort(field_name, argument, unit, mode=None, distance_type=None):
     """Sort field factory for geo-location based sorting.
 
     :param argument: Name of URL query string field to parse pin location from.
@@ -38,20 +37,22 @@ def geolocation_sort(field_name, argument, unit, mode=None,
     :param distance_type: Distance calculation mode.
     :returns: Function that returns geolocation sort field.
     """
+
     def inner(asc):
         locations = request.values.getlist(argument, type=str)
         field = {
-            '_geo_distance': {
+            "_geo_distance": {
                 field_name: locations,
-                'order': 'asc' if asc else 'desc',
-                'unit': unit,
+                "order": "asc" if asc else "desc",
+                "unit": unit,
             }
         }
         if mode:
-            field['_geo_distance']['mode'] = mode
+            field["_geo_distance"]["mode"] = mode
         if distance_type:
-            field['_geo_distance']['distance_type'] = distance_type
+            field["_geo_distance"]["distance_type"] = distance_type
         return field
+
     return inner
 
 
@@ -72,10 +73,10 @@ def reverse_order(order_value):
     :param order_value: Either the string ``asc`` or ``desc``.
     :returns: Reverse sort order of order value.
     """
-    if order_value == 'desc':
-        return 'asc'
-    elif order_value == 'asc':
-        return 'desc'
+    if order_value == "desc":
+        return "asc"
+    elif order_value == "asc":
+        return "desc"
     return None
 
 
@@ -93,7 +94,7 @@ def eval_field(field, asc):
             # Field should only have one key and must have an order subkey.
             field = copy.deepcopy(field)
             key = list(field.keys())[0]
-            field[key]['order'] = reverse_order(field[key]['order'])
+            field[key]["order"] = reverse_order(field[key]["order"])
             return field
     elif callable(field):
         return field(asc)
@@ -101,7 +102,7 @@ def eval_field(field, asc):
         key, key_asc = parse_sort_field(field)
         if not asc:
             key_asc = not key_asc
-        return {key: {'order': 'asc' if key_asc else 'desc'}}
+        return {key: {"order": "asc" if key_asc else "desc"}}
 
 
 def default_sorter_factory(search, index):
@@ -111,27 +112,29 @@ def default_sorter_factory(search, index):
     :param index: Index to search in.
     :returns: Tuple of (query, URL arguments).
     """
-    sort_arg_name = 'sort'
-    urlfield = request.values.get(sort_arg_name, '', type=str)
+    sort_arg_name = "sort"
+    urlfield = request.values.get(sort_arg_name, "", type=str)
 
     # Get default sorting if sort is not specified.
     if not urlfield:
         # cast to six.text_type to handle unicodes in Python 2
-        has_query = request.values.get('q', type=six.text_type)
-        urlfield = current_app.config['RECORDS_REST_DEFAULT_SORT'].get(
-            index, {}).get('query' if has_query else 'noquery', '')
+        has_query = request.values.get("q", type=six.text_type)
+        urlfield = (
+            current_app.config["RECORDS_REST_DEFAULT_SORT"]
+            .get(index, {})
+            .get("query" if has_query else "noquery", "")
+        )
 
     # Parse sort argument
     key, asc = parse_sort_field(urlfield)
 
     # Get sort options
-    sort_options = current_app.config['RECORDS_REST_SORT_OPTIONS'].get(
-        index, {}).get(key)
+    sort_options = (
+        current_app.config["RECORDS_REST_SORT_OPTIONS"].get(index, {}).get(key)
+    )
     if sort_options is None:
         return (search, {})
 
     # Get fields to sort query by
-    search = search.sort(
-        *[eval_field(f, asc) for f in sort_options['fields']]
-    )
+    search = search.sort(*[eval_field(f, asc) for f in sort_options["fields"]])
     return (search, {sort_arg_name: urlfield})

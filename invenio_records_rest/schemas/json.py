@@ -31,17 +31,17 @@ class StrictKeysMixin(Schema):
         else:
             for key in original_data:
                 if key not in [
-                        self.fields[field].attribute or field
-                        for field in self.fields
+                    self.fields[field].attribute or field for field in self.fields
                 ]:
                     raise ValidationError(
-                        'Unknown field name {}'.format(key), field_names=[key])
+                        "Unknown field name {}".format(key), field_names=[key]
+                    )
 
 
 class RecordSchemaJSONV1(Schema):
     """Schema for records v1 in JSON."""
 
-    id = fields.String(attribute='pid.pid_value')
+    id = fields.String(attribute="pid.pid_value")
     metadata = fields.Raw()
     links = fields.Raw()
     created = fields.Str()
@@ -55,8 +55,8 @@ class Nested(fields.Nested):
     """
 
     def _validate_missing(self, value):
-        if value is missing and getattr(self, 'required', False):
-            self.fail('required')
+        if value is missing and getattr(self, "required", False):
+            self.fail("required")
         return super(Nested, self)._validate_missing(value)
 
 
@@ -77,6 +77,7 @@ class OriginalKeysMixin(Schema):
 
 
 if marshmallow_version[0] < 3:
+
     class RecordMetadataSchemaJSONV1(OriginalKeysMixin):
         """Schema for records metadata v1 in JSON with injected PID value."""
 
@@ -84,13 +85,13 @@ if marshmallow_version[0] < 3:
 
         def get_pid_field(self):
             """Return pid_field value."""
-            return current_app.config['PIDSTORE_RECID_FIELD']
+            return current_app.config["PIDSTORE_RECID_FIELD"]
 
         @post_load()
         def inject_pid(self, data):
             """Inject context PID in the RECID field."""
             # Remove already deserialized "pid" field
-            pid_value = data.pop('pid', None)
+            pid_value = data.pop("pid", None)
             if pid_value:
                 pid_field = self.get_pid_field()
                 data.setdefault(pid_field, pid_value)
@@ -111,13 +112,13 @@ else:
 
         def get_pid_field(self):
             """Return pid_field value."""
-            return current_app.config['PIDSTORE_RECID_FIELD']
+            return current_app.config["PIDSTORE_RECID_FIELD"]
 
         @post_load()
         def inject_pid(self, data, **kwargs):
             """Inject context PID in the RECID field."""
             # Remove already deserialized "pid" field
-            pid_value = data.pop('pid', None)
+            pid_value = data.pop("pid", None)
             if pid_value:
                 pid_field = self.get_pid_field()
                 data.setdefault(pid_field, pid_value)

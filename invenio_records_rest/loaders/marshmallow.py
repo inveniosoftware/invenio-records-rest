@@ -32,14 +32,11 @@ def _flatten_marshmallow_errors(errors, parents=()):
                 dict(
                     parents=parents,
                     field=field,
-                    message=' '.join(str(x) for x in error)
+                    message=" ".join(str(x) for x in error),
                 )
             )
         elif isinstance(error, dict):
-            res.extend(_flatten_marshmallow_errors(
-                error,
-                parents=parents + (field,)
-            ))
+            res.extend(_flatten_marshmallow_errors(error, parents=parents + (field,)))
     return res
 
 
@@ -59,8 +56,8 @@ class MarshmallowErrors(RESTValidationError):
     def __str__(self):
         """Print exception with errors."""
         return "{base}. Encountered errors: {errors}".format(
-            base=super(RESTValidationError, self).__str__(),
-            errors=self.errors)
+            base=super(RESTValidationError, self).__str__(), errors=self.errors
+        )
 
     def __iter__(self):
         """Get iterator."""
@@ -83,22 +80,23 @@ class MarshmallowErrors(RESTValidationError):
         )
 
         if self.errors:
-            body['errors'] = self.errors
+            body["errors"] = self.errors
 
         return json.dumps(body)
 
 
 def marshmallow_loader(schema_class):
     """Marshmallow loader for JSON requests."""
+
     def json_loader():
         request_json = request.get_json()
 
         context = {}
-        pid_data = request.view_args.get('pid_value')
+        pid_data = request.view_args.get("pid_value")
         if pid_data:
             pid, record = pid_data.data
-            context['pid'] = pid
-            context['record'] = record
+            context["pid"] = pid
+            context["record"] = record
         if marshmallow_version[0] < 3:
             result = schema_class(context=context).load(request_json)
             if result.errors:
@@ -113,6 +111,7 @@ def marshmallow_loader(schema_class):
                 raise MarshmallowErrors(error.messages)
 
         return result.data
+
     return json_loader
 
 

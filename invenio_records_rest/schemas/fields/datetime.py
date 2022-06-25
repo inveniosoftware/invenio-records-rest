@@ -22,11 +22,15 @@ class DateString(fields.Date):
         """Serialize an ISO8601-formatted date."""
         try:
             return super(DateString, self)._serialize(
-                arrow.get(value).date(), attr, obj, **kwargs)
+                arrow.get(value).date(), attr, obj, **kwargs
+            )
         except ParserError:
             return missing
 
     def _deserialize(self, value, attr, data, **kwargs):
         """Deserialize an ISO8601-formatted date."""
-        return super(DateString, self)._deserialize(value, attr,
-                                                    data, **kwargs).isoformat()
+        return (
+            super(DateString, self)
+            ._deserialize(value, attr, data, **kwargs)
+            .isoformat()
+        )

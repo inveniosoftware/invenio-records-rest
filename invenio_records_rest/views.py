@@ -17,8 +17,15 @@ from functools import partial, wraps
 
 from elasticsearch import VERSION as ES_VERSION
 from elasticsearch.exceptions import RequestError
-from flask import Blueprint, abort, current_app, jsonify, make_response, \
-    request, url_for
+from flask import (
+    Blueprint,
+    abort,
+    current_app,
+    jsonify,
+    make_response,
+    request,
+    url_for,
+)
 from flask.views import MethodView
 from flask_babelex import gettext as _
 from invenio_db import db
@@ -38,11 +45,18 @@ from webargs.flaskparser import parser
 from werkzeug.exceptions import BadRequest
 
 from ._compat import wrap_links_factory
-from .errors import InvalidDataRESTError, InvalidQueryRESTError, \
-    JSONSchemaValidationError, PatchJSONFailureRESTError, \
-    PIDResolveRESTError, SearchPaginationRESTError, \
-    SuggestMissingContextRESTError, SuggestNoCompletionsRESTError, \
-    UnhandledElasticsearchError, UnsupportedMediaRESTError
+from .errors import (
+    InvalidDataRESTError,
+    InvalidQueryRESTError,
+    JSONSchemaValidationError,
+    PatchJSONFailureRESTError,
+    PIDResolveRESTError,
+    SearchPaginationRESTError,
+    SuggestMissingContextRESTError,
+    SuggestNoCompletionsRESTError,
+    UnhandledElasticsearchError,
+    UnsupportedMediaRESTError,
+)
 from .links import default_links_factory
 from .proxies import current_records_rest
 from .query import es_search_factory
@@ -53,7 +67,7 @@ lt_es7 = ES_VERSION[0] < 7
 
 def elasticsearch_query_parsing_exception_handler(error):
     """Handle query parsing exceptions from ElasticSearch."""
-    description = _('The syntax of the search query is invalid.')
+    description = _("The syntax of the search query is invalid.")
     return InvalidQueryRESTError(description=description).get_response()
 
 
@@ -93,9 +107,8 @@ def create_error_handlers(blueprint, error_handlers_registry=None):
     @blueprint.errorhandler(RequestError)
     def elasticsearch_badrequest_error(error):
         """Catch errors of ElasticSearch."""
-        handlers = current_app.config[
-            'RECORDS_REST_ELASTICSEARCH_ERROR_HANDLERS']
-        cause_types = {c['type'] for c in error.info['error']['root_cause']}
+        handlers = current_app.config["RECORDS_REST_ELASTICSEARCH_ERROR_HANDLERS"]
+        cause_types = {c["type"] for c in error.info["error"]["root_cause"]}
 
         for cause_type, handler in handlers.items():
             if cause_type in cause_types:
@@ -109,14 +122,16 @@ def create_error_handlers(blueprint, error_handlers_registry=None):
     for exc_or_code, handlers in error_handlers_registry.items():
         # Build full endpoint names and resolve handlers
         handlers = {
-            '.'.join([blueprint.name, view_name]): obj_or_import_string(func)
+            ".".join([blueprint.name, view_name]): obj_or_import_string(func)
             for view_name, func in handlers.items()
         }
 
         def dispatch_handler(error):
             def default_handler(e):
                 raise e
+
             return handlers.get(request.endpoint, default_handler)(error)
+
         blueprint.register_error_handler(exc_or_code, dispatch_handler)
 
     return blueprint
@@ -134,7 +149,7 @@ def create_blueprint_from_app(app):
     :params app: A Flask application.
     :returns: Configured blueprint.
     """
-    return create_blueprint(app.config.get('RECORDS_REST_ENDPOINTS'))
+    return create_blueprint(app.config.get("RECORDS_REST_ENDPOINTS"))
 
 
 def create_blueprint(endpoints):
@@ -146,43 +161,53 @@ def create_blueprint(endpoints):
     endpoints = endpoints or {}
 
     blueprint = Blueprint(
-        'invenio_records_rest',
+        "invenio_records_rest",
         __name__,
-        url_prefix='',
+        url_prefix="",
     )
 
     error_handlers_registry = defaultdict(dict)
     for endpoint, options in endpoints.items():
-        error_handlers = options.pop('error_handlers', {})
+        error_handlers = options.pop("error_handlers", {})
         for rule in create_url_rules(endpoint, **options):
             for exc_or_code, handler in error_handlers.items():
-                view_name = rule['view_func'].__name__
+                view_name = rule["view_func"].__name__
                 error_handlers_registry[exc_or_code][view_name] = handler
             blueprint.add_url_rule(**rule)
 
     return create_error_handlers(blueprint, error_handlers_registry)
 
 
-def create_url_rules(endpoint, list_route=None, item_route=None,
-                     pid_type=None, pid_minter=None, pid_fetcher=None,
-                     read_permission_factory_imp=None,
-                     create_permission_factory_imp=None,
-                     update_permission_factory_imp=None,
-                     delete_permission_factory_imp=None,
-                     list_permission_factory_imp=None,
-                     record_class=None,
-                     record_serializers=None,
-                     record_serializers_aliases=None,
-                     record_loaders=None,
-                     search_class=None,
-                     indexer_class=RecordIndexer,
-                     search_serializers=None,
-                     search_serializers_aliases=None,
-                     search_index=None, search_type=None,
-                     default_media_type=None,
-                     max_result_window=None, use_options_view=True,
-                     search_factory_imp=None, links_factory_imp=None,
-                     suggesters=None, default_endpoint_prefix=None):
+def create_url_rules(
+    endpoint,
+    list_route=None,
+    item_route=None,
+    pid_type=None,
+    pid_minter=None,
+    pid_fetcher=None,
+    read_permission_factory_imp=None,
+    create_permission_factory_imp=None,
+    update_permission_factory_imp=None,
+    delete_permission_factory_imp=None,
+    list_permission_factory_imp=None,
+    record_class=None,
+    record_serializers=None,
+    record_serializers_aliases=None,
+    record_loaders=None,
+    search_class=None,
+    indexer_class=RecordIndexer,
+    search_serializers=None,
+    search_serializers_aliases=None,
+    search_index=None,
+    search_type=None,
+    default_media_type=None,
+    max_result_window=None,
+    use_options_view=True,
+    search_factory_imp=None,
+    links_factory_imp=None,
+    suggesters=None,
+    default_endpoint_prefix=None,
+):
     """Create Werkzeug URL rules.
 
     :param endpoint: Name of endpoint.
@@ -245,21 +270,11 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
     assert search_serializers
     assert record_serializers
 
-    read_permission_factory = obj_or_import_string(
-        read_permission_factory_imp
-    )
-    create_permission_factory = obj_or_import_string(
-        create_permission_factory_imp
-    )
-    update_permission_factory = obj_or_import_string(
-        update_permission_factory_imp
-    )
-    delete_permission_factory = obj_or_import_string(
-        delete_permission_factory_imp
-    )
-    list_permission_factory = obj_or_import_string(
-        list_permission_factory_imp
-    )
+    read_permission_factory = obj_or_import_string(read_permission_factory_imp)
+    create_permission_factory = obj_or_import_string(create_permission_factory_imp)
+    update_permission_factory = obj_or_import_string(update_permission_factory_imp)
+    delete_permission_factory = obj_or_import_string(delete_permission_factory_imp)
+    list_permission_factory = obj_or_import_string(list_permission_factory_imp)
     links_factory = obj_or_import_string(
         links_factory_imp, default=default_links_factory
     )
@@ -270,25 +285,19 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         def links_factory(pid, record=None, **kwargs):
             return orig_links_factory(pid)
 
-    record_class = obj_or_import_string(
-        record_class, default=Record
-    )
-    search_class = obj_or_import_string(
-        search_class, default=RecordsSearch
-    )
+    record_class = obj_or_import_string(record_class, default=Record)
+    search_class = obj_or_import_string(search_class, default=RecordsSearch)
 
-    indexer_class = obj_or_import_string(
-        indexer_class, default=None
-    )
+    indexer_class = obj_or_import_string(indexer_class, default=None)
 
     search_class_kwargs = {}
     if search_index:
-        search_class_kwargs['index'] = search_index
+        search_class_kwargs["index"] = search_index
     else:
         search_index = search_class.Meta.index
 
     if search_type:
-        search_class_kwargs['doc_type'] = search_type
+        search_class_kwargs["doc_type"] = search_type
     else:
         search_type = search_class.Meta.doc_types
 
@@ -296,12 +305,15 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         search_class = partial(search_class, **search_class_kwargs)
 
     if record_loaders:
-        record_loaders = {mime: obj_or_import_string(func)
-                          for mime, func in record_loaders.items()}
-    record_serializers = {mime: obj_or_import_string(func)
-                          for mime, func in record_serializers.items()}
-    search_serializers = {mime: obj_or_import_string(func)
-                          for mime, func in search_serializers.items()}
+        record_loaders = {
+            mime: obj_or_import_string(func) for mime, func in record_loaders.items()
+        }
+    record_serializers = {
+        mime: obj_or_import_string(func) for mime, func in record_serializers.items()
+    }
+    search_serializers = {
+        mime: obj_or_import_string(func) for mime, func in search_serializers.items()
+    }
 
     list_view = RecordsListResource.as_view(
         RecordsListResource.view_name.format(endpoint),
@@ -319,9 +331,9 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         indexer_class=indexer_class,
         default_media_type=default_media_type,
         max_result_window=max_result_window,
-        search_factory=(obj_or_import_string(
-            search_factory_imp, default=es_search_factory
-        )),
+        search_factory=(
+            obj_or_import_string(search_factory_imp, default=es_search_factory)
+        ),
         item_links_factory=links_factory,
         record_class=record_class,
     )
@@ -336,7 +348,8 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
         search_class=search_class,
         indexer_class=indexer_class,
         links_factory=links_factory,
-        default_media_type=default_media_type)
+        default_media_type=default_media_type,
+    )
 
     views = [
         dict(rule=list_route, view_func=list_view),
@@ -349,10 +362,7 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
             search_class=search_class,
         )
 
-        views.append(dict(
-            rule=list_route + '_suggest',
-            view_func=suggest_view
-        ))
+        views.append(dict(rule=list_route + "_suggest", view_func=suggest_view))
 
     if use_options_view:
         options_view = RecordsListOptionsResource.as_view(
@@ -364,9 +374,8 @@ def create_url_rules(endpoint, list_route=None, item_route=None,
             item_media_types=record_serializers.keys(),
         )
         return [
-                   dict(rule="{0}_options".format(list_route),
-                        view_func=options_view)
-               ] + views
+            dict(rule="{0}_options".format(list_route), view_func=options_view)
+        ] + views
     return views
 
 
@@ -377,13 +386,15 @@ def pass_record(f):
     pattern and resolve it to a PID and a record, which are then available in
     the decorated function as ``pid`` and ``record`` kwargs respectively.
     """
+
     @wraps(f)
     def inner(self, pid_value, *args, **kwargs):
         try:
-            pid, record = request.view_args['pid_value'].data
+            pid, record = request.view_args["pid_value"].data
             return f(self, pid=pid, record=record, *args, **kwargs)
         except SQLAlchemyError:
             raise PIDResolveRESTError(pid_value)
+
     return inner
 
 
@@ -401,6 +412,7 @@ def verify_record_permission(permission_factory, record):
     # operations permission object.
     if not permission_factory(record=record).can():
         from flask_login import current_user
+
         if not current_user.is_authenticated:
             abort(401)
         abort(403)
@@ -411,13 +423,12 @@ def need_record_permission(factory_name):
 
     :param factory_name: name of the permission factory.
     """
+
     def need_record_permission_builder(f):
         @wraps(f)
-        def need_record_permission_decorator(self, record=None, *args,
-                                             **kwargs):
-            permission_factory = (
-                getattr(self, factory_name) or
-                getattr(current_records_rest, factory_name)
+        def need_record_permission_decorator(self, record=None, *args, **kwargs):
+            permission_factory = getattr(self, factory_name) or getattr(
+                current_records_rest, factory_name
             )
 
             # FIXME use context instead
@@ -426,100 +437,115 @@ def need_record_permission(factory_name):
             if permission_factory:
                 verify_record_permission(permission_factory, record)
             return f(self, record=record, *args, **kwargs)
+
         return need_record_permission_decorator
+
     return need_record_permission_builder
 
 
 def _validate_pagination_args(args):
-    if args.get('page') and args.get('from'):
+    if args.get("page") and args.get("from"):
         raise WebargsValidationError(
-            'The query parameters from and page must not be '
-            'used at the same time.',
-            field_names=['page', 'from']
+            "The query parameters from and page must not be " "used at the same time.",
+            field_names=["page", "from"],
         )
 
 
 def use_paginate_args(default_size=25, max_results=10000):
     """Get and validate pagination arguments."""
+
     def decorator(f):
         @wraps(f)
         def inner(self, *args, **kwargs):
 
-            _default_size = default_size(self) \
-                if callable(default_size) else default_size
-            _max_results = max_results(self) \
-                if callable(max_results) else max_results
+            _default_size = (
+                default_size(self) if callable(default_size) else default_size
+            )
+            _max_results = max_results(self) if callable(max_results) else max_results
 
             try:
                 req = parser.parse(
                     {
-                        'page': fields.Int(
+                        "page": fields.Int(
                             validate=validate.Range(min=1),
                         ),
-                        'from': fields.Int(
-                            load_from='from',
+                        "from": fields.Int(
+                            load_from="from",
                             validate=validate.Range(min=1),
                         ),
-                        'size': fields.Int(
-                            validate=validate.Range(min=1),
-                            missing=_default_size
+                        "size": fields.Int(
+                            validate=validate.Range(min=1), missing=_default_size
                         ),
                     },
-                    locations=['querystring'],
+                    locations=["querystring"],
                     validate=_validate_pagination_args,
                     error_status_code=400,
                 )
             # For validation errors, webargs raises an enhanced BadRequest
             except BadRequest as err:
                 raise SearchPaginationRESTError(
-                    description='Invalid pagination parameters.',
-                    errors=err.data.get('messages'))
+                    description="Invalid pagination parameters.",
+                    errors=err.data.get("messages"),
+                )
 
             # Default if neither page nor from is specified
-            if not (req.get('page') or req.get('from')):
-                req['page'] = 1
+            if not (req.get("page") or req.get("from")):
+                req["page"] = 1
 
-            if req.get('page'):
-                req.update(dict(
-                    from_idx=(req['page'] - 1) * req['size'],
-                    to_idx=req['page'] * req['size'],
-                    links=dict(
-                        prev={'page': req['page'] - 1},
-                        self={'page': req['page']},
-                        next={'page': req['page'] + 1},
+            if req.get("page"):
+                req.update(
+                    dict(
+                        from_idx=(req["page"] - 1) * req["size"],
+                        to_idx=req["page"] * req["size"],
+                        links=dict(
+                            prev={"page": req["page"] - 1},
+                            self={"page": req["page"]},
+                            next={"page": req["page"] + 1},
+                        ),
                     )
-                ))
-            elif req.get('from'):
-                req.update(dict(
-                    from_idx=req['from'] - 1,
-                    to_idx=req['from'] - 1 + req['size'],
-                    links=dict(
-                        prev={'from': max(1, req['from'] - req['size'])},
-                        self={'from': req['from']},
-                        next={'from': req['from'] + req['size']},
+                )
+            elif req.get("from"):
+                req.update(
+                    dict(
+                        from_idx=req["from"] - 1,
+                        to_idx=req["from"] - 1 + req["size"],
+                        links=dict(
+                            prev={"from": max(1, req["from"] - req["size"])},
+                            self={"from": req["from"]},
+                            next={"from": req["from"] + req["size"]},
+                        ),
                     )
-                ))
+                )
 
-            if req['to_idx'] > _max_results:
+            if req["to_idx"] > _max_results:
                 raise SearchPaginationRESTError(
                     description=(
-                        'Maximum number of {} results have been reached.'
-                        .format(_max_results))
+                        "Maximum number of {} results have been reached.".format(
+                            _max_results
+                        )
+                    )
                 )
 
             return f(self, pagination=req, *args, **kwargs)
+
         return inner
+
     return decorator
 
 
 class RecordsListOptionsResource(MethodView):
     """Resource for displaying options about records list/item views."""
 
-    view_name = '{0}_list_options'
+    view_name = "{0}_list_options"
 
-    def __init__(self, search_index=None, max_result_window=None,
-                 default_media_type=None, search_media_types=None,
-                 item_media_types=None):
+    def __init__(
+        self,
+        search_index=None,
+        max_result_window=None,
+        default_media_type=None,
+        search_media_types=None,
+        item_media_types=None,
+    ):
         """Initialize method view."""
         self.search_index = search_index
         self.max_result_window = max_result_window or 10000
@@ -529,76 +555,92 @@ class RecordsListOptionsResource(MethodView):
 
     def get(self):
         """Get options."""
-        opts = current_app.config['RECORDS_REST_SORT_OPTIONS'].get(
-            self.search_index)
+        opts = current_app.config["RECORDS_REST_SORT_OPTIONS"].get(self.search_index)
 
         sort_fields = []
         if opts:
-            for key, item in sorted(opts.items(), key=lambda x: x[1]['order']):
+            for key, item in sorted(opts.items(), key=lambda x: x[1]["order"]):
                 sort_fields.append(
-                    {key: dict(
-                        title=item['title'],
-                        default_order=item.get('default_order', 'asc'))}
+                    {
+                        key: dict(
+                            title=item["title"],
+                            default_order=item.get("default_order", "asc"),
+                        )
+                    }
                 )
 
-        return jsonify(dict(
-            sort_fields=sort_fields,
-            max_result_window=self.max_result_window,
-            default_media_type=self.default_media_type,
-            search_media_types=sorted(self.search_media_types),
-            item_media_types=sorted(self.item_media_types),
-        ))
+        return jsonify(
+            dict(
+                sort_fields=sort_fields,
+                max_result_window=self.max_result_window,
+                default_media_type=self.default_media_type,
+                search_media_types=sorted(self.search_media_types),
+                item_media_types=sorted(self.item_media_types),
+            )
+        )
 
 
 class RecordsListResource(ContentNegotiatedMethodView):
     """Resource for records listing."""
 
-    view_name = '{0}_list'
+    view_name = "{0}_list"
 
-    def __init__(self, minter_name=None, pid_type=None,
-                 pid_fetcher=None, read_permission_factory=None,
-                 create_permission_factory=None,
-                 list_permission_factory=None,
-                 search_class=None,
-                 record_serializers=None,
-                 record_loaders=None,
-                 search_serializers=None, default_media_type=None,
-                 max_result_window=None, search_factory=None,
-                 item_links_factory=None, record_class=None,
-                 indexer_class=None, **kwargs):
+    def __init__(
+        self,
+        minter_name=None,
+        pid_type=None,
+        pid_fetcher=None,
+        read_permission_factory=None,
+        create_permission_factory=None,
+        list_permission_factory=None,
+        search_class=None,
+        record_serializers=None,
+        record_loaders=None,
+        search_serializers=None,
+        default_media_type=None,
+        max_result_window=None,
+        search_factory=None,
+        item_links_factory=None,
+        record_class=None,
+        indexer_class=None,
+        **kwargs
+    ):
         """Constructor."""
         super(RecordsListResource, self).__init__(
             method_serializers={
-                'GET': search_serializers,
-                'POST': record_serializers,
+                "GET": search_serializers,
+                "POST": record_serializers,
             },
             default_method_media_type={
-                'GET': default_media_type,
-                'POST': default_media_type,
+                "GET": default_media_type,
+                "POST": default_media_type,
             },
             default_media_type=default_media_type,
-            **kwargs)
+            **kwargs
+        )
         self.pid_type = pid_type
         self.minter = current_pidstore.minters[minter_name]
         self.pid_fetcher = current_pidstore.fetchers[pid_fetcher]
         self.read_permission_factory = read_permission_factory
-        self.create_permission_factory = create_permission_factory or \
-            current_records_rest.create_permission_factory
-        self.list_permission_factory = list_permission_factory or \
-            current_records_rest.list_permission_factory
+        self.create_permission_factory = (
+            create_permission_factory or current_records_rest.create_permission_factory
+        )
+        self.list_permission_factory = (
+            list_permission_factory or current_records_rest.list_permission_factory
+        )
         self.search_class = search_class
         self.max_result_window = max_result_window or 10000
         self.search_factory = partial(search_factory, self)
         self.item_links_factory = item_links_factory
-        self.loaders = record_loaders or \
-            current_records_rest.loaders
+        self.loaders = record_loaders or current_records_rest.loaders
         self.record_class = record_class or Record
         self.indexer_class = indexer_class
 
-    @need_record_permission('list_permission_factory')
+    @need_record_permission("list_permission_factory")
     @use_paginate_args(
         default_size=lambda self: current_app.config.get(
-            'RECORDS_REST_DEFAULT_RESULTS_SIZE', 10),
+            "RECORDS_REST_DEFAULT_RESULTS_SIZE", 10
+        ),
         max_results=lambda self: self.max_result_window,
     )
     def get(self, pagination=None, **kwargs):
@@ -614,7 +656,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         urlkwargs = dict()
         search_obj = self.search_class()
         search = search_obj.with_preference_param().params(version=True)
-        search = search[pagination['from_idx']:pagination['to_idx']]
+        search = search[pagination["from_idx"] : pagination["to_idx"]]
         if not lt_es7:
             search = search.extra(track_total_hits=True)
 
@@ -625,23 +667,25 @@ class RecordsListResource(ContentNegotiatedMethodView):
         search_result = search.execute()
 
         # Generate links for self/prev/next
-        total = search_result.hits.total if lt_es7 else \
-            search_result.hits.total['value']
-        endpoint = '.{0}_list'.format(
-            current_records_rest.default_endpoint_prefixes[self.pid_type])
-        urlkwargs.update(size=pagination['size'], _external=True)
+        total = (
+            search_result.hits.total if lt_es7 else search_result.hits.total["value"]
+        )
+        endpoint = ".{0}_list".format(
+            current_records_rest.default_endpoint_prefixes[self.pid_type]
+        )
+        urlkwargs.update(size=pagination["size"], _external=True)
 
         links = {}
 
         def _link(name):
-            urlkwargs.update(pagination['links'][name])
+            urlkwargs.update(pagination["links"][name])
             links[name] = url_for(endpoint, **urlkwargs)
 
-        _link('self')
-        if pagination['from_idx'] >= 1:
-            _link('prev')
-        if pagination['to_idx'] < min(total, self.max_result_window):
-            _link('next')
+        _link("self")
+        if pagination["from_idx"] >= 1:
+            _link("prev")
+        if pagination["to_idx"] < min(total, self.max_result_window):
+            _link("next")
 
         return self.make_response(
             pid_fetcher=self.pid_fetcher,
@@ -650,7 +694,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
             item_links_factory=self.item_links_factory,
         )
 
-    @need_record_permission('create_permission_factory')
+    @need_record_permission("create_permission_factory")
     def post(self, **kwargs):
         """Create a record.
 
@@ -701,11 +745,13 @@ class RecordsListResource(ContentNegotiatedMethodView):
             self.indexer_class().index(record)
 
         response = self.make_response(
-            pid, record, 201, links_factory=self.item_links_factory)
+            pid, record, 201, links_factory=self.item_links_factory
+        )
 
         # Add location headers
-        endpoint = '.{0}_item'.format(
-            current_records_rest.default_endpoint_prefixes[pid.pid_type])
+        endpoint = ".{0}_item".format(
+            current_records_rest.default_endpoint_prefixes[pid.pid_type]
+        )
         location = url_for(endpoint, pid_value=pid.pid_value, _external=True)
         response.headers.extend(dict(location=location))
         return response
@@ -714,27 +760,36 @@ class RecordsListResource(ContentNegotiatedMethodView):
 class RecordResource(ContentNegotiatedMethodView):
     """Resource for record items."""
 
-    view_name = '{0}_item'
+    view_name = "{0}_item"
 
-    def __init__(self, read_permission_factory=None,
-                 update_permission_factory=None,
-                 delete_permission_factory=None, default_media_type=None,
-                 links_factory=None,
-                 loaders=None, search_class=None, indexer_class=None,
-                 **kwargs):
+    def __init__(
+        self,
+        read_permission_factory=None,
+        update_permission_factory=None,
+        delete_permission_factory=None,
+        default_media_type=None,
+        links_factory=None,
+        loaders=None,
+        search_class=None,
+        indexer_class=None,
+        **kwargs
+    ):
         """Constructor."""
         super(RecordResource, self).__init__(
             method_serializers={
-                'DELETE': {'*/*': lambda *args: make_response(*args), },
+                "DELETE": {
+                    "*/*": lambda *args: make_response(*args),
+                },
             },
             default_method_media_type={
-                'GET': default_media_type,
-                'PUT': default_media_type,
-                'DELETE': '*/*',
-                'PATCH': default_media_type,
+                "GET": default_media_type,
+                "PUT": default_media_type,
+                "DELETE": "*/*",
+                "PATCH": default_media_type,
             },
             default_media_type=default_media_type,
-            **kwargs)
+            **kwargs
+        )
         self.search_class = search_class
         self.read_permission_factory = read_permission_factory
         self.update_permission_factory = update_permission_factory
@@ -744,7 +799,7 @@ class RecordResource(ContentNegotiatedMethodView):
         self.indexer_class = indexer_class
 
     @pass_record
-    @need_record_permission('delete_permission_factory')
+    @need_record_permission("delete_permission_factory")
     def delete(self, pid, record, **kwargs):
         """Delete a record.
 
@@ -778,10 +833,10 @@ class RecordResource(ContentNegotiatedMethodView):
         if self.indexer_class:
             self.indexer_class().delete(record)
 
-        return '', 204
+        return "", 204
 
     @pass_record
-    @need_record_permission('read_permission_factory')
+    @need_record_permission("read_permission_factory")
     def get(self, pid, record, **kwargs):
         """Get a record.
 
@@ -803,13 +858,11 @@ class RecordResource(ContentNegotiatedMethodView):
         self.check_etag(str(record.revision_id))
         self.check_if_modified_since(record.updated, etag=etag)
 
-        return self.make_response(
-            pid, record, links_factory=self.links_factory
-        )
+        return self.make_response(pid, record, links_factory=self.links_factory)
 
-    @require_content_types('application/json-patch+json')
+    @require_content_types("application/json-patch+json")
     @pass_record
-    @need_record_permission('update_permission_factory')
+    @need_record_permission("update_permission_factory")
     def patch(self, pid, record, **kwargs):
         """Modify a record.
 
@@ -847,11 +900,10 @@ class RecordResource(ContentNegotiatedMethodView):
         if self.indexer_class:
             self.indexer_class().index(record)
 
-        return self.make_response(
-            pid, record, links_factory=self.links_factory)
+        return self.make_response(pid, record, links_factory=self.links_factory)
 
     @pass_record
-    @need_record_permission('update_permission_factory')
+    @need_record_permission("update_permission_factory")
     def put(self, pid, record, **kwargs):
         """Replace a record.
 
@@ -888,14 +940,13 @@ class RecordResource(ContentNegotiatedMethodView):
         db.session.commit()
         if self.indexer_class:
             self.indexer_class().index(record)
-        return self.make_response(
-            pid, record, links_factory=self.links_factory)
+        return self.make_response(pid, record, links_factory=self.links_factory)
 
 
 class SuggestResource(MethodView):
     """Resource for records suggests."""
 
-    view_name = '{0}_suggest'
+    view_name = "{0}_suggest"
 
     def __init__(self, suggesters, search_class=None, **kwargs):
         """Constructor."""
@@ -905,7 +956,7 @@ class SuggestResource(MethodView):
     def get(self, **kwargs):
         """Get suggestions."""
         completions = []
-        size = request.values.get('size', type=int)
+        size = request.values.get("size", type=int)
 
         for k in self.suggesters.keys():
             val = request.values.get(k)
@@ -913,35 +964,34 @@ class SuggestResource(MethodView):
                 # Get completion suggestions
                 opts = copy.deepcopy(self.suggesters[k])
                 # Context suggester compatibility adjustment
-                if 'context' in opts.get('completion', {}):
-                    context_key = 'context'
-                elif 'contexts' in opts.get('completion', {}):
-                    context_key = 'contexts'
+                if "context" in opts.get("completion", {}):
+                    context_key = "context"
+                elif "contexts" in opts.get("completion", {}):
+                    context_key = "contexts"
                 else:
                     context_key = None
 
                 if context_key:
-                    ctx_field = opts['completion'][context_key]
+                    ctx_field = opts["completion"][context_key]
                     ctx_val = request.values.get(ctx_field)
                     if not ctx_val:
                         raise SuggestMissingContextRESTError
-                    opts['completion'][context_key] = {
-                        ctx_field: ctx_val
-                    }
+                    opts["completion"][context_key] = {ctx_field: ctx_val}
 
                 if size:
-                    opts['completion']['size'] = size
+                    opts["completion"]["size"] = size
 
                 completions.append((k, val, opts))
 
         if not completions:
             raise SuggestNoCompletionsRESTError(
-                ', '.join(sorted(self.suggesters.keys())))
+                ", ".join(sorted(self.suggesters.keys()))
+            )
 
         # Add completions
         s = self.search_class()
         for field, val, opts in completions:
-            source = opts.pop('_source', None)
+            source = opts.pop("_source", None)
             if source is not None and ES_VERSION[0] >= 5:
                 s = s.source(source).suggest(field, val, **opts)
             else:
@@ -952,11 +1002,11 @@ class SuggestResource(MethodView):
             response = s.execute_suggest().to_dict()
             for field, _, _ in completions:
                 for resp in response[field]:
-                    for op in resp['options']:
-                        if 'payload' in op:
-                            op['_source'] = copy.deepcopy(op['payload'])
+                    for op in resp["options"]:
+                        if "payload" in op:
+                            op["_source"] = copy.deepcopy(op["payload"])
         elif ES_VERSION[0] >= 5:
-            response = s.execute().to_dict()['suggest']
+            response = s.execute().to_dict()["suggest"]
 
         result = dict()
         for field, val, opts in completions:

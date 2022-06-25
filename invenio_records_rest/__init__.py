@@ -6,7 +6,7 @@
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
-u"""REST API for Records.
+"""REST API for Records.
 
 Invenio-Records-REST is a core component of Invenio which provides configurable
 REST APIs for searching, retrieving, creating, modifying and deleting records.
@@ -714,6 +714,6 @@ from __future__ import absolute_import, print_function
 from .ext import InvenioRecordsREST
 from .proxies import current_records_rest
 
-__version__ = '1.9.0'
+__version__ = "1.9.0"
 
-__all__ = ('__version__', 'current_records_rest', 'InvenioRecordsREST')
+__all__ = ("__version__", "current_records_rest", "InvenioRecordsREST")

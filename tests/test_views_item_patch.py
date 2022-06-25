@@ -18,16 +18,15 @@ from conftest import IndexFlusher
 from helpers import _mock_validate_fail, assert_hits_len, get_json, record_url
 
 
-@pytest.mark.parametrize('content_type', [
-    'application/json-patch+json', 'application/json-patch+json;charset=utf-8'
-])
-def test_valid_patch(app, es, test_records, test_patch, content_type,
-                     search_url, search_class):
+@pytest.mark.parametrize(
+    "content_type",
+    ["application/json-patch+json", "application/json-patch+json;charset=utf-8"],
+)
+def test_valid_patch(
+    app, es, test_records, test_patch, content_type, search_url, search_class
+):
     """Test VALID record patch request (PATCH .../records/<record_id>)."""
-    HEADERS = [
-        ('Accept', 'application/json'),
-        ('Content-Type', content_type)
-    ]
+    HEADERS = [("Accept", "application/json"), ("Content-Type", content_type)]
     pid, record = test_records[0]
 
     # Check that
@@ -36,37 +35,35 @@ def test_valid_patch(app, es, test_records, test_patch, content_type,
     with app.test_client() as client:
         # Check that patch and record is not the same value for year.
         url = record_url(pid)
-        previous_year = get_json(client.get(url))['metadata']['year']
+        previous_year = get_json(client.get(url))["metadata"]["year"]
 
         # Patch record
         res = client.patch(url, data=json.dumps(test_patch), headers=HEADERS)
         assert res.status_code == 200
 
         # Check that year changed.
-        new_year = get_json(client.get(url))['metadata']['year']
+        new_year = get_json(client.get(url))["metadata"]["year"]
         assert previous_year != new_year
         IndexFlusher(search_class).flush_and_wait()
-        res = client.get(search_url, query_string={'year': new_year})
+        res = client.get(search_url, query_string={"year": new_year})
         assert_hits_len(res, 1)
 
 
-@pytest.mark.parametrize('content_type', [
-    'application/json-patch+json', 'application/json-patch+json;charset=utf-8'
-])
-def test_patch_deleted(app, db, es, test_data, test_patch, content_type,
-                       search_url, search_class):
+@pytest.mark.parametrize(
+    "content_type",
+    ["application/json-patch+json", "application/json-patch+json;charset=utf-8"],
+)
+def test_patch_deleted(
+    app, db, es, test_data, test_patch, content_type, search_url, search_class
+):
     """Test patching deleted record."""
-    HEADERS = [
-        ('Accept', 'application/json'),
-        ('Content-Type', content_type)
-    ]
+    HEADERS = [("Accept", "application/json"), ("Content-Type", content_type)]
 
     with app.test_client() as client:
         # Create record
-        res = client.post(
-            search_url, data=json.dumps(test_data[0]), headers=HEADERS)
+        res = client.post(search_url, data=json.dumps(test_data[0]), headers=HEADERS)
         assert res.status_code == 201
-        _id = get_json(res)['id']
+        _id = get_json(res)["id"]
         # Delete record.
         url = record_url(_id)
         assert client.delete(url).status_code == 204
@@ -75,21 +72,18 @@ def test_patch_deleted(app, db, es, test_data, test_patch, content_type,
         res = client.patch(url, data=json.dumps(test_patch), headers=HEADERS)
         assert res.status_code == 410
         IndexFlusher(search_class).flush_and_wait()
-        res = client.get(search_url,
-                         query_string={'title': test_data[0]['title']})
+        res = client.get(search_url, query_string={"title": test_data[0]["title"]})
         assert_hits_len(res, 0)
 
 
-@pytest.mark.parametrize('charset', [
-    '', ';charset=utf-8'
-])
-def test_invalid_patch(app, es, test_records, test_patch, charset, search_url,
-                       search_class):
+@pytest.mark.parametrize("charset", ["", ";charset=utf-8"])
+def test_invalid_patch(
+    app, es, test_records, test_patch, charset, search_url, search_class
+):
     """Test INVALID record put request (PUT .../records/<record_id>)."""
     HEADERS = [
-        ('Accept', 'application/json'),
-        ('Content-Type',
-         'application/json-patch+json{0}'.format(charset))
+        ("Accept", "application/json"),
+        ("Content-Type", "application/json-patch+json{0}".format(charset)),
     ]
     pid, record = test_records[0]
 
@@ -98,34 +92,39 @@ def test_invalid_patch(app, es, test_records, test_patch, charset, search_url,
 
         # Non-existing record
         res = client.patch(
-            record_url('0'), data=json.dumps(test_patch), headers=HEADERS)
+            record_url("0"), data=json.dumps(test_patch), headers=HEADERS
+        )
         assert res.status_code == 404
         IndexFlusher(search_class).flush_and_wait()
         res = client.get(search_url)
         assert_hits_len(res, 0)
 
         # Invalid accept mime type.
-        headers = [('Content-Type',
-                    'application/json-patch+json{0}'.format(charset)),
-                   ('Accept', 'video/mp4')]
+        headers = [
+            ("Content-Type", "application/json-patch+json{0}".format(charset)),
+            ("Accept", "video/mp4"),
+        ]
         res = client.patch(url, data=json.dumps(test_patch), headers=headers)
         assert res.status_code == 406
 
         # Invalid content type
-        headers = [('Content-Type', 'video/mp4{0}'.format(charset)),
-                   ('Accept', 'application/json')]
+        headers = [
+            ("Content-Type", "video/mp4{0}".format(charset)),
+            ("Accept", "application/json"),
+        ]
         res = client.patch(url, data=json.dumps(test_patch), headers=headers)
         assert res.status_code == 415
 
         # Invalid Patch
         res = client.patch(
             url,
-            data=json.dumps([{'invalid': 'json-patch{0}'.format(charset)}]),
-            headers=HEADERS)
+            data=json.dumps([{"invalid": "json-patch{0}".format(charset)}]),
+            headers=HEADERS,
+        )
         assert res.status_code == 400
 
         # Invalid JSON
-        res = client.patch(url, data='{', headers=HEADERS)
+        res = client.patch(url, data="{", headers=HEADERS)
         assert res.status_code == 400
 
         # Invalid ETag
@@ -133,24 +132,21 @@ def test_invalid_patch(app, es, test_records, test_patch, charset, search_url,
             url,
             data=json.dumps(test_patch),
             headers={
-                'Content-Type': 'application/json-patch+json{0}'.format(
-                    charset),
-                'If-Match': '"2"'
-            }
+                "Content-Type": "application/json-patch+json{0}".format(charset),
+                "If-Match": '"2"',
+            },
         )
         assert res.status_code == 412
 
 
-@mock.patch('invenio_records.api.Record.commit', _mock_validate_fail)
-@pytest.mark.parametrize('content_type', [
-    'application/json-patch+json', 'application/json-patch+json;charset=utf-8'
-])
+@mock.patch("invenio_records.api.Record.commit", _mock_validate_fail)
+@pytest.mark.parametrize(
+    "content_type",
+    ["application/json-patch+json", "application/json-patch+json;charset=utf-8"],
+)
 def test_validation_error(app, test_records, test_patch, content_type):
     """Test VALID record patch request (PATCH .../records/<record_id>)."""
-    HEADERS = [
-        ('Accept', 'application/json'),
-        ('Content-Type', content_type)
-    ]
+    HEADERS = [("Accept", "application/json"), ("Content-Type", content_type)]
     pid, record = test_records[0]
 
     # Check that
@@ -159,7 +155,7 @@ def test_validation_error(app, test_records, test_patch, content_type):
     with app.test_client() as client:
         # Check that patch and record is not the same value for year.
         url = record_url(pid)
-        previous_year = get_json(client.get(url))['metadata']['year']
+        previous_year = get_json(client.get(url))["metadata"]["year"]
 
         # Patch record
         res = client.patch(url, data=json.dumps(test_patch), headers=HEADERS)

@@ -44,9 +44,9 @@ class JSONLDTransformerMixin(TransformerMixinInterface):
         """Get JSON-LD expanded state."""
         # Ensure we can run outside a application/request context.
         if request:
-            if 'expanded' in request.args:
+            if "expanded" in request.args:
                 return True
-            elif 'compacted' in request.args:
+            elif "compacted" in request.args:
                 return False
         return self._expanded
 
@@ -67,8 +67,7 @@ class JSONLDTransformerMixin(TransformerMixinInterface):
         )
         return self.transform_jsonld(result)
 
-    def transform_search_hit(self, pid, record_hit, links_factory=None,
-                             **kwargs):
+    def transform_search_hit(self, pid, record_hit, links_factory=None, **kwargs):
         """Transform search result hit into an intermediate representation."""
         result = super(JSONLDTransformerMixin, self).transform_search_hit(
             pid, record_hit, links_factory, **kwargs

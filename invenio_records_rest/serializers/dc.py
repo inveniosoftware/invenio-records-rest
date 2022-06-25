@@ -17,8 +17,9 @@ from .base import PreprocessorMixin, SerializerMixinInterface
 from .marshmallow import MarshmallowMixin
 
 
-class DublinCoreSerializer(SerializerMixinInterface, MarshmallowMixin,
-                           PreprocessorMixin):
+class DublinCoreSerializer(
+    SerializerMixinInterface, MarshmallowMixin, PreprocessorMixin
+):
     """Marshmallow based DublinCore serializer for records.
 
     Note: This serializer is not suitable for serializing large number of
@@ -32,11 +33,11 @@ class DublinCoreSerializer(SerializerMixinInterface, MarshmallowMixin,
         :param record: Record instance.
         :param links_factory: Factory function for record links.
         """
-        return simpledc.tostring(
-            self.transform_record(pid, record, links_factory))
+        return simpledc.tostring(self.transform_record(pid, record, links_factory))
 
-    def serialize_search(self, pid_fetcher, search_result, links=None,
-                         item_links_factory=None):
+    def serialize_search(
+        self, pid_fetcher, search_result, links=None, item_links_factory=None
+    ):
         """Serialize a search result.
 
         :param pid_fetcher: Persistent identifier fetcher.
@@ -44,19 +45,25 @@ class DublinCoreSerializer(SerializerMixinInterface, MarshmallowMixin,
         :param links: Dictionary of links to add to response.
         """
         records = []
-        for hit in search_result['hits']['hits']:
-            records.append(simpledc.tostring(self.transform_search_hit(
-                pid_fetcher(hit['_id'], hit['_source']),
-                hit,
-                links_factory=item_links_factory,
-            )))
+        for hit in search_result["hits"]["hits"]:
+            records.append(
+                simpledc.tostring(
+                    self.transform_search_hit(
+                        pid_fetcher(hit["_id"], hit["_source"]),
+                        hit,
+                        links_factory=item_links_factory,
+                    )
+                )
+            )
 
         return "\n".join(records)
 
     def serialize_oaipmh(self, pid, record):
         """Serialize a single record for OAI-PMH."""
-        obj = self.transform_record(pid, record['_source']) \
-            if isinstance(record['_source'], Record) \
+        obj = (
+            self.transform_record(pid, record["_source"])
+            if isinstance(record["_source"], Record)
             else self.transform_search_hit(pid, record)
+        )
 
         return simpledc.dump_etree(obj)
