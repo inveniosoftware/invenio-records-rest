@@ -57,9 +57,8 @@ class StyleNotFoundRESTError(RESTException):
     def __init__(self, style=None, **kwargs):
         """Initialize exception."""
         super(RESTException, self).__init__(**kwargs)
-        self.description = "Style{0}could not be found.".format(
-            ' "{0}" '.format(style) if style else " "
-        )
+        arg = f' "{style}" ' if style else " "
+        self.description = f"Style{arg}could not be found."
 
 
 #
@@ -103,7 +102,7 @@ class PIDMissingObjectRESTError(PIDRESTException):
     def __init__(self, pid, **kwargs):
         """Initialize exception."""
         super(PIDMissingObjectRESTError, self).__init__(**kwargs)
-        self.description = "No object assigned to {0}.".format(pid)
+        self.description = f"No object assigned to {pid}."
 
 
 class PIDRedirectedRESTError(PIDRESTException):
@@ -114,9 +113,8 @@ class PIDRedirectedRESTError(PIDRESTException):
     def __init__(self, pid_type=None, **kwargs):
         """Initialize exception."""
         super(PIDRedirectedRESTError, self).__init__(**kwargs)
-        self.description = "Invalid redirect - pid_type{0}endpoint missing.".format(
-            ' "{0}" '.format(pid_type) if pid_type else " "
-        )
+        arg = f' "{pid_type}" ' if pid_type else " "
+        self.description = f"Invalid redirect - pid_type{arg}endpoint missing."
 
 
 #
@@ -130,9 +128,8 @@ class PIDResolveRESTError(RESTException):
     def __init__(self, pid=None, **kwargs):
         """Initialize exception."""
         super(RESTException, self).__init__(**kwargs)
-        self.description = "PID{0}could not be resolved.".format(
-            " #{0} ".format(pid) if pid else " "
-        )
+        arg = f" #{pid} " if pid else " "
+        self.description = f"PID{arg}could not be resolved."
 
 
 class UnsupportedMediaRESTError(RESTException):
@@ -144,7 +141,7 @@ class UnsupportedMediaRESTError(RESTException):
         """Initialize exception."""
         super(RESTException, self).__init__(**kwargs)
         content_type = content_type or request.mimetype
-        self.description = 'Unsupported media type "{0}".'.format(content_type)
+        self.description = f'Unsupported media type "{content_type}".'
 
 
 class InvalidDataRESTError(RESTException):
@@ -169,9 +166,8 @@ class SuggestMissingContextRESTError(RESTException):
     def __init__(self, ctx_field=None, **kwargs):
         """Initialize exception."""
         super(RESTException, self).__init__(**kwargs)
-        self.description = "Missing{0}context".format(
-            ' "{0}" '.format(ctx_field) if ctx_field else " "
-        )
+        arg = f' "{ctx_field}" ' if ctx_field else " "
+        self.description = f"Missing{arg}context"
 
 
 class SuggestNoCompletionsRESTError(RESTException):
@@ -182,9 +178,8 @@ class SuggestNoCompletionsRESTError(RESTException):
     def __init__(self, options=None, **kwargs):
         """Initialize exception."""
         super(RESTException, self).__init__(**kwargs)
-        self.description = "No completions requested.{0}".format(
-            " (options: {0})".format(options) if options else ""
-        )
+        arg = f" (options: {options})" if options else ""
+        self.description = f"No completions requested.{arg}"
 
 
 class JSONSchemaValidationError(RESTValidationError):
@@ -195,13 +190,12 @@ class JSONSchemaValidationError(RESTValidationError):
     def __init__(self, error=None, **kwargs):
         """Initialize exception."""
         super(RESTValidationError, self).__init__(**kwargs)
-        self.description = "Validation error: {0}.".format(
-            error.message if error else ""
-        )
+        error = error.message if error else ""
+        self.description = f"Validation error: {error}."
 
 
 class UnhandledElasticsearchError(RESTException):
     """Failed to handle exception."""
 
     code = 500
-    description = "An internal server error occurred when handling the " "request."
+    description = "An internal server error occurred when handling the request."
