@@ -12,10 +12,9 @@
 from __future__ import absolute_import, print_function
 
 import pytest
-from elasticsearch_dsl import Search
-from elasticsearch_dsl.query import Q, Range
 from flask import Flask
 from invenio_rest.errors import RESTValidationError
+from invenio_search.engine import dsl
 from werkzeug.datastructures import MultiDict
 
 from invenio_records_rest.facets import (
@@ -38,14 +37,14 @@ def test_terms_filter():
 def test_range_filter():
     """Test range filter."""
     f = range_filter("test", start_date_math="startmath", end_date_math="endmath")
-    assert f(["1821--1940"]) == Range(
+    assert f(["1821--1940"]) == dsl.query.Range(
         test={
             "gte": "1821||startmath",
             "lte": "1940||endmath",
         }
     )
-    assert f([">1821--"]) == Range(test={"gt": "1821||startmath"})
-    assert f(["1821--<1940"]) == Range(
+    assert f([">1821--"]) == dsl.query.Range(test={"gt": "1821||startmath"})
+    assert f(["1821--<1940"]) == dsl.query.Range(
         test={"gte": "1821||startmath", "lt": "1940||endmath"}
     )
 
@@ -91,14 +90,14 @@ def test_post_filter(app):
     )
 
     with app.test_request_context("?type=test"):
-        search = Search().query(Q(query="value"))
+        search = dsl.Search().query(dsl.Q(query="value"))
         search, args = _post_filter(search, urlargs, defs)
         assert "post_filter" in search.to_dict()
         assert search.to_dict()["post_filter"] == dict(terms=dict(type=["test"]))
         assert args["type"] == "test"
 
     with app.test_request_context("?anotertype=test"):
-        search = Search().query(Q(query="value"))
+        search = dsl.Search().query(dsl.Q(query="value"))
         search, args = _post_filter(search, urlargs, defs)
         assert "post_filter" not in search.to_dict()
 
@@ -112,7 +111,7 @@ def test_query_filter(app):
     )
 
     with app.test_request_context("?type=test"):
-        search = Search().query(Q("multi_match", query="value"))
+        search = dsl.Search().query(dsl.Q("multi_match", query="value"))
         body = search.to_dict()
         search, args = _query_filter(search, urlargs, defs)
         assert "post_filter" not in search.to_dict()
@@ -123,7 +122,7 @@ def test_query_filter(app):
         assert args["type"] == "test"
 
     with app.test_request_context("?anotertype=test"):
-        search = Search().query(Q(query="value"))
+        search = dsl.Search().query(dsl.Q(query="value"))
         body = search.to_dict()
         query, args = _query_filter(search, urlargs, defs)
         assert query.to_dict() == body
@@ -132,7 +131,7 @@ def test_query_filter(app):
 def test_aggregations(app):
     """Test aggregations."""
     with app.test_request_context(""):
-        search = Search().query(Q(query="value"))
+        search = dsl.Search().query(dsl.Q(query="value"))
         defs = dict(
             type=dict(
                 terms=dict(field="upload_type"),
@@ -164,13 +163,13 @@ def test_default_facets_factory(app):
     )
     app.config["RECORDS_REST_FACETS"]["testidx"] = defs
     with app.test_request_context("?type=a&subtype=b"):
-        search = Search().query(Q(query="value"))
+        search = dsl.Search().query(dsl.Q(query="value"))
         search, urlkwargs = default_facets_factory(search, "testidx")
         assert search.to_dict()["aggs"] == defs["aggs"]
         assert "post_filter" in search.to_dict()
         assert search.to_dict()["query"]["bool"]["filter"][0]["terms"]["subtype"]
 
-        search = Search().query(Q(query="value"))
+        search = dsl.Search().query(dsl.Q(query="value"))
         search, urlkwargs = default_facets_factory(search, "anotheridx")
         assert "aggs" not in search.to_dict()
         assert "post_filter" not in search.to_dict()
@@ -199,7 +198,7 @@ def test_selecting_one_specified_facet(app):
     expected_agg = dict(facet_2=dict(terms=dict(field="other_field")))
     app.config["RECORDS_REST_FACETS"]["test_facet_names"] = defs
     with app.test_request_context("?type=a&subtype=b&facets=facet_2"):
-        search = Search().query(Q(query="value"))
+        search = dsl.Search().query(dsl.Q(query="value"))
         search, urlkwargs = default_facets_factory(search, "test_facet_names")
         assert search.to_dict().get("aggs") == expected_agg
 
@@ -231,7 +230,7 @@ def test_selecting_specified_facet(app):
     )
     app.config["RECORDS_REST_FACETS"]["test_facet_names"] = defs
     with app.test_request_context("?type=a&subtype=b&facets=facet_1,facet_3"):
-        search = Search().query(Q(query="value"))
+        search = dsl.Search().query(dsl.Q(query="value"))
         search, urlkwargs = default_facets_factory(search, "test_facet_names")
         assert search.to_dict().get("aggs") == expected_agg
 
@@ -257,7 +256,7 @@ def test_turn_off_facets(app):
 
     app.config["RECORDS_REST_FACETS"]["test_facet_names"] = defs
     with app.test_request_context("?type=a&subtype=b&facets=null"):
-        search = Search().query(Q(query="value"))
+        search = dsl.Search().query(dsl.Q(query="value"))
         search, urlkwargs = default_facets_factory(search, "test_facet_names")
         assert search.to_dict().get("aggs") is None
 
@@ -284,6 +283,6 @@ def test_selecting_all_facets_by_default(app):
     expected_agg = defs["aggs"]
     app.config["RECORDS_REST_FACETS"]["test_facet_names"] = defs
     with app.test_request_context("?type=a&subtype=b"):
-        search = Search().query(Q(query="value"))
+        search = dsl.Search().query(dsl.Q(query="value"))
         search, urlkwargs = default_facets_factory(search, "test_facet_names")
         assert search.to_dict().get("aggs") == expected_agg

@@ -330,12 +330,12 @@ A custom query parser can also be plugged in by setting the
 function implementing it:
 
 >>> from invenio_records_rest.query import default_search_factory
->>> from elasticsearch_dsl.query import Q
+>>> from invenio_search.engine import dsl
 ...
 >>> def my_query_parser(qstr=None):
 ...     if qstr:
-...         return Q('query_string', query=qstr)
-...     return Q()
+...         return dsl.Q('query_string', query=qstr)
+...     return dsl.Q()
 ...
 >>> def my_search_factory(*args, **kwargs):
 ...     return default_search_factory(*args,
@@ -636,7 +636,7 @@ An example of such a search class is the following:
 
 >>> from flask_login import current_user
 >>> def deposits_filter():
-...    return Q(
+...    return dsl.Q(
 ...       'match', **{'_deposit.owners': getattr(current_user, 'id', 0)}
 ...    )
 ...
