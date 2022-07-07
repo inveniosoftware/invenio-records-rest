@@ -19,8 +19,6 @@ import tempfile
 from os.path import dirname, join
 
 import pytest
-from elasticsearch import VERSION as ES_VERSION
-from elasticsearch.exceptions import RequestError
 from flask import Flask, url_for
 from flask_login import LoginManager, UserMixin
 from helpers import create_record
@@ -39,6 +37,7 @@ from invenio_search import (
     current_search,
     current_search_client,
 )
+from invenio_search.engine import check_es_version, search, uses_es7
 from invenio_search.errors import IndexAlreadyExistsError
 from sqlalchemy_utils.functions import create_database, database_exists
 
@@ -220,7 +219,7 @@ def es(app):
     """Elasticsearch fixture."""
     try:
         list(current_search.create())
-    except (RequestError, IndexAlreadyExistsError):
+    except (search.exceptions.RequestError, IndexAlreadyExistsError):
         list(current_search.delete(ignore=[404]))
         list(current_search.create(ignore=[400]))
     current_search_client.indices.refresh()
@@ -234,7 +233,7 @@ def prefixed_es(app):
     app.config["SEARCH_INDEX_PREFIX"] = "test-"
     try:
         list(current_search.create())
-    except (RequestError, IndexAlreadyExistsError):
+    except (search.exceptions.RequestError, IndexAlreadyExistsError):
         list(current_search.delete(ignore=[404]))
         list(current_search.create(ignore=[400]))
     current_search_client.indices.refresh()
@@ -245,7 +244,7 @@ def prefixed_es(app):
 
 def record_indexer_receiver(sender, json=None, record=None, index=None, **kwargs):
     """Mock-receiver of a before_record_index signal."""
-    if ES_VERSION[0] == 2:
+    if check_es_version(2):
         suggest_byyear = {}
         suggest_byyear["context"] = {"year": json["year"]}
         suggest_byyear["input"] = [
@@ -264,7 +263,8 @@ def record_indexer_receiver(sender, json=None, record=None, index=None, **kwargs
         json["suggest_byyear"] = suggest_byyear
         json["suggest_title"] = suggest_title
 
-    elif ES_VERSION[0] >= 5:
+    elif check_es_version(lambda v: v >= 5) or uses_es7():
+        # note: OSv1 is considered valid by ``uses_es7``
         suggest_byyear = {}
         suggest_byyear["contexts"] = {"year": [str(json["year"])]}
         suggest_byyear["input"] = [

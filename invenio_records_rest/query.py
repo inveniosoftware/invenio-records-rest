@@ -10,8 +10,8 @@
 
 from __future__ import absolute_import, print_function
 
-from elasticsearch_dsl.query import Q
 from flask import current_app, request
+from invenio_search.engine import dsl
 
 from .errors import InvalidQueryRESTError
 
@@ -27,8 +27,8 @@ def default_search_factory(self, search, query_parser=None):
     def _default_parser(qstr=None):
         """Default parser that uses the Q() from elasticsearch_dsl."""
         if qstr:
-            return Q("query_string", query=qstr)
-        return Q()
+            return dsl.Q("query_string", query=qstr)
+        return dsl.Q()
 
     from .facets import default_facets_factory
     from .sorter import default_sorter_factory

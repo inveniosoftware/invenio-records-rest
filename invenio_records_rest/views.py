@@ -15,8 +15,6 @@ import uuid
 from collections import defaultdict
 from functools import partial, wraps
 
-from elasticsearch import VERSION as ES_VERSION
-from elasticsearch.exceptions import RequestError
 from flask import (
     Blueprint,
     abort,
@@ -36,6 +34,7 @@ from invenio_records.api import Record
 from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.decorators import require_content_types
 from invenio_search import RecordsSearch
+from invenio_search.engine import ES, OS, check_search_version, search, uses_es7
 from jsonpatch import JsonPatchException, JsonPointerException
 from jsonschema.exceptions import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
@@ -61,8 +60,6 @@ from .links import default_links_factory
 from .proxies import current_records_rest
 from .query import es_search_factory
 from .utils import obj_or_import_string
-
-lt_es7 = ES_VERSION[0] < 7
 
 
 def elasticsearch_query_parsing_exception_handler(error):
@@ -104,7 +101,7 @@ def create_error_handlers(blueprint, error_handlers_registry=None):
         """Catch validation errors."""
         return JSONSchemaValidationError(error=error).get_response()
 
-    @blueprint.errorhandler(RequestError)
+    @blueprint.errorhandler(search.exceptions.RequestError)
     def elasticsearch_badrequest_error(error):
         """Catch errors of ElasticSearch."""
         handlers = current_app.config["RECORDS_REST_ELASTICSEARCH_ERROR_HANDLERS"]
@@ -657,7 +654,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         search_obj = self.search_class()
         search = search_obj.with_preference_param().params(version=True)
         search = search[pagination["from_idx"] : pagination["to_idx"]]
-        if not lt_es7:
+        if uses_es7():
             search = search.extra(track_total_hits=True)
 
         search, qs_kwargs = self.search_factory(search)
@@ -668,7 +665,9 @@ class RecordsListResource(ContentNegotiatedMethodView):
 
         # Generate links for self/prev/next
         total = (
-            search_result.hits.total if lt_es7 else search_result.hits.total["value"]
+            search_result.hits.total["value"]
+            if uses_es7()
+            else search_result.hits.total
         )
         endpoint = ".{0}_list".format(
             current_records_rest.default_endpoint_prefixes[self.pid_type]
@@ -988,16 +987,21 @@ class SuggestResource(MethodView):
                 ", ".join(sorted(self.suggesters.keys()))
             )
 
+        # opensearch is a fork of es7
+        is_es5_plus = check_search_version(
+            ES, version=lambda v: v >= 5
+        ) or check_search_version(OS, 1)
+
         # Add completions
         s = self.search_class()
         for field, val, opts in completions:
             source = opts.pop("_source", None)
-            if source is not None and ES_VERSION[0] >= 5:
+            if source is not None and is_es5_plus:
                 s = s.source(source).suggest(field, val, **opts)
             else:
                 s = s.suggest(field, val, **opts)
 
-        if ES_VERSION[0] == 2:
+        if check_search_version(ES, 2):
             # Execute search
             response = s.execute_suggest().to_dict()
             for field, _, _ in completions:
@@ -1005,7 +1009,7 @@ class SuggestResource(MethodView):
                     for op in resp["options"]:
                         if "payload" in op:
                             op["_source"] = copy.deepcopy(op["payload"])
-        elif ES_VERSION[0] >= 5:
+        elif is_es5_plus:
             response = s.execute().to_dict()["suggest"]
 
         result = dict()
