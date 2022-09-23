@@ -8,8 +8,6 @@
 
 """Marshmallow based DataCite serializer for records."""
 
-from __future__ import absolute_import, print_function
-
 from datacite import schema31, schema40, schema41
 from invenio_records.api import Record
 from lxml import etree
@@ -46,7 +44,7 @@ class BaseDataCiteSerializer(MarshmallowMixin, PreprocessorMixin):
         """Serialize a search result.
 
         :param pid_fetcher: Persistent identifier fetcher.
-        :param search_result: Elasticsearch search result.
+        :param search_result: The search engine result.
         :param links: Dictionary of links to add to response.
         """
         records = []

@@ -8,8 +8,6 @@
 
 """Test sorter."""
 
-from __future__ import absolute_import, print_function
-
 import pytest
 from invenio_search.engine import dsl
 

@@ -8,8 +8,6 @@
 
 """Sanitized Unicode string field."""
 
-from __future__ import absolute_import, print_function
-
 from ftfy import fix_text
 
 from .trimmedstring import TrimmedString

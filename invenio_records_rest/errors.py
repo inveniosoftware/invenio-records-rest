@@ -13,8 +13,6 @@ All error classes in this module are inheriting from
 :class:`invenio_rest.errors.RESTValidationError`.
 """
 
-from __future__ import absolute_import, print_function
-
 from flask import request
 from invenio_rest.errors import FieldError, RESTException, RESTValidationError
 
@@ -194,7 +192,7 @@ class JSONSchemaValidationError(RESTValidationError):
         self.description = f"Validation error: {error}."
 
 
-class UnhandledElasticsearchError(RESTException):
+class UnhandledSearchError(RESTException):
     """Failed to handle exception."""
 
     code = 500

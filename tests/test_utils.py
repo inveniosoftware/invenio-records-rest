@@ -9,8 +9,6 @@
 
 """Utils tests."""
 
-from __future__ import absolute_import, print_function
-
 import pytest
 
 from invenio_records_rest.proxies import current_records_rest

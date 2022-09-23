@@ -34,7 +34,11 @@ extensions = [
     "sphinx.ext.viewcode",
 ]
 
-nitpick_ignore = [("py:class", "t.Optional"), ("py:class", "t.List")]
+nitpick_ignore = [
+    ("py:class", "t.Optional"),
+    ("py:class", "t.List"),
+    ("py:class", "types.StrSequenceOrSet")
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

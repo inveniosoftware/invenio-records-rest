@@ -9,8 +9,6 @@
 
 """PID resolver tests."""
 
-from __future__ import absolute_import, print_function
-
 from flask import url_for
 from helpers import create_record
 from invenio_pidstore.models import PersistentIdentifier, PIDStatus, RecordIdentifier

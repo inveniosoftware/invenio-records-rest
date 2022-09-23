@@ -13,8 +13,6 @@ external to an internal JSON presentation. The marshmallow schema further
 allows for advanced data validation.
 """
 
-from __future__ import absolute_import, print_function
-
 import json
 
 from flask import request

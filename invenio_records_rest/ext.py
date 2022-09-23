@@ -8,7 +8,7 @@
 
 """Flask extension for the Invenio-Records-REST."""
 
-from __future__ import absolute_import, print_function
+import warnings
 
 from werkzeug.utils import cached_property
 
@@ -103,7 +103,16 @@ class InvenioRecordsREST(object):
             if k.startswith("RECORDS_REST_"):
                 app.config.setdefault(k, getattr(config, k))
 
-        # Resolve the Elasticsearch error handlers
-        handlers = app.config["RECORDS_REST_ELASTICSEARCH_ERROR_HANDLERS"]
+        # Resolve the search error handlers
+        error_handlers = app.config.get("RECORDS_REST_SEARCH_ERROR_HANDLERS", {})
+        elastic_error_handlers = app.config.get(
+            "RECORDS_REST_ELASTICSEARCH_ERROR_HANDLERS", {}
+        )
+        if elastic_error_handlers and not error_handlers:
+            warnings.warn(
+                "The variable RECORDS_REST_ELASTICSEARCH_ERROR_HANDLERS will be replaced by RECORDS_REST_SEARCH_ERROR_HANDLERS",
+                DeprecationWarning,
+            )
+        handlers = error_handlers or elastic_error_handlers
         for k, v in handlers.items():
             handlers[k] = obj_or_import_string(v)

@@ -14,11 +14,9 @@ configuration variable. The sort options are defined per index alias
 (e.g. ``records``). If more fine grained control is needed a custom sorter
 factory can be provided to Records-REST instead.
 
-See Elasticsearch Reference Manual for full details of sorting capabilities:
-https://www.elastic.co/guide/en/elasticsearch/reference/2.4/search-request-sort.html
+See the search engine reference manual for full details of sorting capabilities:
+https://www.elastic.co/guide/en/elasticsearch/reference/7.0/search-request-sort.html
 """
-
-from __future__ import absolute_import, print_function
 
 import copy
 

@@ -9,8 +9,6 @@
 
 """Marshmallow based JSON-LD serializer for records."""
 
-from __future__ import absolute_import, print_function
-
 import copy
 
 from flask import request

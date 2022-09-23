@@ -8,8 +8,6 @@
 
 """Record creation."""
 
-from __future__ import absolute_import, print_function
-
 import json
 
 import mock
@@ -23,7 +21,9 @@ from sqlalchemy.exc import SQLAlchemyError
 @pytest.mark.parametrize(
     "content_type", ["application/json", "application/json;charset=utf-8"]
 )
-def test_valid_create(app, db, es, test_data, search_url, search_class, content_type):
+def test_valid_create(
+    app, db, search, test_data, search_url, search_class, content_type
+):
     """Test VALID record creation request (POST .../records/)."""
     with app.test_client() as client:
         HEADERS = [("Accept", "application/json"), ("Content-Type", content_type)]
@@ -59,7 +59,7 @@ def test_valid_create(app, db, es, test_data, search_url, search_class, content_
 @pytest.mark.parametrize(
     "content_type", ["application/json", "application/json;charset=utf-8"]
 )
-def test_invalid_create(app, db, es, test_data, search_url, content_type):
+def test_invalid_create(app, db, search, test_data, search_url, content_type):
     """Test INVALID record creation request (POST .../records/)."""
     with app.test_client() as client:
         HEADERS = [("Accept", "application/json"), ("Content-Type", content_type)]

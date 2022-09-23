@@ -32,9 +32,9 @@ jobs:
           python-version: [3.7, 3.8, 3.9]
           requirements-level: [pypi]
           cache-service: [redis]
-          db-service: [postgresql13, mysql8]
+          db-service: [postgresql13,mysql8]
           mq-service: [rabbitmq, redis]
-          search-service: [elasticsearch7]
+          search-service: [opensearch1,elasticsearch7]
 
           include:
           - db-service: postgresql13
@@ -42,6 +42,9 @@ jobs:
 
           - db-service: mysql8
             DB_EXTRAS: "mysql"
+
+          - search-service: opensearch1
+            SEARCH_EXTRAS: "opensearch1"
 
           - search-service: elasticsearch7
             SEARCH_EXTRAS: "elasticsearch7"
@@ -51,7 +54,7 @@ jobs:
       DB: ${{ matrix.db-service }}
       MQ: ${{ matrix.mq-service }}
       SEARCH: ${{ matrix.search-service }}
-      EXTRAS: tests
+      EXTRAS: tests,${{ matrix.DB_EXTRAS }},${{ matrix.SEARCH_EXTRAS }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2

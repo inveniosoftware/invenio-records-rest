@@ -8,8 +8,6 @@
 
 """Record PUT tests."""
 
-from __future__ import absolute_import, print_function
-
 import json
 
 import mock
@@ -21,7 +19,7 @@ from helpers import _mock_validate_fail, assert_hits_len, get_json, record_url
 @pytest.mark.parametrize(
     "content_type", ["application/json", "application/json;charset=utf-8"]
 )
-def test_valid_put(app, es, test_records, content_type, search_url, search_class):
+def test_valid_put(app, search, test_records, content_type, search_url, search_class):
     """Test VALID record patch request (PATCH .../records/<record_id>)."""
     HEADERS = [("Accept", "application/json"), ("Content-Type", content_type)]
 
@@ -46,7 +44,9 @@ def test_valid_put(app, es, test_records, content_type, search_url, search_class
 @pytest.mark.parametrize(
     "content_type", ["application/json", "application/json;charset=utf-8"]
 )
-def test_valid_put_etag(app, es, test_records, content_type, search_url, search_class):
+def test_valid_put_etag(
+    app, search, test_records, content_type, search_url, search_class
+):
     """Test concurrency control with etags."""
     HEADERS = [("Accept", "application/json"), ("Content-Type", content_type)]
 
@@ -75,7 +75,9 @@ def test_valid_put_etag(app, es, test_records, content_type, search_url, search_
 @pytest.mark.parametrize(
     "content_type", ["application/json", "application/json;charset=utf-8"]
 )
-def test_put_on_deleted(app, db, es, test_data, content_type, search_url, search_class):
+def test_put_on_deleted(
+    app, db, search, test_data, content_type, search_url, search_class
+):
     """Test putting to a deleted record."""
     with app.test_client() as client:
         HEADERS = [("Accept", "application/json"), ("Content-Type", content_type)]
@@ -96,7 +98,7 @@ def test_put_on_deleted(app, db, es, test_data, content_type, search_url, search
 
 
 @pytest.mark.parametrize("charset", ["", ";charset=utf-8"])
-def test_invalid_put(app, es, test_records, charset, search_url):
+def test_invalid_put(app, search, test_records, charset, search_url):
     """Test INVALID record put request (PUT .../records/<record_id>)."""
     HEADERS = [
         ("Accept", "application/json"),
