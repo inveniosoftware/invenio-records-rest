@@ -8,14 +8,12 @@
 
 """Invenio-Records-REST configuration."""
 
-from __future__ import absolute_import, print_function
-
 from flask import request
 from invenio_indexer.api import RecordIndexer
 from invenio_search import RecordsSearch
 
 from .facets import terms_filter
-from .utils import allow_all, check_elasticsearch, deny_all
+from .utils import allow_all, check_search, deny_all
 
 
 def _(x):
@@ -112,19 +110,19 @@ The structure of the dictionary is as follows:
             },
             'search_class': 'mypackage.utils:mysearchclass',
             'search_factory_imp': search_factory(),
-            'search_index': 'elasticsearch-index-name',
+            'search_index': 'search-index-name',
             'search_serializers': {
                 'application/json': 'mypackage.utils:my_json_search_serializer'
             },
             'search_serializers_aliases': {
                 'json': 'application/json'
             },
-            'search_type': 'elasticsearch-doc-type',
+            'search_type': 'search-doc-type',
             'suggesters': {
                 'my_url_param_to_complete': {
                     '_source': ['specified_source_filtered_field'],
                     'completion': {
-                        'field': 'suggest_byyear_elasticsearch_field',
+                        'field': 'suggest_byyear_search_field',
                         'size': 10,
                         'context': 'year'
                     }
@@ -191,7 +189,7 @@ The structure of the dictionary is as follows:
     :class:`invenio_search.api.RecordsSearch`.
     For more information about resource loading, see the `Search
     <http://elasticsearch-dsl.readthedocs.io/en/latest/search_dsl.html>` of the
-    ElasticSearch DSL library.
+    the search engine DSL library.
 
 :param search_factory_imp: Factory to parse queries.
 
@@ -213,9 +211,9 @@ The structure of the dictionary is as follows:
     optionally specify the source filtering (appropriate for ES5) by using
     ``_source``. The key of the dictionary element is used to identify the url
     query parameter. The ``field`` parameter identifies the suggester field
-    name in your elasticsearch schema.
+    name in your search engine schema.
     To have more information about suggestion configuration, you can read
-    suggesters section on ElasticSearch documentation.
+    suggesters section on the search engine documentation.
 
     .. note:: Only completion suggesters are supported.
 
@@ -291,7 +289,7 @@ Each search field can be either:
 
 - A string of the form ``'<field name>'`` (ascending) or ``'-<field name>'``
   (descending).
-- A dictionary with Elasticsearch sorting syntax (e.g.
+- A dictionary with search engine sorting syntax (e.g.
   ``{'price' : {'order' : 'asc', 'mode' : 'avg'}}``).
 - A callable taking one boolean parameter (``True`` for ascending and ``False``
   for descending) and returning a dictionary like above. This is useful if you
@@ -356,7 +354,7 @@ RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY = deny_all
 RECORDS_REST_DEFAULT_LIST_PERMISSION_FACTORY = allow_all
 """Default list permission factory: allow all requests"""
 
-RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY = check_elasticsearch
+RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY = check_search
 """Default read permission factory: check if the record exists."""
 
 RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY = deny_all
@@ -365,15 +363,14 @@ RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY = deny_all
 RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY = deny_all
 """Default delete permission factory: reject any request."""
 
-RECORDS_REST_ELASTICSEARCH_ERROR_HANDLERS = {
+RECORDS_REST_SEARCH_ERROR_HANDLERS = {
     "query_parsing_exception": (
-        "invenio_records_rest.views" ":elasticsearch_query_parsing_exception_handler"
+        "invenio_records_rest.views" ":search_query_parsing_exception_handler"
     ),
     "query_shard_exception": (
-        "invenio_records_rest.views" ":elasticsearch_query_parsing_exception_handler"
+        "invenio_records_rest.views" ":search_query_parsing_exception_handler"
     ),
 }
-"""Handlers for ElasticSearch error codes."""
 
 RECORDS_REST_DEFAULT_RESULTS_SIZE = 10
 """Default search results size."""

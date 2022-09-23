@@ -11,11 +11,11 @@
 Invenio-Records-REST is a core component of Invenio which provides configurable
 REST APIs for searching, retrieving, creating, modifying and deleting records.
 
-The module uses Elasticsearch as the backend search engine and builds on top
-a REST API that supports features such as:
+The module uses a search engine and builds on top a REST API that supports features
+such as:
 
 - Search with sorting, filtering, aggregations and pagination, which allows the
-  full capabilities of Elasticsearch to be used, such as geo-based quering.
+  full capabilities of the search engine to be used, such as geo-based quering.
 - Record serialization and transformation (e.g., JSON, XML, CSV, DataCite,
   DublinCore, JSON-LD, MARCXML, Citation Style Language).
 - Pluggable query parser.
@@ -55,10 +55,10 @@ different JSONSchema versions. For more information on records and schemas
 visit
 `InvenioRecords <http://invenio-records.readthedocs.io/en/latest/index.html>`_.
 
-Elasticsearch
+Search engine
 ~~~~~~~~~~~~~
 
-Records are represented as JSON documents internally in Elasticsearch and
+Records are represented as JSON documents internally in the search engine and
 grouped under an index specified in the configuration, an index represents a
 collection of documents with similar characteristics. Because the shape of a
 record can change with time, there is the possibility to group indices with
@@ -117,7 +117,7 @@ Configuration
 them as a way of grouping related metadata.
 Imagine a `namespace` called ``records`` and another ``authors``. You could
 use ``records`` to provide bibliographic metadata and ``authors`` for author
-metadata. A namespace is mapped one to one to Elasticsearch indices or
+metadata. A namespace is mapped one to one to search engine indices or
 aliases.
 
 In Invenio-Records-REST these namespaces are mapped to endpoints (i.e.,
@@ -211,23 +211,23 @@ categories, and provide an easy to navigate faceted menu.
 
 Aggregations
 ++++++++++++
-By exposing the Elasticsearch API by default, we can use the advanced
+By exposing the search engine API by default, we can use the advanced
 features it provides, such as the `aggregations framework
-<https://www.elastic.co/guide/en/elasticsearch/reference/5.6/
+<https://www.elastic.co/guide/en/elasticsearch/reference/7.0/
 search-aggregations.html>`_.
 
 These features include:
 
-- `bucketing <https://www.elastic.co/guide/en/elasticsearch/reference/5.6/
+- `bucketing <https://www.elastic.co/guide/en/elasticsearch/reference/7.0/
   search-aggregations-bucket.html>`_ "used to group the documents
   by a certain criterion".
-- `metric <https://www.elastic.co/guide/en/elasticsearch/reference/5.6/
+- `metric <https://www.elastic.co/guide/en/elasticsearch/reference/7.0/
   search-aggregations-metrics.html>`_ "used to create different types of
   metrics from values extracted from the documents being aggregated".
-- `matrix <https://www.elastic.co/guide/en/elasticsearch/reference/5.6/
+- `matrix <https://www.elastic.co/guide/en/elasticsearch/reference/7.0/
   search-aggregations-matrix.html>`_ "used to produce a matrix result based
   on the values extracted from the requested document fields".
-- `pipeline <https://www.elastic.co/guide/en/elasticsearch/reference/5.6/
+- `pipeline <https://www.elastic.co/guide/en/elasticsearch/reference/7.0/
   search-aggregations-pipeline.html>`_ "used to aggregate the output of other
   aggregations and their associated metrics".
 
@@ -259,7 +259,7 @@ To set the aggregations and filters you want you can modify the
 .. note::
 
     Unlike the other configurations the ``index_name`` does not refer,
-    to the namespace ``recid``, but the actual Elasticsearch index or alias.
+    to the namespace ``recid``, but the actual search engine index or alias.
 
 Sorting
 ~~~~~~~
@@ -351,11 +351,11 @@ function implementing it:
 Suggesters
 ~~~~~~~~~~
 Through the ``/records/_suggest?text=`` entrypoint the suggest feature of
-elasticsearch is exposed. The suggest feature suggests similar looking terms
+the search engine is exposed. The suggest feature suggests similar looking terms
 based on a provided text by using a suggester. This endpoint is
 configurable and takes a dictionary specifying the suggestion fields and
 their url query parameters. The field names are linked to the ones
-specified in the elasticsearch schema.
+specified in the search engine schema.
 
 Advanced customization
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -374,10 +374,10 @@ Advanced customization
 ...    )
 ... )
 
-  Creating a custom search factory can enable full control over Elasticsearch's
+  Creating a custom search factory can enable full control over the search engine's
   Search API. Some of the features available include rank evaluation, post
   filters, highlighting, index boosting among others. For the full list see
-  the full Elasticsearch documentation for the `Search API <https://
+  the full search engine documentation for the `Search API <https://
   www.elastic.co/guide/en/elasticsearch/reference/current/search.html>`_.
 
 - As the default search behaviour can be adjusted, Invenio-Records-REST
@@ -388,17 +388,17 @@ Advanced customization
 ...     description = 'There is an error in your query syntax.'
 ...     return InvalidQueryRESTError(description=description).get_response()
 ...
->>> RECORDS_REST_ELASTICSEARCH_ERROR_HANDLERS = dict(
+>>> RECORDS_REST_SEARCH_ERROR_HANDLERS = dict(
 ...    query_parsing_exception=custom_query_parsing_error
 ... )
 
 - `Max Results Window`
   In the case where you execute a query and the number of results exceed the
   ``max_results_window`` you will get a 400 error. This limit is passed to
-  Elasticsearch and can be configured by the ``RECORDS_REST_ENDPOINTS``, by
+  the search engine and can be configured by the ``RECORDS_REST_ENDPOINTS``, by
   default it is set to 10000.
 
-- `Fetching records from Elasticsearch`
+- `Fetching records from the search engine`
   To retrieve records in the REST API we make use of fetchers. These functions
   take the record unique identifiers and return FetchedPID objects, which
   consist of the Persistent Identifier and the record data.
@@ -411,12 +411,12 @@ Advanced customization
   api.html#module-invenio_pidstore.fetchers>`_.
 
   The fetchers by default will query the database, but this can be redirected
-  to Elasticsearch according to the needs of the application. More
+  to the search engine according to the needs of the application. More
   specifically, the fetcher takes as a parameter a provider object,
   which is responsible for the querying. In order to change the behavior of
   the GET one would write a new provider class to
   override the ``get()`` method of the ``BaseProvider`` and query
-  Elasticsearch.
+  the search engine.
 
 Serialization
 -------------
@@ -472,9 +472,9 @@ Workflow
 The serializers typically will follow a certain number of steps
 to process records.
 For example, for records returned as results to a search query the format
-is dictated from Elasticsearch, while for requests for specific records
+is dictated from the search engine, while for requests for specific records
 the format comes from the database. The output has to be consistent so a
-first step is to create the different methods to syncronize the data which
+first step is to create the different methods to synchronize the data which
 will be returned. The abstract classes with the boilerplate for this workflow
 are in `invenio_records_rest.serializers.base`.
 
@@ -708,8 +708,6 @@ or deposit has to be attained so the operation can be performed.
 To fectch the corresponding object a fetcher is used, typically provided
 by Invenio-PIDStore.
 """
-
-from __future__ import absolute_import, print_function
 
 from .ext import InvenioRecordsREST
 from .proxies import current_records_rest

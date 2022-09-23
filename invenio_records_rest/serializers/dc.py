@@ -8,8 +8,6 @@
 
 """Marshmallow based DublinCore serializer for records."""
 
-from __future__ import absolute_import, print_function
-
 from dcxml import simpledc
 from invenio_records.api import Record
 
@@ -41,7 +39,7 @@ class DublinCoreSerializer(
         """Serialize a search result.
 
         :param pid_fetcher: Persistent identifier fetcher.
-        :param search_result: Elasticsearch search result.
+        :param search_result: The search engine result.
         :param links: Dictionary of links to add to response.
         """
         records = []

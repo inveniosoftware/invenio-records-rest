@@ -8,10 +8,7 @@
 
 """Marshmallow based JSON serializer for records."""
 
-from __future__ import absolute_import, print_function
-
 from flask import json, request
-from invenio_search.engine import uses_es7
 
 from .base import PreprocessorMixin, SerializerMixinInterface
 from .marshmallow import MarshmallowMixin
@@ -52,14 +49,10 @@ class JSONSerializerMixin(SerializerMixinInterface):
         """Serialize a search result.
 
         :param pid_fetcher: Persistent identifier fetcher.
-        :param search_result: Elasticsearch search result.
+        :param search_result: The search engine result.
         :param links: Dictionary of links to add to response.
         """
-        total = (
-            search_result["hits"]["total"]["value"]
-            if uses_es7()
-            else search_result["hits"]["total"]
-        )
+        total = search_result["hits"]["total"]["value"]
         return json.dumps(
             dict(
                 hits=dict(

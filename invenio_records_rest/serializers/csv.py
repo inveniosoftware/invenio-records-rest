@@ -8,8 +8,6 @@
 
 """Marshmallow based DublinCore serializer for records."""
 
-from __future__ import absolute_import, print_function
-
 import csv
 
 from .base import PreprocessorMixin, SerializerMixinInterface
@@ -75,7 +73,7 @@ class CSVSerializer(SerializerMixinInterface, MarshmallowMixin, PreprocessorMixi
         """Serialize a search result.
 
         :param pid_fetcher: Persistent identifier fetcher.
-        :param search_result: Elasticsearch search result.
+        :param search_result: The search engine result.
         :param links: Dictionary of links to add to response.
         :param item_links_factory: Factory function for record links.
         """

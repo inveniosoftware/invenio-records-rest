@@ -12,8 +12,6 @@ See :data:`invenio_records_rest.config.RECORDS_REST_FACETS` for more
 information on how to specify aggregations and filters.
 """
 
-from __future__ import absolute_import, print_function
-
 from flask import current_app, request
 from invenio_rest.errors import FieldError, RESTValidationError
 from invenio_search.engine import dsl

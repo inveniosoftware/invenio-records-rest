@@ -8,8 +8,6 @@
 
 """Search tests."""
 
-from __future__ import absolute_import, print_function
-
 import re
 
 import pytest
@@ -165,10 +163,10 @@ def test_query(app, indexed_records, search_url):
     ],
     indirect=["app"],
 )
-def test_es_query_syntax(app, indexed_records, search_url):
-    """Test ES query syntax."""
+def test_search_query_syntax(app, indexed_records, search_url):
+    """Test search engine query syntax."""
     with app.test_client() as client:
-        # Valid ES query syntax
+        # Valid search query syntax
         res = client.get(search_url, query_string=dict(q="+title:back"))
         assert len(get_json(res)["hits"]["hits"]) == 2
 
@@ -245,8 +243,8 @@ def test_query_wrong(app, indexed_records, search_url):
     ],
     indirect=["app"],
 )
-def test_elasticsearch_exception(app, indexed_records):
-    """Test elasticsearch exception."""
+def test_search_exception(app, indexed_records):
+    """Test search exception."""
     with app.test_client() as client:
         res = client.get(url_for("invenio_records_rest.recid_list", q="i/o"))
         assert res.status_code == 400

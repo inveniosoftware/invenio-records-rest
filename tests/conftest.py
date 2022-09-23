@@ -8,8 +8,6 @@
 
 """Pytest configuration."""
 
-from __future__ import absolute_import, print_function
-
 import copy
 import json
 import os
@@ -37,7 +35,7 @@ from invenio_search import (
     current_search,
     current_search_client,
 )
-from invenio_search.engine import check_es_version, search, uses_es7
+from invenio_search.engine import search as search_engine
 from invenio_search.errors import IndexAlreadyExistsError
 from sqlalchemy_utils.functions import create_database, database_exists
 
@@ -103,7 +101,7 @@ def app(request, search_class):
         endpoint=dict(
             search_class='conftest:TestSearch',
         )
-    def test_mytest(app, db, es):
+    def test_mytest(app, db, search):
         # ...
 
     This will parameterize the default 'recid' endpoint in
@@ -119,7 +117,7 @@ def app(request, search_class):
                 search_class='conftest:TestSearch',
             )
         )
-    def test_mytest(app, db, es):
+    def test_mytest(app, db, search):
         # ...
 
     This will fully parameterize RECORDS_REST_ENDPOINTS.
@@ -215,11 +213,11 @@ def db(app):
 
 
 @pytest.yield_fixture()
-def es(app):
-    """Elasticsearch fixture."""
+def search(app):
+    """Search engine fixture."""
     try:
         list(current_search.create())
-    except (search.exceptions.RequestError, IndexAlreadyExistsError):
+    except (search_engine.RequestError, IndexAlreadyExistsError):
         list(current_search.delete(ignore=[404]))
         list(current_search.create(ignore=[400]))
     current_search_client.indices.refresh()
@@ -228,12 +226,12 @@ def es(app):
 
 
 @pytest.yield_fixture()
-def prefixed_es(app):
-    """Elasticsearch fixture."""
+def prefixed_search(app):
+    """Search engine fixture."""
     app.config["SEARCH_INDEX_PREFIX"] = "test-"
     try:
         list(current_search.create())
-    except (search.exceptions.RequestError, IndexAlreadyExistsError):
+    except (search_engine.RequestError, IndexAlreadyExistsError):
         list(current_search.delete(ignore=[404]))
         list(current_search.create(ignore=[400]))
     current_search_client.indices.refresh()
@@ -244,45 +242,23 @@ def prefixed_es(app):
 
 def record_indexer_receiver(sender, json=None, record=None, index=None, **kwargs):
     """Mock-receiver of a before_record_index signal."""
-    if check_es_version(2):
-        suggest_byyear = {}
-        suggest_byyear["context"] = {"year": json["year"]}
-        suggest_byyear["input"] = [
-            json["title"],
-        ]
-        suggest_byyear["output"] = json["title"]
-        suggest_byyear["payload"] = copy.deepcopy(json)
+    suggest_byyear = {}
+    suggest_byyear["contexts"] = {"year": [str(json["year"])]}
+    suggest_byyear["input"] = [
+        json["title"],
+    ]
 
-        suggest_title = {}
-        suggest_title["input"] = [
-            json["title"],
-        ]
-        suggest_title["output"] = json["title"]
-        suggest_title["payload"] = copy.deepcopy(json)
-
-        json["suggest_byyear"] = suggest_byyear
-        json["suggest_title"] = suggest_title
-
-    elif check_es_version(lambda v: v >= 5) or uses_es7():
-        # note: OSv1 is considered valid by ``uses_es7``
-        suggest_byyear = {}
-        suggest_byyear["contexts"] = {"year": [str(json["year"])]}
-        suggest_byyear["input"] = [
-            json["title"],
-        ]
-
-        suggest_title = {}
-        suggest_title["input"] = [
-            json["title"],
-        ]
-        json["suggest_byyear"] = suggest_byyear
-        json["suggest_title"] = suggest_title
-
+    suggest_title = {}
+    suggest_title["input"] = [
+        json["title"],
+    ]
+    json["suggest_byyear"] = suggest_byyear
+    json["suggest_title"] = suggest_title
     return json
 
 
 @pytest.yield_fixture()
-def indexer(app, es):
+def indexer(app, search):
     """Create a record indexer."""
     InvenioIndexer(app)
     before_record_index.connect(record_indexer_receiver, sender=app)

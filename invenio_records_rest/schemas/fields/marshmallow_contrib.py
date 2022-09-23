@@ -8,8 +8,6 @@
 
 """Contributed Marshmallow fields."""
 
-from __future__ import absolute_import, print_function
-
 import functools
 from inspect import isfunction, ismethod
 

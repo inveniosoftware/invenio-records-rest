@@ -8,8 +8,6 @@
 
 """DataCite serializer tests."""
 
-from __future__ import absolute_import, print_function
-
 import pytest
 from invenio_pidstore.models import PersistentIdentifier
 from invenio_records import Record

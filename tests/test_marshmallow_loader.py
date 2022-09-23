@@ -8,14 +8,11 @@
 
 """Invenio marshmallow loader tests."""
 
-from __future__ import absolute_import, print_function
-
 import json
 from copy import deepcopy
 
 import pytest
 from helpers import get_json
-from invenio_records.api import Record
 from invenio_records.models import RecordMetadata
 from invenio_rest.serializer import BaseSchema as Schema
 from marshmallow import ValidationError
@@ -27,11 +24,7 @@ from invenio_records_rest.loaders.marshmallow import (
     MarshmallowErrors,
     marshmallow_loader,
 )
-from invenio_records_rest.schemas import (
-    Nested,
-    RecordMetadataSchemaJSONV1,
-    RecordSchemaJSONV1,
-)
+from invenio_records_rest.schemas import Nested
 from invenio_records_rest.schemas.fields import PersistentIdentifier
 
 
@@ -67,7 +60,7 @@ class _TestMetadataSchema(Schema):
     control_number = PersistentIdentifier()
 
 
-def test_marshmallow_load(app, db, es, test_data, search_url, search_class):
+def test_marshmallow_load(app, db, search, test_data, search_url, search_class):
     """Test marshmallow loader."""
     app.config["RECORDS_REST_DEFAULT_LOADERS"] = {
         "application/json": marshmallow_loader(_TestMetadataSchema)
@@ -97,7 +90,7 @@ def test_marshmallow_load(app, db, es, test_data, search_url, search_class):
         assert res_data["metadata"] == model_record.json
 
 
-def test_marshmallow_load_errors(app, db, es, test_data, search_url, search_class):
+def test_marshmallow_load_errors(app, db, search, test_data, search_url, search_class):
     """Test marshmallow loader errors."""
     app.config["RECORDS_REST_DEFAULT_LOADERS"] = {
         "application/json": marshmallow_loader(_TestSchema)
@@ -114,7 +107,7 @@ def test_marshmallow_load_errors(app, db, es, test_data, search_url, search_clas
 
 
 def test_marshmallow_load_nested_errors(
-    app, db, es, test_data, search_url, search_class
+    app, db, search, test_data, search_url, search_class
 ):
     """Test loading nested errors."""
     app.config["RECORDS_REST_DEFAULT_LOADERS"] = {
@@ -137,7 +130,7 @@ def test_marshmallow_load_nested_errors(
 
 
 def test_marshmallow_load_nested_subfield_errors(
-    app, db, es, test_data, search_url, search_class
+    app, db, search, test_data, search_url, search_class
 ):
     """Test loading nested subfield errors."""
     app.config["RECORDS_REST_DEFAULT_LOADERS"] = {
@@ -193,7 +186,7 @@ def test_marshmallow_errors(test_data):
     assert next(me)
 
 
-def test_json_pid_checker_loader(app, db, es, search_url, search_class):
+def test_json_pid_checker_loader(app, db, search, search_url, search_class):
     """Test loading using the record metadata schema."""
     app.config["RECORDS_REST_DEFAULT_LOADERS"] = {"application/json": json_pid_checker}
 

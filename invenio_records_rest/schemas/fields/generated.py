@@ -8,8 +8,6 @@
 
 """Generated field."""
 
-from __future__ import absolute_import, print_function
-
 import warnings
 
 from marshmallow import __version_info__ as marshmallow_version

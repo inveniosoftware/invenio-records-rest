@@ -8,8 +8,6 @@
 
 """Error handler tests."""
 
-from __future__ import absolute_import, print_function
-
 import json
 
 import pytest

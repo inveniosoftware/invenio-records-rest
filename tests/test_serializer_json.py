@@ -8,14 +8,11 @@
 
 """Invenio serializer tests."""
 
-from __future__ import absolute_import, print_function
-
 import json
 
 from invenio_pidstore.models import PersistentIdentifier
 from invenio_records import Record
 from invenio_rest.serializer import BaseSchema as Schema
-from invenio_search.engine import uses_es7
 from marshmallow import fields
 
 from invenio_records_rest.schemas.fields import PersistentIdentifier as PIDField
@@ -50,8 +47,7 @@ def test_serialize_search():
         assert obj_uuid in ["a", "b"]
         return PersistentIdentifier(pid_type="recid", pid_value=data["pid"])
 
-    # Search results structure changes based on ES version
-    total = 2 if not uses_es7() else dict(value=2)
+    total = dict(value=2)
     data = json.loads(
         JSONSerializer(TestSchema).serialize_search(
             fetcher,

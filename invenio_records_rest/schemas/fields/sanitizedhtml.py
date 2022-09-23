@@ -8,8 +8,6 @@
 
 """HTML sanitized string field."""
 
-from __future__ import absolute_import, print_function
-
 import bleach
 from flask import current_app
 

@@ -8,8 +8,6 @@
 
 """REST API resources."""
 
-from __future__ import absolute_import, print_function
-
 import copy
 import uuid
 from collections import defaultdict
@@ -34,7 +32,7 @@ from invenio_records.api import Record
 from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.decorators import require_content_types
 from invenio_search import RecordsSearch
-from invenio_search.engine import ES, OS, check_search_version, search, uses_es7
+from invenio_search.engine import search as search_engine
 from jsonpatch import JsonPatchException, JsonPointerException
 from jsonschema.exceptions import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
@@ -53,7 +51,7 @@ from .errors import (
     SearchPaginationRESTError,
     SuggestMissingContextRESTError,
     SuggestNoCompletionsRESTError,
-    UnhandledElasticsearchError,
+    UnhandledSearchError,
     UnsupportedMediaRESTError,
 )
 from .links import default_links_factory
@@ -62,8 +60,8 @@ from .query import es_search_factory
 from .utils import obj_or_import_string
 
 
-def elasticsearch_query_parsing_exception_handler(error):
-    """Handle query parsing exceptions from ElasticSearch."""
+def search_query_parsing_exception_handler(error):
+    """Handle query parsing exceptions from the search engine."""
     description = _("The syntax of the search query is invalid.")
     return InvalidQueryRESTError(description=description).get_response()
 
@@ -101,10 +99,10 @@ def create_error_handlers(blueprint, error_handlers_registry=None):
         """Catch validation errors."""
         return JSONSchemaValidationError(error=error).get_response()
 
-    @blueprint.errorhandler(search.exceptions.RequestError)
-    def elasticsearch_badrequest_error(error):
-        """Catch errors of ElasticSearch."""
-        handlers = current_app.config["RECORDS_REST_ELASTICSEARCH_ERROR_HANDLERS"]
+    @blueprint.errorhandler(search_engine.RequestError)
+    def search_badrequest_error(error):
+        """Catch errors of the search engine."""
+        handlers = current_app.config["RECORDS_REST_SEARCH_ERROR_HANDLERS"]
         cause_types = {c["type"] for c in error.info["error"]["root_cause"]}
 
         for cause_type, handler in handlers.items():
@@ -112,7 +110,7 @@ def create_error_handlers(blueprint, error_handlers_registry=None):
                 return handler(error)
 
         # Default exception for unhandled errors
-        exception = UnhandledElasticsearchError()
+        exception = UnhandledSearchError()
         current_app.logger.exception(error)  # Log the original stacktrace
         return exception.get_response()
 
@@ -237,7 +235,7 @@ def create_url_rules(
         of execute the search queries. The default search class is
         :class:`invenio_search.api.RecordsSearch`.
         For more information about resource loading, see the Search of
-        ElasticSearch DSL library.
+        the search engine DSL library.
     :param indexer_class: Import path or class object for the object in charge
         of indexing records. The default indexer is
         :class:`invenio_indexer.api.RecordIndexer`.
@@ -248,9 +246,9 @@ def create_url_rules(
     :param search_index: Name of the search index used when searching records.
     :param search_type: Name of the search type used when searching records.
     :param default_media_type: Default media type for both records and search.
-    :param max_result_window: Maximum number of results that Elasticsearch can
+    :param max_result_window: Maximum number of results that the search engine can
         provide for the given search index without use of scroll. This value
-        should correspond to Elasticsearch ``index.max_result_window`` value
+        should correspond to the search engine ``index.max_result_window`` value
         for the index.
     :param use_options_view: Determines if a special option view should be
         installed.
@@ -654,8 +652,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         search_obj = self.search_class()
         search = search_obj.with_preference_param().params(version=True)
         search = search[pagination["from_idx"] : pagination["to_idx"]]
-        if uses_es7():
-            search = search.extra(track_total_hits=True)
+        search = search.extra(track_total_hits=True)
 
         search, qs_kwargs = self.search_factory(search)
         urlkwargs.update(qs_kwargs)
@@ -664,11 +661,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         search_result = search.execute()
 
         # Generate links for self/prev/next
-        total = (
-            search_result.hits.total["value"]
-            if uses_es7()
-            else search_result.hits.total
-        )
+        total = search_result.hits.total["value"]
         endpoint = ".{0}_list".format(
             current_records_rest.default_endpoint_prefixes[self.pid_type]
         )
@@ -987,30 +980,16 @@ class SuggestResource(MethodView):
                 ", ".join(sorted(self.suggesters.keys()))
             )
 
-        # opensearch is a fork of es7
-        is_es5_plus = check_search_version(
-            ES, version=lambda v: v >= 5
-        ) or check_search_version(OS, 1)
-
         # Add completions
         s = self.search_class()
         for field, val, opts in completions:
             source = opts.pop("_source", None)
-            if source is not None and is_es5_plus:
+            if source is not None:
                 s = s.source(source).suggest(field, val, **opts)
             else:
                 s = s.suggest(field, val, **opts)
 
-        if check_search_version(ES, 2):
-            # Execute search
-            response = s.execute_suggest().to_dict()
-            for field, _, _ in completions:
-                for resp in response[field]:
-                    for op in resp["options"]:
-                        if "payload" in op:
-                            op["_source"] = copy.deepcopy(op["payload"])
-        elif is_es5_plus:
-            response = s.execute().to_dict()["suggest"]
+        response = s.execute().to_dict()["suggest"]
 
         result = dict()
         for field, val, opts in completions:

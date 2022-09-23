@@ -9,8 +9,6 @@
 
 """Base class for Marshmallow based serializers."""
 
-from __future__ import absolute_import, print_function
-
 from ..schemas import RecordSchemaJSONV1
 from .base import TransformerMixinInterface
 

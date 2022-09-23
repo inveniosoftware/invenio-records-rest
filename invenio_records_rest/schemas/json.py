@@ -8,8 +8,6 @@
 
 """Marshmallow JSON schema."""
 
-from __future__ import absolute_import, print_function
-
 from flask import current_app
 from invenio_rest.serializer import BaseSchema as Schema
 from marshmallow import ValidationError
