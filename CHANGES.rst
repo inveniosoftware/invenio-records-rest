@@ -8,6 +8,18 @@
 Changes
 =======
 
+Version 2.0.0 (2022-09-24)
+
+- Add support for OpenSearch
+- Drop support for Elasticsearch < 7
+- Upper pin Invenio dependencies
+- Rename all occurrences of Elasticsearch to `search`
+- Remove iterator from `MarshmallowErrors` class
+- Breaking: rename func `check_elasticsearch` to `check_search`,
+  conf `RECORDS_REST_ELASTICSEARCH_ERROR_HANDLERS` to
+  `RECORDS_REST_SEARCH_ERROR_HANDLERS`
+- Fix CI tests
+
 Version 1.9.0 (2021-11-29)
 
 - Fixes `MarshmallowErrors.get_body` due to Werkzeug 2.0.x changes
