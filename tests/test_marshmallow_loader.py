@@ -11,7 +11,6 @@
 import json
 from copy import deepcopy
 
-import pytest
 from helpers import get_json
 from invenio_records.models import RecordMetadata
 from invenio_rest.serializer import BaseSchema as Schema
@@ -177,13 +176,7 @@ def test_marshmallow_errors(test_data):
         errors = res.errors
 
     me = MarshmallowErrors(errors)
-
-    with pytest.raises(TypeError):
-        next(me)
-    # assert __iter__ method works
-    iter(me)
-    # assert __next__ method works
-    assert next(me)
+    assert me.errors
 
 
 def test_json_pid_checker_loader(app, db, search, search_url, search_class):
