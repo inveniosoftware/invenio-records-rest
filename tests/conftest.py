@@ -74,19 +74,19 @@ class IndexFlusher(object):
         current_search.flush_and_refresh(self.search_class.Meta.index)
 
 
-@pytest.yield_fixture(scope="session")
+@pytest.fixture(scope="session")
 def search_class():
     """Search class."""
     yield TestSearch
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def search_url():
     """Search class."""
     yield url_for("invenio_records_rest.recid_list")
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def app(request, search_class):
     """Flask application fixture.
 
@@ -196,7 +196,7 @@ def app(request, search_class):
     shutil.rmtree(instance_path)
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def db(app):
     """Database fixture."""
     if (
@@ -212,7 +212,7 @@ def db(app):
     db_.drop_all()
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def search(app):
     """Search engine fixture."""
     try:
@@ -225,7 +225,7 @@ def search(app):
     list(current_search.delete(ignore=[404]))
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def prefixed_search(app):
     """Search engine fixture."""
     app.config["SEARCH_INDEX_PREFIX"] = "test-"
@@ -257,7 +257,7 @@ def record_indexer_receiver(sender, json=None, record=None, index=None, **kwargs
     return json
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def indexer(app, search):
     """Create a record indexer."""
     InvenioIndexer(app)
@@ -265,7 +265,7 @@ def indexer(app, search):
     yield RecordIndexer()
 
 
-@pytest.yield_fixture(scope="session")
+@pytest.fixture(scope="session")
 def test_data():
     """Load test records."""
     path = "data/testrecords.json"
@@ -274,7 +274,7 @@ def test_data():
     yield records
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def test_records(db, test_data):
     """Load test records."""
     result = []
@@ -284,7 +284,7 @@ def test_records(db, test_data):
     yield result
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def indexed_records(search_class, indexer, test_records):
     """Get a function to wait for records to be flushed to index."""
     for pid, record in test_records:
@@ -293,13 +293,13 @@ def indexed_records(search_class, indexer, test_records):
     yield test_records
 
 
-@pytest.yield_fixture(scope="session")
+@pytest.fixture(scope="session")
 def test_patch():
     """A JSON patch."""
     yield [{"op": "replace", "path": "/year", "value": 1985}]
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def default_permissions(app):
     """Test default deny all permission."""
     for key in [
