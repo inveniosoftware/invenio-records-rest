@@ -217,7 +217,7 @@ class PIDConverter(BaseConverter):
         self, url_map, pid_type, getter=None, record_class=None, object_type="rec"
     ):
         """Initialize the converter."""
-        super(PIDConverter, self).__init__(url_map)
+        super().__init__(url_map)
         self.pid_type = pid_type
         self.getter = getter
         self.record_class = record_class

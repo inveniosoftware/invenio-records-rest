@@ -48,12 +48,12 @@ class MarshmallowErrors(RESTValidationError):
     def __init__(self, errors):
         """Store marshmallow errors."""
         self.errors = _flatten_marshmallow_errors(errors)
-        super(MarshmallowErrors, self).__init__()
+        super().__init__()
 
     def __str__(self):
         """Print exception with errors."""
         return "{base}. Encountered errors: {errors}".format(
-            base=super(RESTValidationError, self).__str__(), errors=self.errors
+            base=super().__str__(), errors=self.errors
         )
 
     def get_body(self, environ=None, scope=None):

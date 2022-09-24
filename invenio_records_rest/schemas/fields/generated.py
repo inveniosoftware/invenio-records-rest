@@ -50,7 +50,7 @@ class ForcedFieldDeserializeMixin(object):
             # Setting "missing" to some value forces the call
             # to ``.deserialize``
             kwargs["missing"] = GeneratedValue
-            super(ForcedFieldDeserializeMixin, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
 
     # Overriding default deserializer since we need to deserialize an
     # initially non-existent field. In this implementation the checks are

@@ -19,14 +19,14 @@ class SanitizedHTML(SanitizedUnicode):
 
     def __init__(self, tags=None, attrs=None, *args, **kwargs):
         """Initialize field."""
-        super(SanitizedHTML, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.tags = tags
 
         self.attrs = attrs
 
     def _deserialize(self, value, attr, data, **kwargs):
         """Deserialize string by sanitizing HTML."""
-        value = super(SanitizedHTML, self)._deserialize(value, attr, data, **kwargs)
+        value = super()._deserialize(value, attr, data, **kwargs)
         return bleach.clean(
             value,
             tags=self.tags or current_app.config.get("ALLOWED_HTML_TAGS", []),

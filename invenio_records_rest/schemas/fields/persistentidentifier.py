@@ -27,6 +27,6 @@ class PersistentIdentifier(GenFunction):
 
     def __init__(self, *args, **kwargs):
         """Initialize field."""
-        super(PersistentIdentifier, self).__init__(
+        super().__init__(
             serialize=pid_from_context, deserialize=pid_from_context, *args, **kwargs
         )

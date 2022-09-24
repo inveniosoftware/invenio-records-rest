@@ -16,5 +16,5 @@ class TrimmedString(fields.String):
 
     def _deserialize(self, value, attr, data, **kwargs):
         """Deserialize string value."""
-        value = super(TrimmedString, self)._deserialize(value, attr, data, **kwargs)
+        value = super()._deserialize(value, attr, data, **kwargs)
         return value.strip()

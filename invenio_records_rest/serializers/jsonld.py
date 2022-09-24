@@ -35,7 +35,7 @@ class JSONLDTransformerMixin(TransformerMixinInterface):
         """
         self.context = context
         self._expanded = expanded
-        super(JSONLDTransformerMixin, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expanded(self):
@@ -60,16 +60,12 @@ class JSONLDTransformerMixin(TransformerMixinInterface):
 
     def transform_record(self, pid, record, links_factory=None, **kwargs):
         """Transform record into an intermediate representation."""
-        result = super(JSONLDTransformerMixin, self).transform_record(
-            pid, record, links_factory, **kwargs
-        )
+        result = super().transform_record(pid, record, links_factory, **kwargs)
         return self.transform_jsonld(result)
 
     def transform_search_hit(self, pid, record_hit, links_factory=None, **kwargs):
         """Transform search result hit into an intermediate representation."""
-        result = super(JSONLDTransformerMixin, self).transform_search_hit(
-            pid, record_hit, links_factory, **kwargs
-        )
+        result = super().transform_search_hit(pid, record_hit, links_factory, **kwargs)
         return self.transform_jsonld(result)
 
 

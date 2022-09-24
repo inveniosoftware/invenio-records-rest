@@ -55,7 +55,7 @@ class Nested(fields.Nested):
     def _validate_missing(self, value):
         if value is missing and getattr(self, "required", False):
             self.fail("required")
-        return super(Nested, self)._validate_missing(value)
+        return super()._validate_missing(value)
 
 
 class OriginalKeysMixin(Schema):
