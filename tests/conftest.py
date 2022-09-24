@@ -17,7 +17,7 @@ import tempfile
 from os.path import dirname, join
 
 import pytest
-from flask import Flask, url_for
+from flask import Flask, g, url_for
 from flask_login import LoginManager, UserMixin
 from helpers import create_record
 from invenio_config import InvenioConfigDefault
@@ -299,7 +299,7 @@ def test_patch():
     yield [{"op": "replace", "path": "/year", "value": 1985}]
 
 
-@pytest.fixture
+@pytest.fixture()
 def default_permissions(app):
     """Test default deny all permission."""
     for key in [
@@ -323,6 +323,11 @@ def default_permissions(app):
         if uid:
             return User(uid)
         return None
+
+    @app.after_request
+    def logout(response):
+        g.pop("_login_user", None)
+        return response
 
     yield app
 
