@@ -601,7 +601,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         **kwargs
     ):
         """Constructor."""
-        super(RecordsListResource, self).__init__(
+        super().__init__(
             method_serializers={
                 "GET": search_serializers,
                 "POST": record_serializers,
@@ -767,7 +767,7 @@ class RecordResource(ContentNegotiatedMethodView):
         **kwargs
     ):
         """Constructor."""
-        super(RecordResource, self).__init__(
+        super().__init__(
             method_serializers={
                 "DELETE": {
                     "*/*": lambda *args: make_response(*args),

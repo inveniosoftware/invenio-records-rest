@@ -33,7 +33,7 @@ class SanitizedUnicode(TrimmedString):
 
     def _deserialize(self, value, attr, data, **kwargs):
         """Deserialize sanitized string value."""
-        value = super(SanitizedUnicode, self)._deserialize(value, attr, data, **kwargs)
+        value = super()._deserialize(value, attr, data, **kwargs)
         value = fix_text(value)
 
         # NOTE: This `join` might be ineffiecient... There's a solution with a

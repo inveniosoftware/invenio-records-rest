@@ -54,7 +54,7 @@ class CSVSerializer(SerializerMixinInterface, MarshmallowMixin, PreprocessorMixi
             raise ValueError("Please provide only fields to either include or exclude")
 
         self.header_separator = kwargs.pop("header_separator", "_")
-        super(CSVSerializer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def serialize(self, pid, record, links_factory=None):
         """Serialize a single record and persistent identifier.

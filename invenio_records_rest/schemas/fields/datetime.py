@@ -19,16 +19,10 @@ class DateString(fields.Date):
     def _serialize(self, value, attr, obj, **kwargs):
         """Serialize an ISO8601-formatted date."""
         try:
-            return super(DateString, self)._serialize(
-                arrow.get(value).date(), attr, obj, **kwargs
-            )
+            return super()._serialize(arrow.get(value).date(), attr, obj, **kwargs)
         except ParserError:
             return missing
 
     def _deserialize(self, value, attr, data, **kwargs):
         """Deserialize an ISO8601-formatted date."""
-        return (
-            super(DateString, self)
-            ._deserialize(value, attr, data, **kwargs)
-            .isoformat()
-        )
+        return super()._deserialize(value, attr, data, **kwargs).isoformat()

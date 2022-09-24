@@ -132,7 +132,7 @@ class PreprocessorMixin(PreprocessorMixinInterface):
 
     def __init__(self, replace_refs=False, **kwargs):
         """Constructor."""
-        super(PreprocessorMixin, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.replace_refs = replace_refs
 
     def preprocess_record(self, pid, record, links_factory=None, **kwargs):

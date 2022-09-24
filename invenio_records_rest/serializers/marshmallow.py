@@ -19,7 +19,7 @@ class MarshmallowMixin(TransformerMixinInterface):
     def __init__(self, schema_class=RecordSchemaJSONV1, **kwargs):
         """Initialize record."""
         self.schema_class = schema_class
-        super(MarshmallowMixin, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def dump(self, obj, context=None):
         """Serialize object with schema."""

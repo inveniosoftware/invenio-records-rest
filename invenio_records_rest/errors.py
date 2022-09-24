@@ -31,7 +31,7 @@ class SearchPaginationRESTError(RESTException):
         if errors:
             for field, messages in errors.items():
                 _errors.extend([FieldError(field, msg) for msg in messages])
-        super(SearchPaginationRESTError, self).__init__(errors=_errors, **kwargs)
+        super().__init__(errors=_errors, **kwargs)
 
 
 #
@@ -54,7 +54,7 @@ class StyleNotFoundRESTError(RESTException):
 
     def __init__(self, style=None, **kwargs):
         """Initialize exception."""
-        super(RESTException, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         arg = f' "{style}" ' if style else " "
         self.description = f"Style{arg}could not be found."
 
@@ -67,7 +67,7 @@ class PIDRESTException(RESTException):
 
     def __init__(self, pid_error=None, **kwargs):
         """Initialize exception."""
-        super(RESTException, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.pid_error = pid_error
 
 
@@ -99,7 +99,7 @@ class PIDMissingObjectRESTError(PIDRESTException):
 
     def __init__(self, pid, **kwargs):
         """Initialize exception."""
-        super(PIDMissingObjectRESTError, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.description = f"No object assigned to {pid}."
 
 
@@ -110,7 +110,7 @@ class PIDRedirectedRESTError(PIDRESTException):
 
     def __init__(self, pid_type=None, **kwargs):
         """Initialize exception."""
-        super(PIDRedirectedRESTError, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         arg = f' "{pid_type}" ' if pid_type else " "
         self.description = f"Invalid redirect - pid_type{arg}endpoint missing."
 
@@ -125,7 +125,7 @@ class PIDResolveRESTError(RESTException):
 
     def __init__(self, pid=None, **kwargs):
         """Initialize exception."""
-        super(RESTException, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         arg = f" #{pid} " if pid else " "
         self.description = f"PID{arg}could not be resolved."
 
@@ -137,7 +137,7 @@ class UnsupportedMediaRESTError(RESTException):
 
     def __init__(self, content_type=None, **kwargs):
         """Initialize exception."""
-        super(RESTException, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         content_type = content_type or request.mimetype
         self.description = f'Unsupported media type "{content_type}".'
 
@@ -163,7 +163,7 @@ class SuggestMissingContextRESTError(RESTException):
 
     def __init__(self, ctx_field=None, **kwargs):
         """Initialize exception."""
-        super(RESTException, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         arg = f' "{ctx_field}" ' if ctx_field else " "
         self.description = f"Missing{arg}context"
 
@@ -175,7 +175,7 @@ class SuggestNoCompletionsRESTError(RESTException):
 
     def __init__(self, options=None, **kwargs):
         """Initialize exception."""
-        super(RESTException, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         arg = f" (options: {options})" if options else ""
         self.description = f"No completions requested.{arg}"
 
@@ -187,7 +187,7 @@ class JSONSchemaValidationError(RESTValidationError):
 
     def __init__(self, error=None, **kwargs):
         """Initialize exception."""
-        super(RESTValidationError, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         error = error.message if error else ""
         self.description = f"Validation error: {error}."
 
