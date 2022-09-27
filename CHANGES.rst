@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 2.0.1 (2022-09-27)
+
+- Bump invenio-records
+
 Version 2.0.0 (2022-09-24)
 
 - Add support for OpenSearch
