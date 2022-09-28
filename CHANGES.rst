@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 2.0.2 (2022-09-28)
+
+- Bump invenio-indexer
+
 Version 2.0.1 (2022-09-27)
 
 - Bump invenio-records
