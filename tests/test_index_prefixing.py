@@ -54,7 +54,6 @@ def test_api_views(app, prefixed_search, db, test_data, search_url, search_class
         assert len(result["hits"]["hits"]) == 1
         record_doc = result["hits"]["hits"][0]
         assert record_doc["_index"] == "test-invenio-records-rest-testrecord" + suffix
-        assert record_doc["_type"] == "_doc"
 
         # Fetch the record
         assert client.get(record_url(recid)).status_code == 200
