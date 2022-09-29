@@ -34,7 +34,7 @@ jobs:
           cache-service: [redis]
           db-service: [postgresql13,mysql8]
           mq-service: [rabbitmq, redis]
-          search-service: [opensearch1,elasticsearch7]
+          search-service: [opensearch2,elasticsearch7]
 
           include:
           - db-service: postgresql13
@@ -43,8 +43,8 @@ jobs:
           - db-service: mysql8
             DB_EXTRAS: "mysql"
 
-          - search-service: opensearch1
-            SEARCH_EXTRAS: "opensearch1"
+          - search-service: opensearch2
+            SEARCH_EXTRAS: "opensearch2"
 
           - search-service: elasticsearch7
             SEARCH_EXTRAS: "elasticsearch7"
