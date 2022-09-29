@@ -153,7 +153,6 @@ default options in the out of the box minimal configuration.
 ...     search_class=RecordsSearch,
 ...     indexer_class=RecordIndexer,
 ...     search_index=None,
-...     search_type=None,
 ...     record_serializers={
 ...         'application/json': ('invenio_records_rest.serializers'
 ...                              ':json_v1_response'),

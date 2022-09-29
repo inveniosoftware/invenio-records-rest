@@ -54,7 +54,6 @@ class TestSearch(RecordsSearch):
         """Test configuration."""
 
         index = "invenio-records-rest"
-        doc_types = None
 
     def __init__(self, **kwargs):
         """Add extra options."""

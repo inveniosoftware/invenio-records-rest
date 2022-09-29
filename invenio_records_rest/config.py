@@ -29,7 +29,6 @@ RECORDS_REST_ENDPOINTS = dict(
         search_class=RecordsSearch,
         indexer_class=RecordIndexer,
         search_index=None,
-        search_type=None,
         record_serializers={
             "application/json": (
                 "invenio_records_rest.serializers" ":json_v1_response"
@@ -117,7 +116,6 @@ The structure of the dictionary is as follows:
             'search_serializers_aliases': {
                 'json': 'application/json'
             },
-            'search_type': 'search-doc-type',
             'suggesters': {
                 'my_url_param_to_complete': {
                     '_source': ['specified_source_filtered_field'],
@@ -203,8 +201,6 @@ The structure of the dictionary is as follows:
 :param search_serializers_aliases: A mapping of values of the defined query arg
     (see `config.REST_MIMETYPE_QUERY_ARG_NAME`) to valid mimetypes for records
     search serializers: dict(alias -> mimetype).
-
-:param search_type: Name of the search type used when searching records.
 
 :param suggesters: Suggester fields configuration. Any element of the
     dictionary represents a suggestion field. For each suggestion field we can
