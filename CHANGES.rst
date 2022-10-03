@@ -8,6 +8,11 @@
 Changes
 =======
 
+Version 2.1.0 (2022-10-03)
+
+- Add support to OpenSearch v2
+- Remove `search_type` param
+
 Version 2.0.2 (2022-09-28)
 
 - Bump invenio-indexer
