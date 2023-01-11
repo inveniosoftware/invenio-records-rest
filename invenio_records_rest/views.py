@@ -2,6 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2015-2019 CERN.
+# Copyright (C) 2023 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -23,8 +24,8 @@ from flask import (
     url_for,
 )
 from flask.views import MethodView
-from flask_babelex import gettext as _
 from invenio_db import db
+from invenio_i18n import gettext as _
 from invenio_indexer.api import RecordIndexer
 from invenio_pidstore import current_pidstore
 from invenio_pidstore.models import PersistentIdentifier
@@ -445,7 +446,6 @@ def use_paginate_args(default_size=25, max_results=10000):
     def decorator(f):
         @wraps(f)
         def inner(self, *args, **kwargs):
-
             _default_size = (
                 default_size(self) if callable(default_size) else default_size
             )
