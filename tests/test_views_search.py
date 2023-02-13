@@ -345,7 +345,9 @@ def test_from_parameter_invalid_pagination(app, indexed_records, search_url):
         assert res.status_code == 400
         assert data["message"] == "Invalid pagination parameters."
         errors = {(e["field"], e["message"]) for e in data["errors"]}
-        assert errors == {("from", "Must be at least 1."),} or errors == {
+        assert errors == {
+            ("from", "Must be at least 1."),
+        } or errors == {
             ("from", "Must be greater than or equal to 1."),
         }
 

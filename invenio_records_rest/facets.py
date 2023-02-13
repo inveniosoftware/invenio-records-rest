@@ -60,10 +60,9 @@ def range_filter(field, start_date_math=None, end_date_math=None, **kwargs):
         date_maths = [start_date_math, end_date_math]
 
         # Add the proper values to the dict
-        for (range_end, strict, opers, date_math) in zip(
+        for range_end, strict, opers, date_math in zip(
             range_ends, [">", "<"], ineq_opers, date_maths
         ):
-
             if range_end != "":
                 # If first char is '>' for start or '<' for end
                 if range_end[0] == strict:

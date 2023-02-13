@@ -34,6 +34,7 @@ from invenio_records_rest.views import RecordResource, RecordsListResource
 @pytest.fixture()
 def test_custom_endpoints_app(app):
     """Create an application enabling the creation of a custom endpoint."""
+
     # Hack necessary to have links generated properly
     @app.before_first_request
     def extend_default_endpoint_prefixes():
