@@ -23,6 +23,7 @@ from helpers import create_record
 from invenio_config import InvenioConfigDefault
 from invenio_db import InvenioDB
 from invenio_db import db as db_
+from invenio_i18n import InvenioI18N
 from invenio_indexer import InvenioIndexer
 from invenio_indexer.api import RecordIndexer
 from invenio_indexer.signals import before_record_index
@@ -183,6 +184,7 @@ def app(request, search_class):
     InvenioIndexer(app)
     InvenioPIDStore(app)
     InvenioConfigDefault(app)
+    InvenioI18N(app)
     search = InvenioSearch(app)
     search.register_mappings(search_class.Meta.index, "mock_module.mappings")
     InvenioRecordsREST(app)
