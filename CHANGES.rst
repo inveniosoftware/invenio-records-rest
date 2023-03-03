@@ -8,6 +8,11 @@
 Changes
 =======
 
+Version 2.2.0 (2023-03-03)
+
+- remove deprecated flask-babelex dependency and imports
+- upgrade invenio-i18n
+
 Version 2.1.0 (2022-10-03)
 
 - Add support to OpenSearch v2
