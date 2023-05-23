@@ -14,7 +14,6 @@ import pytest
 from flask import jsonify, make_response, url_for
 
 from invenio_records_rest.errors import PIDDoesNotExistRESTError
-from invenio_records_rest.proxies import current_records_rest
 
 
 def custom_error_handler(error):
