@@ -1,12 +1,16 @@
 ..
     This file is part of Invenio.
-    Copyright (C) 2015-2019 CERN.
+    Copyright (C) 2015-2023 CERN.
 
     Invenio is free software; you can redistribute it and/or modify it
     under the terms of the MIT License; see LICENSE file for more details.
 
 Changes
 =======
+
+Version 2.3.0 (2023-11-07)
+
+- facets: add a new filter for nested filters
 
 Version 2.2.0 (2023-03-03)
 
