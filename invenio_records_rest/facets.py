@@ -21,20 +21,24 @@ from werkzeug.datastructures import MultiDict
 from invenio_records_rest.utils import make_comma_list_a_list
 
 
-def nested_filter(field, url_subfield, subfield):
+def nested_filter(field, subfield):
     """Create a nested filter. Similar to the https://github.com/inveniosoftware/invenio-records-resources/blob/master/invenio_records_resources/services/records/facets/facets.py#L94"""
 
     def inner(values):
-        subvalues = request.values.getlist(url_subfield, type=text_type)
-        if subvalues:
-            return dsl.Q(
-                "bool",
-                should=[
-                    dsl.Q("terms", **{field: values}),
-                    dsl.Q("terms", **{subfield: subvalues}),
-                ],
-            )
-        return dsl.Q("terms", **{field: values})
+        top_level = []
+        queries = []
+        for value in values:
+            subvalues = value.split("::")
+            if len(subvalues)>1:
+                queries.append(dsl.Q("bool", must=[dsl.Q("term", **{field: subvalues[0]}), dsl.Q("term", **{subfield: subvalues[1]})]))
+            else:
+                top_level.append(value)
+        if len(top_level):
+            queries.append(dsl.Q("terms", **{field: top_level}))
+
+        if len(queries)>1:
+            return dsl.Q("bool", should=queries)
+        return queries[0]
 
     return inner
 
