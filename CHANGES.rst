@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 2.3.1 (2023-11-10)
+
+- facets: apply some fixes on nested filter
+
 Version 2.3.0 (2023-11-07)
 
 - facets: add a new filter for nested filters
