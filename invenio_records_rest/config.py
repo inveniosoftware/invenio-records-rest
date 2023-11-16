@@ -344,6 +344,9 @@ The structure of the dictionary is as follows:
     }
 """
 
+RECORDS_REST_FACETS_POST_FILTERS_PROPAGATE = False
+"""Define if the post_filters facets in one category should be applied as filters to all the other categories"""
+
 RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY = deny_all
 """Default create permission factory: reject any request."""
 
