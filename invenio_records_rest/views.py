@@ -202,6 +202,7 @@ def create_url_rules(
     links_factory_imp=None,
     suggesters=None,
     default_endpoint_prefix=None,
+    search_query_parser=None,
 ):
     """Create Werkzeug URL rules.
 
@@ -254,6 +255,7 @@ def create_url_rules(
     :param search_factory_imp: Factory to parse queries.
     :param links_factory_imp: Factory for record links generation.
     :param suggesters: Suggester fields configuration.
+    :param search_query_parser: Function that implements the query parser
 
     :returns: a list of dictionaries with can each be passed as keywords
         arguments to ``Blueprint.add_url_rule``.
@@ -325,6 +327,7 @@ def create_url_rules(
         ),
         item_links_factory=links_factory,
         record_class=record_class,
+        search_query_parser=search_query_parser,
     )
     item_view = RecordResource.as_view(
         RecordResource.view_name.format(endpoint),
@@ -591,6 +594,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         item_links_factory=None,
         record_class=None,
         indexer_class=None,
+        search_query_parser=None,
         **kwargs
     ):
         """Constructor."""
@@ -623,6 +627,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         self.loaders = record_loaders or current_records_rest.loaders
         self.record_class = record_class or Record
         self.indexer_class = indexer_class
+        self.search_query_parser = search_query_parser
 
     @need_record_permission("list_permission_factory")
     @use_paginate_args(
@@ -647,7 +652,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         search = search[pagination["from_idx"] : pagination["to_idx"]]
         search = search.extra(track_total_hits=True)
 
-        search, qs_kwargs = self.search_factory(search)
+        search, qs_kwargs = self.search_factory(search, self.search_query_parser)
         urlkwargs.update(qs_kwargs)
 
         # Execute search
