@@ -29,6 +29,7 @@ RECORDS_REST_ENDPOINTS = dict(
         search_class=RecordsSearch,
         indexer_class=RecordIndexer,
         search_index=None,
+        search_query_parser=None,
         record_serializers={
             "application/json": (
                 "invenio_records_rest.serializers" ":json_v1_response"
@@ -80,6 +81,12 @@ The structure of the dictionary is as follows:
             'message': error.description,
             'removal_reason': record.get('removal_reason')}), 410)
 
+    def query_parser_with_and(qstr=None):
+        if qstr:
+            return dsl.Q("query_string", query=qstr, default_operator="AND")
+        return dsl.Q()
+
+
     RECORDS_REST_ENDPOINTS = {
         'endpoint-prefix': {
             'create_permission_factory_imp': permission_check_factory(),
@@ -110,6 +117,7 @@ The structure of the dictionary is as follows:
             'search_class': 'mypackage.utils:mysearchclass',
             'search_factory_imp': search_factory(),
             'search_index': 'search-index-name',
+            'search_query_parser': query_parser_with_and,
             'search_serializers': {
                 'application/json': 'mypackage.utils:my_json_search_serializer'
             },
@@ -192,6 +200,10 @@ The structure of the dictionary is as follows:
 :param search_factory_imp: Factory to parse queries.
 
 :param search_index: Name of the search index used when searching records.
+
+:param search_query_parser: Name of the function that will be used to parse the
+    query. The default parser does an 'OR' of all the terms that have been
+    specified. This could be used to do, as an example, and 'AND' of the terms.
 
 :param search_serializers: It contains the list of records serializers for all
     supported format. This configuration differ from the previous because in
