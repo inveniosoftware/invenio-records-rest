@@ -8,6 +8,13 @@
 Changes
 =======
 
+Version 2.4.0 (2023-12-08)
+
+- facet: Allow more than one possibility on range facets
+- search: possibility to specify a different query_parser
+- facets: New parameter, RECORDS_REST_FACETS_FILTER, to filter the facets based on a category based on all the other categories
+- i18n-global: add compile-catalog fuzzy (#323)
+
 Version 2.3.1 (2023-11-10)
 
 - facets: apply some fixes on nested filter
