@@ -134,7 +134,7 @@ class CSVSerializer(SerializerMixinInterface, MarshmallowMixin, PreprocessorMixi
                 if new_key in self.csv_excluded_fields:
                     continue
                 if self.csv_included_fields and not self.key_in_field(
-                    parent_key, self.csv_included_fields
+                    new_key, self.csv_included_fields
                 ):
                     continue
                 items.extend(self._flatten(item, new_key).items())
