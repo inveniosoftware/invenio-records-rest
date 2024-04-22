@@ -10,6 +10,7 @@
 
 from functools import partial
 
+import pkg_resources
 import six
 from flask import abort, current_app, jsonify, make_response, request, url_for
 from invenio_pidstore.errors import (
@@ -32,6 +33,10 @@ from .errors import (
     PIDUnregisteredRESTError,
 )
 from .proxies import current_records_rest
+
+marshmallow_major_version = int(
+    pkg_resources.get_distribution("marshmallow").version[0]
+)
 
 
 def build_default_endpoint_prefixes(records_rest_endpoints):

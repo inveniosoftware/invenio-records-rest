@@ -10,11 +10,11 @@
 
 from flask import current_app
 from invenio_rest.serializer import BaseSchema as Schema
-from marshmallow import ValidationError
-from marshmallow import __version_info__ as marshmallow_version
-from marshmallow import fields, missing, post_load, validates_schema
+from marshmallow import ValidationError, fields, missing, post_load, validates_schema
 
 from invenio_records_rest.schemas.fields import PersistentIdentifier
+
+from ..utils import marshmallow_major_version
 
 
 class StrictKeysMixin(Schema):
@@ -74,7 +74,7 @@ class OriginalKeysMixin(Schema):
         return data
 
 
-if marshmallow_version[0] < 3:
+if marshmallow_major_version < 3:
 
     class RecordMetadataSchemaJSONV1(OriginalKeysMixin):
         """Schema for records metadata v1 in JSON with injected PID value."""

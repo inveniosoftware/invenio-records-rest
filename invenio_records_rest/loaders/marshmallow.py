@@ -18,7 +18,8 @@ import json
 from flask import request
 from invenio_rest.errors import RESTValidationError
 from marshmallow import ValidationError
-from marshmallow import __version_info__ as marshmallow_version
+
+from ..utils import marshmallow_major_version
 
 
 def _flatten_marshmallow_errors(errors, parents=()):
@@ -81,7 +82,7 @@ def marshmallow_loader(schema_class):
             pid, record = pid_data.data
             context["pid"] = pid
             context["record"] = record
-        if marshmallow_version[0] < 3:
+        if marshmallow_major_version < 3:
             result = schema_class(context=context).load(request_json)
             if result.errors:
                 raise MarshmallowErrors(result.errors)

@@ -10,8 +10,9 @@
 
 import warnings
 
-from marshmallow import __version_info__ as marshmallow_version
 from marshmallow import missing as missing_
+
+from invenio_records_rest.utils import marshmallow_major_version
 
 from .marshmallow_contrib import Function, Method
 
@@ -25,7 +26,7 @@ class GeneratedValue(object):
 class ForcedFieldDeserializeMixin(object):
     """Mixin that forces deserialization of marshmallow fields."""
 
-    if marshmallow_version[0] < 3:
+    if marshmallow_major_version < 3:
 
         def __init__(self, *args, **kwargs):
             """Override the "missing" parameter."""
