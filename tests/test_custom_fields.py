@@ -12,7 +12,6 @@ import pytest
 from invenio_pidstore.models import PersistentIdentifier as PIDModel
 from invenio_records import Record
 from invenio_rest.serializer import BaseSchema as Schema
-from marshmallow import __version_info__ as marshmallow_version
 from marshmallow import missing
 
 from invenio_records_rest.schemas import StrictKeysMixin
@@ -25,8 +24,9 @@ from invenio_records_rest.schemas.fields import (
     SanitizedUnicode,
     TrimmedString,
 )
+from invenio_records_rest.utils import marshmallow_major_version
 
-if marshmallow_version[0] >= 3:
+if marshmallow_major_version >= 3:
     schema_to_use = Schema
     from marshmallow import EXCLUDE
 else:
@@ -36,7 +36,7 @@ else:
 class CustomFieldSchema(schema_to_use):
     """Test schema."""
 
-    if marshmallow_version[0] >= 3:
+    if marshmallow_major_version >= 3:
 
         class Meta:
             """."""
@@ -107,7 +107,7 @@ def test_custom_generated_fields():
     class GeneratedFieldsSchema(schema_to_use):
         """Test schema."""
 
-        if marshmallow_version[0] >= 3:
+        if marshmallow_major_version >= 3:
 
             class Meta:
                 """Meta attributes for the schema."""

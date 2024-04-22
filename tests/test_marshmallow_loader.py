@@ -14,9 +14,7 @@ from copy import deepcopy
 from helpers import get_json
 from invenio_records.models import RecordMetadata
 from invenio_rest.serializer import BaseSchema as Schema
-from marshmallow import ValidationError
-from marshmallow import __version_info__ as marshmallow_version
-from marshmallow import fields
+from marshmallow import ValidationError, fields
 
 from invenio_records_rest.loaders import json_pid_checker
 from invenio_records_rest.loaders.marshmallow import (
@@ -25,6 +23,7 @@ from invenio_records_rest.loaders.marshmallow import (
 )
 from invenio_records_rest.schemas import Nested
 from invenio_records_rest.schemas.fields import PersistentIdentifier
+from invenio_records_rest.utils import marshmallow_major_version
 
 
 class _TestSchema(Schema):
@@ -166,7 +165,7 @@ def test_marshmallow_load_nested_subfield_errors(
 def test_marshmallow_errors(test_data):
     """Test MarshmallowErrors class."""
     incomplete_data = dict(test_data[0])
-    if marshmallow_version[0] >= 3:
+    if marshmallow_major_version >= 3:
         try:
             res = _TestSchema(context={}).load(json.dumps(incomplete_data))
         except ValidationError as error:
