@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 2.4.1 (2024-05-08)
+
+- marhsmallow: remove deprecation warning
+
 Version 2.4.0 (2023-12-08)
 
 - facet: Allow more than one possibility on range facets
