@@ -2,6 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2017-2018 CERN.
+# Copyright (C) 2024 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -35,15 +36,12 @@ from invenio_records_rest.views import RecordResource, RecordsListResource
 def test_custom_endpoints_app(app):
     """Create an application enabling the creation of a custom endpoint."""
 
-    # Hack necessary to have links generated properly
-    @app.before_first_request
-    def extend_default_endpoint_prefixes():
-        """Extend redirects between PID types."""
-        endpoint_prefixes = utils.build_default_endpoint_prefixes(
-            {"recid": {"pid_type": "recid"}}
-        )
-        current_records_rest = app.extensions["invenio-records-rest"]
-        current_records_rest.default_endpoint_prefixes.update(endpoint_prefixes)
+    """Extend redirects between PID types."""
+    endpoint_prefixes = utils.build_default_endpoint_prefixes(
+        {"recid": {"pid_type": "recid"}}
+    )
+    current_records_rest = app.extensions["invenio-records-rest"]
+    current_records_rest.default_endpoint_prefixes.update(endpoint_prefixes)
 
     return app
 
