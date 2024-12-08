@@ -2,6 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2015-2018 CERN.
+# Copyright (C) 2024 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -201,10 +202,10 @@ def app(request, search_class):
 def db(app):
     """Database fixture."""
     if (
-        not database_exists(str(db_.engine.url))
+        not database_exists(str(db_.engine.url.render_as_string(hide_password=False)))
         and app.config["SQLALCHEMY_DATABASE_URI"] != "sqlite://"
     ):
-        create_database(db_.engine.url)
+        create_database(db_.engine.url.render_as_string(hide_password=False))
     db_.create_all()
 
     yield db_
