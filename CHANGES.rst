@@ -1,12 +1,21 @@
 ..
     This file is part of Invenio.
     Copyright (C) 2015-2023 CERN.
+    Copyright (C) 2024 Graz University of Technology.
 
     Invenio is free software; you can redistribute it and/or modify it
     under the terms of the MIT License; see LICENSE file for more details.
 
 Changes
 =======
+
+Version 3.0.0 (2024-12-09)
+
+- tests: fix sneaking in indices
+- tests: remove before_first_request use
+- tests: apply changes for sqlalchemy>=2.0
+- setup: change to reusable workflows
+- setup: bump major dependencies
 
 Version 2.4.1 (2024-05-08)
 
