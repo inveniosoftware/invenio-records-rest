@@ -438,7 +438,7 @@ def need_record_permission(factory_name):
 def _validate_pagination_args(args):
     if args.get("page") and args.get("from"):
         raise WebargsValidationError(
-            "The query parameters from and page must not be " "used at the same time.",
+            _("The query parameters from and page must not be used at the same time."),
             field_names=["page", "from"],
         )
 
@@ -475,7 +475,7 @@ def use_paginate_args(default_size=25, max_results=10000):
             # For validation errors, webargs raises an enhanced BadRequest
             except BadRequest as err:
                 raise SearchPaginationRESTError(
-                    description="Invalid pagination parameters.",
+                    description=_("Invalid pagination parameters."),
                     errors=err.data.get("messages"),
                 )
 
@@ -511,9 +511,9 @@ def use_paginate_args(default_size=25, max_results=10000):
             if req["to_idx"] > _max_results:
                 raise SearchPaginationRESTError(
                     description=(
-                        "Maximum number of {} results have been reached.".format(
-                            _max_results
-                        )
+                        _(
+                            "Maximum number of {count} results have been reached."
+                        ).format(count=_max_results)
                     )
                 )
 
@@ -595,7 +595,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
         record_class=None,
         indexer_class=None,
         search_query_parser=None,
-        **kwargs
+        **kwargs,
     ):
         """Constructor."""
         super().__init__(
@@ -608,7 +608,7 @@ class RecordsListResource(ContentNegotiatedMethodView):
                 "POST": default_media_type,
             },
             default_media_type=default_media_type,
-            **kwargs
+            **kwargs,
         )
         self.pid_type = pid_type
         self.minter = current_pidstore.minters[minter_name]
@@ -762,7 +762,7 @@ class RecordResource(ContentNegotiatedMethodView):
         loaders=None,
         search_class=None,
         indexer_class=None,
-        **kwargs
+        **kwargs,
     ):
         """Constructor."""
         super().__init__(
@@ -778,7 +778,7 @@ class RecordResource(ContentNegotiatedMethodView):
                 "PATCH": default_media_type,
             },
             default_media_type=default_media_type,
-            **kwargs
+            **kwargs,
         )
         self.search_class = search_class
         self.read_permission_factory = read_permission_factory

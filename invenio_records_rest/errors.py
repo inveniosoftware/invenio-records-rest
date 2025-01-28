@@ -14,6 +14,7 @@ All error classes in this module are inheriting from
 """
 
 from flask import request
+from invenio_i18n import gettext as _
 from invenio_rest.errors import FieldError, RESTException, RESTValidationError
 
 
@@ -41,7 +42,14 @@ class InvalidQueryRESTError(RESTException):
     """Invalid query syntax."""
 
     code = 400
-    description = "Invalid query syntax."
+
+    # We can't use lazy_gettext for the description field because it doesn't serialize correctly to JSON.
+    # To ensure the translated description is included in JSON output, we translate it in the constructor.
+    def __init__(self, **kwargs):
+        """Initialize exception."""
+        if "description" not in kwargs:
+            kwargs["description"] = _("Invalid query syntax.")
+        super().__init__(**kwargs)
 
 
 #
@@ -54,9 +62,11 @@ class StyleNotFoundRESTError(RESTException):
 
     def __init__(self, style=None, **kwargs):
         """Initialize exception."""
+        if "description" not in kwargs:
+            kwargs["description"] = _("Style {style} could not be found.").format(
+            style=f'"{style}"' if style else ""
+        )
         super().__init__(**kwargs)
-        arg = f' "{style}" ' if style else " "
-        self.description = f"Style{arg}could not be found."
 
 
 #
@@ -75,21 +85,36 @@ class PIDDoesNotExistRESTError(PIDRESTException):
     """Non-existent PID."""
 
     code = 404
-    description = "PID does not exist."
+
+    def __init__(self, **kwargs):
+        """Initialize exception."""
+        if "description" not in kwargs:
+            kwargs["description"] = _("PID does not exist.")
+        super().__init__(**kwargs)
 
 
 class PIDUnregisteredRESTError(PIDRESTException):
     """Unregistered PID."""
 
     code = 404
-    description = "PID is not registered."
+
+    def __init__(self, **kwargs):
+        """Initialize exception."""
+        if "description" not in kwargs:
+            kwargs["description"] = _("PID is not registered.")
+        super().__init__(**kwargs)
 
 
 class PIDDeletedRESTError(PIDRESTException):
     """Deleted PID."""
 
     code = 410
-    description = "PID has been deleted."
+
+    def __init__(self, **kwargs):
+        """Initialize exception."""
+        if "description" not in kwargs:
+            kwargs["description"] = _("PID has been deleted.")
+        super().__init__(**kwargs)
 
 
 class PIDMissingObjectRESTError(PIDRESTException):
@@ -99,8 +124,9 @@ class PIDMissingObjectRESTError(PIDRESTException):
 
     def __init__(self, pid, **kwargs):
         """Initialize exception."""
+        if "description" not in kwargs:
+            kwargs["description"] = _("No object assigned to {pid}.").format(pid=pid)
         super().__init__(**kwargs)
-        self.description = f"No object assigned to {pid}."
 
 
 class PIDRedirectedRESTError(PIDRESTException):
@@ -110,9 +136,11 @@ class PIDRedirectedRESTError(PIDRESTException):
 
     def __init__(self, pid_type=None, **kwargs):
         """Initialize exception."""
+        if "description" not in kwargs:
+            kwargs["description"] = _(
+            "Invalid redirect - pid_type {pid_type} endpoint missing."
+        ).format(pid_type=f'"{pid_type}"' if pid_type else "")
         super().__init__(**kwargs)
-        arg = f' "{pid_type}" ' if pid_type else " "
-        self.description = f"Invalid redirect - pid_type{arg}endpoint missing."
 
 
 #
@@ -125,9 +153,11 @@ class PIDResolveRESTError(RESTException):
 
     def __init__(self, pid=None, **kwargs):
         """Initialize exception."""
+        if "description" not in kwargs:
+            kwargs["description"] = _("PID {pid} could not be resolved.").format(
+            pid=f"#{pid}" if pid else ""
+        )
         super().__init__(**kwargs)
-        arg = f" #{pid} " if pid else " "
-        self.description = f"PID{arg}could not be resolved."
 
 
 class UnsupportedMediaRESTError(RESTException):
@@ -137,23 +167,35 @@ class UnsupportedMediaRESTError(RESTException):
 
     def __init__(self, content_type=None, **kwargs):
         """Initialize exception."""
+        if "description" not in kwargs:
+            kwargs["description"] = _('Unsupported media type "{content_type}".').format(
+            content_type=content_type or request.mimetype
+        )
         super().__init__(**kwargs)
-        content_type = content_type or request.mimetype
-        self.description = f'Unsupported media type "{content_type}".'
 
 
 class InvalidDataRESTError(RESTException):
     """Invalid request body."""
 
     code = 400
-    description = "Could not load data."
+
+    def __init__(self, **kwargs):
+        """Initialize exception."""
+        if "description" not in kwargs:
+            kwargs["description"] = _("Could not load data.")
+        super().__init__(**kwargs)
 
 
 class PatchJSONFailureRESTError(RESTException):
     """Failed to patch JSON."""
 
     code = 400
-    description = "Could not patch JSON."
+
+    def __init__(self, **kwargs):
+        """Initialize exception."""
+        if "description" not in kwargs:
+            kwargs["description"] = _("Could not patch JSON.")
+        super().__init__(**kwargs)
 
 
 class SuggestMissingContextRESTError(RESTException):
@@ -163,9 +205,11 @@ class SuggestMissingContextRESTError(RESTException):
 
     def __init__(self, ctx_field=None, **kwargs):
         """Initialize exception."""
+        if "description" not in kwargs:
+            kwargs["description"] = _("Missing {ctx_field} context.").format(
+            ctx_field=f'"{ctx_field}"' if ctx_field else ""
+        )
         super().__init__(**kwargs)
-        arg = f' "{ctx_field}" ' if ctx_field else " "
-        self.description = f"Missing{arg}context"
 
 
 class SuggestNoCompletionsRESTError(RESTException):
@@ -175,9 +219,11 @@ class SuggestNoCompletionsRESTError(RESTException):
 
     def __init__(self, options=None, **kwargs):
         """Initialize exception."""
+        if "description" not in kwargs:
+            kwargs["description"] = _("No completions requested.{options}").format(
+            options=f" (options: {options})" if options else ""
+        )
         super().__init__(**kwargs)
-        arg = f" (options: {options})" if options else ""
-        self.description = f"No completions requested.{arg}"
 
 
 class JSONSchemaValidationError(RESTValidationError):
@@ -187,13 +233,22 @@ class JSONSchemaValidationError(RESTValidationError):
 
     def __init__(self, error=None, **kwargs):
         """Initialize exception."""
+        if "description" not in kwargs:
+            kwargs["description"] = _("Validation error: {error}.").format(
+            error=error.message if error else ""
+        )
         super().__init__(**kwargs)
-        error = error.message if error else ""
-        self.description = f"Validation error: {error}."
 
 
 class UnhandledSearchError(RESTException):
     """Failed to handle exception."""
 
     code = 500
-    description = "An internal server error occurred when handling the request."
+
+    def __init__(self, **kwargs):
+        """Initialize exception."""
+        if "description" not in kwargs:
+            kwargs["description"] = _(
+            "An internal server error occurred when handling the request."
+        )
+        super().__init__(**kwargs)
