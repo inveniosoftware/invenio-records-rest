@@ -9,17 +9,12 @@
 """Invenio-Records-REST configuration."""
 
 from flask import request
+from invenio_i18n import lazy_gettext as _
 from invenio_indexer.api import RecordIndexer
 from invenio_search import RecordsSearch
 
 from .facets import terms_filter
 from .utils import allow_all, check_search, deny_all
-
-
-def _(x):
-    """Identity function for string extraction."""
-    return x
-
 
 RECORDS_REST_ENDPOINTS = dict(
     recid=dict(
