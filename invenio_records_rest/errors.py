@@ -64,8 +64,8 @@ class StyleNotFoundRESTError(RESTException):
         """Initialize exception."""
         if "description" not in kwargs:
             kwargs["description"] = _("Style {style} could not be found.").format(
-            style=f'"{style}"' if style else ""
-        )
+                style=f'"{style}"' if style else ""
+            )
         super().__init__(**kwargs)
 
 
@@ -138,8 +138,8 @@ class PIDRedirectedRESTError(PIDRESTException):
         """Initialize exception."""
         if "description" not in kwargs:
             kwargs["description"] = _(
-            "Invalid redirect - pid_type {pid_type} endpoint missing."
-        ).format(pid_type=f'"{pid_type}"' if pid_type else "")
+                "Invalid redirect - pid_type {pid_type} endpoint missing."
+            ).format(pid_type=f'"{pid_type}"' if pid_type else "")
         super().__init__(**kwargs)
 
 
@@ -155,8 +155,8 @@ class PIDResolveRESTError(RESTException):
         """Initialize exception."""
         if "description" not in kwargs:
             kwargs["description"] = _("PID {pid} could not be resolved.").format(
-            pid=f"#{pid}" if pid else ""
-        )
+                pid=f"#{pid}" if pid else ""
+            )
         super().__init__(**kwargs)
 
 
@@ -168,9 +168,9 @@ class UnsupportedMediaRESTError(RESTException):
     def __init__(self, content_type=None, **kwargs):
         """Initialize exception."""
         if "description" not in kwargs:
-            kwargs["description"] = _('Unsupported media type "{content_type}".').format(
-            content_type=content_type or request.mimetype
-        )
+            kwargs["description"] = _(
+                'Unsupported media type "{content_type}".'
+            ).format(content_type=content_type or request.mimetype)
         super().__init__(**kwargs)
 
 
@@ -207,8 +207,8 @@ class SuggestMissingContextRESTError(RESTException):
         """Initialize exception."""
         if "description" not in kwargs:
             kwargs["description"] = _("Missing {ctx_field} context.").format(
-            ctx_field=f'"{ctx_field}"' if ctx_field else ""
-        )
+                ctx_field=f'"{ctx_field}"' if ctx_field else ""
+            )
         super().__init__(**kwargs)
 
 
@@ -221,8 +221,8 @@ class SuggestNoCompletionsRESTError(RESTException):
         """Initialize exception."""
         if "description" not in kwargs:
             kwargs["description"] = _("No completions requested.{options}").format(
-            options=f" (options: {options})" if options else ""
-        )
+                options=f" (options: {options})" if options else ""
+            )
         super().__init__(**kwargs)
 
 
@@ -235,8 +235,8 @@ class JSONSchemaValidationError(RESTValidationError):
         """Initialize exception."""
         if "description" not in kwargs:
             kwargs["description"] = _("Validation error: {error}.").format(
-            error=error.message if error else ""
-        )
+                error=error.message if error else ""
+            )
         super().__init__(**kwargs)
 
 
@@ -249,6 +249,6 @@ class UnhandledSearchError(RESTException):
         """Initialize exception."""
         if "description" not in kwargs:
             kwargs["description"] = _(
-            "An internal server error occurred when handling the request."
-        )
+                "An internal server error occurred when handling the request."
+            )
         super().__init__(**kwargs)
