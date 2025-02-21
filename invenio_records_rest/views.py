@@ -512,8 +512,9 @@ def use_paginate_args(default_size=25, max_results=10000):
                 raise SearchPaginationRESTError(
                     description=(
                         _(
-                            "Maximum number of {count} results have been reached."
-                        ).format(count=_max_results)
+                            "Maximum number of %(count)s results have been reached.",
+                            count=_max_results,
+                        )
                     )
                 )
 
