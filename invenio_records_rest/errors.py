@@ -63,8 +63,9 @@ class StyleNotFoundRESTError(RESTException):
     def __init__(self, style=None, **kwargs):
         """Initialize exception."""
         if "description" not in kwargs:
-            kwargs["description"] = _("Style {style} could not be found.").format(
-                style=f'"{style}"' if style else ""
+            kwargs["description"] = _(
+                "Style %(style)s could not be found.",
+                style=f'"{style}"' if style else "",
             )
         super().__init__(**kwargs)
 
@@ -125,7 +126,7 @@ class PIDMissingObjectRESTError(PIDRESTException):
     def __init__(self, pid, **kwargs):
         """Initialize exception."""
         if "description" not in kwargs:
-            kwargs["description"] = _("No object assigned to {pid}.").format(pid=pid)
+            kwargs["description"] = _("No object assigned to %(pid)s.", pid=pid)
         super().__init__(**kwargs)
 
 
@@ -138,8 +139,9 @@ class PIDRedirectedRESTError(PIDRESTException):
         """Initialize exception."""
         if "description" not in kwargs:
             kwargs["description"] = _(
-                "Invalid redirect - pid_type {pid_type} endpoint missing."
-            ).format(pid_type=f'"{pid_type}"' if pid_type else "")
+                "Invalid redirect - pid_type %(pid_type)s endpoint missing.",
+                pid_type=f'"{pid_type}"' if pid_type else "",
+            )
         super().__init__(**kwargs)
 
 
@@ -154,8 +156,8 @@ class PIDResolveRESTError(RESTException):
     def __init__(self, pid=None, **kwargs):
         """Initialize exception."""
         if "description" not in kwargs:
-            kwargs["description"] = _("PID {pid} could not be resolved.").format(
-                pid=f"#{pid}" if pid else ""
+            kwargs["description"] = _(
+                "PID %(pid)s could not be resolved.", pid=f"#{pid}" if pid else ""
             )
         super().__init__(**kwargs)
 
@@ -169,8 +171,9 @@ class UnsupportedMediaRESTError(RESTException):
         """Initialize exception."""
         if "description" not in kwargs:
             kwargs["description"] = _(
-                'Unsupported media type "{content_type}".'
-            ).format(content_type=content_type or request.mimetype)
+                'Unsupported media type "%(content_type)s".',
+                content_type=content_type or request.mimetype,
+            )
         super().__init__(**kwargs)
 
 
@@ -206,8 +209,9 @@ class SuggestMissingContextRESTError(RESTException):
     def __init__(self, ctx_field=None, **kwargs):
         """Initialize exception."""
         if "description" not in kwargs:
-            kwargs["description"] = _("Missing {ctx_field} context.").format(
-                ctx_field=f'"{ctx_field}"' if ctx_field else ""
+            kwargs["description"] = _(
+                "Missing %(ctx_field)s context.",
+                ctx_field=f'"{ctx_field}"' if ctx_field else "",
             )
         super().__init__(**kwargs)
 
@@ -220,8 +224,9 @@ class SuggestNoCompletionsRESTError(RESTException):
     def __init__(self, options=None, **kwargs):
         """Initialize exception."""
         if "description" not in kwargs:
-            kwargs["description"] = _("No completions requested.{options}").format(
-                options=f" (options: {options})" if options else ""
+            kwargs["description"] = _(
+                "No completions requested.%(options)s",
+                options=f" (options: {options})" if options else "",
             )
         super().__init__(**kwargs)
 
@@ -234,8 +239,8 @@ class JSONSchemaValidationError(RESTValidationError):
     def __init__(self, error=None, **kwargs):
         """Initialize exception."""
         if "description" not in kwargs:
-            kwargs["description"] = _("Validation error: {error}.").format(
-                error=error.message if error else ""
+            kwargs["description"] = _(
+                "Validation error: %(error)s.", error=error.message if error else ""
             )
         super().__init__(**kwargs)
 
