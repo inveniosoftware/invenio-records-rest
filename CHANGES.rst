@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version 2.4.2 (2025-03-20)
+
+- i18n: mark missing strings for translations
+
 Version 2.4.1 (2024-05-08)
 
 - marhsmallow: remove deprecation warning
