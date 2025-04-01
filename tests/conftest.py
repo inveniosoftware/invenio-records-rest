@@ -235,6 +235,14 @@ def prefixed_search(app):
     except (search_engine.RequestError, IndexAlreadyExistsError):
         list(current_search.delete(ignore=[404]))
         list(current_search.create(ignore=[400]))
+
+    try:
+        current_search_client.indices.delete(".opensearch-sap-log-types-config")
+        current_search_client.indices.delete(".opensearch-observability")
+        current_search_client.indices.delete(".plugins-ml-config")
+    except Exception:
+        pass
+
     current_search_client.indices.refresh()
     yield current_search_client
     list(current_search.delete(ignore=[404]))
