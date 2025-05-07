@@ -1,6 +1,7 @@
 ..
     This file is part of Invenio.
     Copyright (C) 2015-2023 CERN.
+    Copyright (C) 2025 KTH Royal Institute of Technology.
 
     Invenio is free software; you can redistribute it and/or modify it
     under the terms of the MIT License; see LICENSE file for more details.
@@ -8,9 +9,16 @@
 Changes
 =======
 
-Version 2.4.1 (2024-05-08)
+Version 2.5.0 (2025-05-07)
 
-- marhsmallow: remove deprecation warning
+- i18n: pulled translations
+- i18n: remove .pot files from .gitignore
+- fix: update outdated Transifex configuration
+- fix: update setup.cfg to use underscores in configuration keys
+- i18n: add workflows for pulling and pushing translations
+- fix: handle exceptions when deleting specific indices in search client
+- ci: use reusable workflows
+- i18n: add untranslated strings in facets
 
 Version 2.4.0 (2023-12-08)
 
