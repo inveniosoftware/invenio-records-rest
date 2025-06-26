@@ -2,6 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2016-2018 CERN.
+# Copyright (C) 2025 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -9,8 +10,8 @@
 """General utility functions module."""
 
 from functools import partial
+from importlib.metadata import version
 
-import pkg_resources
 import six
 from flask import abort, current_app, jsonify, make_response, request, url_for
 from invenio_pidstore.errors import (
@@ -34,9 +35,7 @@ from .errors import (
 )
 from .proxies import current_records_rest
 
-marshmallow_major_version = int(
-    pkg_resources.get_distribution("marshmallow").version[0]
-)
+marshmallow_major_version = int(version("marshmallow").split(".")[0])
 
 
 def build_default_endpoint_prefixes(records_rest_endpoints):
