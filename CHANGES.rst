@@ -1,13 +1,23 @@
 ..
     This file is part of Invenio.
     Copyright (C) 2015-2023 CERN.
-    Copyright (C) 2024 Graz University of Technology.
+    Copyright (C) 2024-2025 Graz University of Technology.
 
     Invenio is free software; you can redistribute it and/or modify it
     under the terms of the MIT License; see LICENSE file for more details.
 
 Changes
 =======
+
+Version 3.1.0 (2025-07-01)
+
+- fix: pkg_resources DeprecationWarning
+- i18n: remove .pot files from gitignore
+- fix: update outdated Transifex configuration
+- fix: update setup.cfg to use underscores in configuration keys
+- i18n: add workflows for pulling and pushing translations
+- i18n: replaced {} with %()s in gettext
+- i18n: Fix untranslated strings in facets
 
 Version 3.0.0 (2024-12-09)
 
