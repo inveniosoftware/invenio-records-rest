@@ -9,6 +9,12 @@
 Changes
 =======
 
+Version v3.2.0 (released 2025-07-18)
+
+- fix: remove datacite schema31 support
+- i18n: pulled translations
+- i18n: push translations
+
 Version 3.1.0 (2025-07-01)
 
 - fix: pkg_resources DeprecationWarning
