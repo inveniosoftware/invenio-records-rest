@@ -712,6 +712,6 @@ by Invenio-PIDStore.
 from .ext import InvenioRecordsREST
 from .proxies import current_records_rest
 
-__version__ = "3.1.0"
+__version__ = "3.2.0"
 
 __all__ = ("__version__", "current_records_rest", "InvenioRecordsREST")
