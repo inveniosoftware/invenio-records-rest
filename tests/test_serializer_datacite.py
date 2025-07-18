@@ -2,6 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2016-2018 CERN.
+# Copyright (C) 2025 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -15,7 +16,6 @@ from invenio_rest.serializer import BaseSchema as Schema
 from marshmallow import fields
 
 from invenio_records_rest.serializers.datacite import (
-    DataCite31Serializer,
     DataCite40Serializer,
     DataCite41Serializer,
     OAIDataCiteSerializer,
@@ -35,9 +35,7 @@ class SimpleSchema(Schema):
     identifier = fields.Nested(DOISchema, attribute="metadata")
 
 
-@pytest.mark.parametrize(
-    "serializer", [DataCite31Serializer, DataCite40Serializer, DataCite41Serializer]
-)
+@pytest.mark.parametrize("serializer", [DataCite40Serializer, DataCite41Serializer])
 def test_serialize(serializer):
     pid = PersistentIdentifier(pid_type="recid", pid_value="2")
     record = Record({"doi": "10.1234/foo"})
@@ -55,9 +53,7 @@ def test_serialize(serializer):
     assert len(tree.xpath("/oai_datacite/datacentreSymbol")) == 1
 
 
-@pytest.mark.parametrize(
-    "serializer", [DataCite31Serializer, DataCite40Serializer, DataCite41Serializer]
-)
+@pytest.mark.parametrize("serializer", [DataCite40Serializer, DataCite41Serializer])
 def test_serialize_search(serializer):
     """Test JSON serialize."""
 

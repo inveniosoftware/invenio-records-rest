@@ -2,13 +2,14 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2016-2018 CERN.
+# Copyright (C) 2025 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """Marshmallow based DataCite serializer for records."""
 
-from datacite import schema31, schema40, schema41
+from datacite import schema40, schema41
 from invenio_records.api import Record
 from lxml import etree
 from lxml.builder import E
@@ -70,19 +71,6 @@ class BaseDataCiteSerializer(MarshmallowMixin, PreprocessorMixin):
         )
 
         return self.schema.dump_etree(obj)
-
-
-class DataCite31Serializer(BaseDataCiteSerializer):
-    """Marshmallow DataCite serializer v3.1 for records.
-
-    Note: This serializer is not suitable for serializing large number of
-    records.
-    """
-
-    schema = schema31
-    """Class variable to define which schema use."""
-    version = "3.1"
-    """Class variable to tell the version of the schema."""
 
 
 class DataCite40Serializer(BaseDataCiteSerializer):
