@@ -6,6 +6,7 @@
 # 
 # Translators:
 # Ben Translation and Interpreting Services <info@bentercume.com>, 2025
+# Eylül-1 -, 2025
 # 
 #, fuzzy
 msgid ""
@@ -14,7 +15,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: info@inveniosoftware.org\n"
 "POT-Creation-Date: 2025-07-08 19:51+0000\n"
 "PO-Revision-Date: 2025-04-03 11:38+0000\n"
-"Last-Translator: Ben Translation and Interpreting Services <info@bentercume.com>, 2025\n"
+"Last-Translator: Eylül-1 -, 2025\n"
 "Language-Team: Turkish (https://app.transifex.com/inveniosoftware/teams/23537/tr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -29,89 +30,89 @@ msgstr "En iyi eşleşme"
 
 #: invenio_records_rest/config.py:268
 msgid "Most recent"
-msgstr ""
+msgstr "En son"
 
 #: invenio_records_rest/errors.py:51
 msgid "Invalid query syntax."
-msgstr ""
+msgstr "Geçersiz sorgu sözdizimi."
 
 #: invenio_records_rest/errors.py:67
 #, python-format
 msgid "Style %(style)s could not be found."
-msgstr ""
+msgstr "%(style)s stili bulunamadı."
 
 #: invenio_records_rest/errors.py:93
 msgid "PID does not exist."
-msgstr ""
+msgstr "PID mevcut değil."
 
 #: invenio_records_rest/errors.py:105
 msgid "PID is not registered."
-msgstr ""
+msgstr "PID kayıtlı değil."
 
 #: invenio_records_rest/errors.py:117
 msgid "PID has been deleted."
-msgstr ""
+msgstr "PID silindi."
 
 #: invenio_records_rest/errors.py:129
 #, python-format
 msgid "No object assigned to %(pid)s."
-msgstr ""
+msgstr "%(pid)s bloğuna atanan nesne yok."
 
 #: invenio_records_rest/errors.py:142
 #, python-format
 msgid "Invalid redirect - pid_type %(pid_type)s endpoint missing."
-msgstr ""
+msgstr "Geçersiz yönlendirme - %(pid_type)s pid_type uç noktası eksik."
 
 #: invenio_records_rest/errors.py:160
 #, python-format
 msgid "PID %(pid)s could not be resolved."
-msgstr ""
+msgstr "%(pid)s PID'i çözümlenmedi."
 
 #: invenio_records_rest/errors.py:174
 #, python-format
 msgid "Unsupported media type \"%(content_type)s\"."
-msgstr ""
+msgstr "Desteklenmeyen \"%(content_type)s\" ortam türü."
 
 #: invenio_records_rest/errors.py:188
 msgid "Could not load data."
-msgstr ""
+msgstr "Veriler yüklenemedi."
 
 #: invenio_records_rest/errors.py:200
 msgid "Could not patch JSON."
-msgstr ""
+msgstr "JSON yaması uygulanamadı."
 
 #: invenio_records_rest/errors.py:213
 #, python-format
 msgid "Missing %(ctx_field)s context."
-msgstr ""
+msgstr "%(ctx_field)s bağlamı eksik."
 
 #: invenio_records_rest/errors.py:228
 #, python-format
 msgid "No completions requested.%(options)s"
-msgstr ""
+msgstr "Tamamlanma isteğinde bulunulmadı. %(options)s"
 
 #: invenio_records_rest/errors.py:243
 #, python-format
 msgid "Validation error: %(error)s."
-msgstr ""
+msgstr "Doğrulama hatası: %(error)s."
 
 #: invenio_records_rest/errors.py:257
 msgid "An internal server error occurred when handling the request."
-msgstr ""
+msgstr "İsteği işlerken iç bir sunucu hatası oluştu."
 
 #: invenio_records_rest/views.py:66
 msgid "The syntax of the search query is invalid."
-msgstr ""
+msgstr "Arama sorgusunun sözdizimi geçersiz."
 
 #: invenio_records_rest/views.py:441
 msgid "The query parameters from and page must not be used at the same time."
-msgstr ""
+msgstr "Sorgu parametreleri formu ve sayfası aynı anda kullanılmamalıdır."
 
 #: invenio_records_rest/views.py:478
 msgid "Invalid pagination parameters."
-msgstr ""
+msgstr "Geçersiz sayfalandırma parametreleri."
 
 #: invenio_records_rest/views.py:515
 #, python-format
 msgid "Maximum number of %(count)s results have been reached."
-msgstr ""
+msgstr "Maksimum %(count)s sonuç sayısına ulaşıldı."
