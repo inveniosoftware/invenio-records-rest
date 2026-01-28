@@ -123,7 +123,7 @@ def test_custom_generated_fields():
         gen_method = GenMethod(
             serialize="_serialize_gen_method",
             deserialize="_desererialize_gen_method",
-            missing="raises-warning",
+            load_default="raises-warning",
         )
 
         def _serialize_gen_method(self, obj):

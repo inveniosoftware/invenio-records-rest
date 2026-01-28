@@ -2,6 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2016-2018 CERN.
+# Copyright (C) 2026 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -54,8 +55,8 @@ class CiteprocSerializer(object):
     """The `citeproc-py` library supports by default the 'harvard1' style."""
 
     _user_args = {
-        "style": fields.Str(missing=_default_style),
-        "locale": fields.Str(missing=_default_locale),
+        "style": fields.Str(load_default=_default_style),
+        "locale": fields.Str(load_default=_default_locale),
     }
     """Arguments for the webargs parser."""
 

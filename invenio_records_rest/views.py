@@ -2,7 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2015-2019 CERN.
-# Copyright (C) 2023 Graz University of Technology.
+# Copyright (C) 2023-2026 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -465,7 +465,7 @@ def use_paginate_args(default_size=25, max_results=10000):
                             validate=validate.Range(min=1),
                         ),
                         "size": fields.Int(
-                            validate=validate.Range(min=1), missing=_default_size
+                            validate=validate.Range(min=1), load_default=_default_size
                         ),
                     },
                     locations=["querystring"],
