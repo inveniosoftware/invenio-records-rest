@@ -2,6 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2016-2018 CERN.
+# Copyright (C) 2026 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -9,8 +10,6 @@
 """Mixin helper class for preprocessing records and search results."""
 
 import copy
-
-import pytz
 
 
 class SerializerMixinInterface(object):
@@ -148,16 +147,8 @@ class PreprocessorMixin(PreprocessorMixinInterface):
             metadata=metadata,
             links=links_factory(pid, record=record, **kwargs),
             revision=record.revision_id,
-            created=(
-                pytz.utc.localize(record.created).isoformat()
-                if record.created
-                else None
-            ),
-            updated=(
-                pytz.utc.localize(record.updated).isoformat()
-                if record.updated
-                else None
-            ),
+            created=(record.created.isoformat() if record.created else None),
+            updated=(record.updated.isoformat() if record.updated else None),
         )
 
     @staticmethod
