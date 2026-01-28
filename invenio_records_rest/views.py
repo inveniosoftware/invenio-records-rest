@@ -461,7 +461,7 @@ def use_paginate_args(default_size=25, max_results=10000):
                             validate=validate.Range(min=1),
                         ),
                         "from": fields.Int(
-                            load_from="from",
+                            metadata={"load_from": "from"},
                             validate=validate.Range(min=1),
                         ),
                         "size": fields.Int(
