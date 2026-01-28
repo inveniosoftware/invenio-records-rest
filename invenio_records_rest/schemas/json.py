@@ -2,6 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2016-2018 CERN.
+# Copyright (C) 2026 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -54,7 +55,7 @@ class Nested(fields.Nested):
 
     def _validate_missing(self, value):
         if value is missing and getattr(self, "required", False):
-            self.fail("required")
+            raise self.make_error("required")
         return super()._validate_missing(value)
 
 
