@@ -3,6 +3,7 @@
 # This file is part of Invenio.
 # Copyright (C) 2016-2018 CERN.
 # Copyright (C) 2017 RERO.
+# Copyright (C) 2026 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -23,7 +24,7 @@ class MarshmallowMixin(TransformerMixinInterface):
 
     def dump(self, obj, context=None):
         """Serialize object with schema."""
-        return self.schema_class(context=context).dump(obj).data
+        return self.schema_class(context=context).dump(obj)
 
     def transform_record(self, pid, record, links_factory=None, **kwargs):
         """Transform record into an intermediate representation."""

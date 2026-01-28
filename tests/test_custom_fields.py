@@ -2,6 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2016-2018 CERN.
+# Copyright (C) 2026 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -77,7 +78,7 @@ def test_load_custom_fields(app):
         }
     )
     recid = PIDModel(pid_type="recid", pid_value="12345")
-    loaded_data = CustomFieldSchema(context={"pid": recid}).load(rec).data
+    loaded_data = CustomFieldSchema(context={"pid": recid}).load(rec)
     if "metadata" in loaded_data:
         values = loaded_data["metadata"].values()
     else:
@@ -145,35 +146,35 @@ def test_custom_generated_fields():
     }
 
     # No context, no data
-    assert GeneratedFieldsSchema().load({}).data == {}
-    assert GeneratedFieldsSchema().dump({}).data == {}
+    assert GeneratedFieldsSchema().load({}) == {}
+    assert GeneratedFieldsSchema().dump({}) == {}
 
     # Only context
-    assert GeneratedFieldsSchema(context=ctx).load({}).data == {
+    assert GeneratedFieldsSchema(context=ctx).load({}) == {
         "gen_function": "ctx-func-value",
         "gen_method": "ctx-meth-value",
     }
-    assert GeneratedFieldsSchema(context=ctx).dump({}).data == {
+    assert GeneratedFieldsSchema(context=ctx).dump({}) == {
         "gen_function": "ctx-func-value",
         "gen_method": "ctx-meth-value",
     }
 
     # Only data
-    assert GeneratedFieldsSchema().load(data).data == {
+    assert GeneratedFieldsSchema().load(data) == {
         "gen_function": "data-func-value",
         "gen_method": "data-meth-value",
     }
-    assert GeneratedFieldsSchema().dump(data).data == {
+    assert GeneratedFieldsSchema().dump(data) == {
         "gen_function": "data-func-value",
         "gen_method": "data-meth-value",
     }
 
     # Context and data
-    assert GeneratedFieldsSchema(context=ctx).load(data).data == {
+    assert GeneratedFieldsSchema(context=ctx).load(data) == {
         "gen_function": "ctx-func-value",
         "gen_method": "ctx-meth-value",
     }
-    assert GeneratedFieldsSchema(context=ctx).dump(data).data == {
+    assert GeneratedFieldsSchema(context=ctx).dump(data) == {
         "gen_function": "ctx-func-value",
         "gen_method": "ctx-meth-value",
     }

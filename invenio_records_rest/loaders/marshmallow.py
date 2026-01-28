@@ -2,6 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2016-2018 CERN.
+# Copyright (C) 2026 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -95,7 +96,7 @@ def marshmallow_loader(schema_class):
             except ValidationError as error:
                 raise MarshmallowErrors(error.messages)
 
-        return result.data
+        return result
 
     return json_loader
 
