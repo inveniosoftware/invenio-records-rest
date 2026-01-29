@@ -2,7 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2015-2023 CERN.
-# Copyright (C) 2024-2025 Graz University of Technology.
+# Copyright (C) 2024-2026 Graz University of Technology.
 # Copyright (C) 2025 KTH Royal Institute of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
@@ -713,6 +713,6 @@ by Invenio-PIDStore.
 from .ext import InvenioRecordsREST
 from .proxies import current_records_rest
 
-__version__ = "3.2.1"
+__version__ = "4.0.0"
 
 __all__ = ("__version__", "current_records_rest", "InvenioRecordsREST")

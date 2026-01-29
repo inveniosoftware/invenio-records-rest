@@ -1,13 +1,22 @@
 ..
     This file is part of Invenio.
     Copyright (C) 2015-2023 CERN.
-    Copyright (C) 2024-2025 Graz University of Technology.
+    Copyright (C) 2024-2026 Graz University of Technology.
     Copyright (C) 2025 KTH Royal Institute of Technology.
     Invenio is free software; you can redistribute it and/or modify it
     under the terms of the MIT License; see LICENSE file for more details.
 
 Changes
 =======
+
+Version v4.0.0 (released 2026-01-29)
+
+- chore: apply changes for marshmallow context
+- fix: RemovedInMarshmallow4Warning
+- fix: PendingDeprecationWarning
+- fix(chore): DeprecationWarning stdlib
+- chore(setup): bump dependencies
+- i18n: pulled translations
 
 Version v3.2.1 (released 2025-10-22)
 
