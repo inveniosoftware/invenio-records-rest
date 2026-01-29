@@ -84,7 +84,7 @@ def marshmallow_loader(schema_class):
             context["pid"] = pid
             context["record"] = record
         if marshmallow_major_version < 3:
-            result = schema_class(context=context).load(request_json)
+            result = schema_class().load(request_json, context=context)
             if result.errors:
                 raise MarshmallowErrors(result.errors)
         else:
@@ -92,7 +92,7 @@ def marshmallow_loader(schema_class):
             # than returned. To adjust this change to our flow we catch these
             # errors and reraise them instead.
             try:
-                result = schema_class(context=context).load(request_json)
+                result = schema_class().load(request_json, context=context)
             except ValidationError as error:
                 raise MarshmallowErrors(error.messages)
 

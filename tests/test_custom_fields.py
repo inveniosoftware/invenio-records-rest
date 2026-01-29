@@ -14,6 +14,7 @@ from invenio_pidstore.models import PersistentIdentifier as PIDModel
 from invenio_records import Record
 from invenio_rest.serializer import BaseSchema as Schema
 from marshmallow import missing
+from marshmallow_utils.context import context_schema
 
 from invenio_records_rest.schemas import StrictKeysMixin
 from invenio_records_rest.schemas.fields import (
@@ -78,7 +79,7 @@ def test_load_custom_fields(app):
         }
     )
     recid = PIDModel(pid_type="recid", pid_value="12345")
-    loaded_data = CustomFieldSchema(context={"pid": recid}).load(rec)
+    loaded_data = CustomFieldSchema().load(rec, context={"pid": recid})
     if "metadata" in loaded_data:
         values = loaded_data["metadata"].values()
     else:
@@ -100,10 +101,10 @@ def test_custom_generated_fields():
     """Test fields.generated fields."""
 
     def serialize_func(obj, ctx):
-        return ctx.get("func-foo", obj.get("func-bar", missing))
+        return context_schema.get().get("func-foo", obj.get("func-bar", missing))
 
     def deserialize_func(value, ctx, data):
-        return ctx.get("func-foo", data.get("func-bar", missing))
+        return context_schema.get().get("func-foo", data.get("func-bar", missing))
 
     class GeneratedFieldsSchema(schema_to_use):
         """Test schema."""
@@ -128,11 +129,11 @@ def test_custom_generated_fields():
 
         def _serialize_gen_method(self, obj):
             # "meth-foo" from context or "meth-bar" from the object
-            return self.context.get("meth-foo", obj.get("meth-bar", missing))
+            return context_schema.get().get("meth-foo", obj.get("meth-bar", missing))
 
         def _desererialize_gen_method(self, value, data):
             # "meth-foo" from context or "meth-bar" from the data
-            return self.context.get("meth-foo", data.get("meth-bar", missing))
+            return context_schema.get().get("meth-foo", data.get("meth-bar", missing))
 
     ctx = {
         "func-foo": "ctx-func-value",
@@ -150,11 +151,11 @@ def test_custom_generated_fields():
     assert GeneratedFieldsSchema().dump({}) == {}
 
     # Only context
-    assert GeneratedFieldsSchema(context=ctx).load({}) == {
+    assert GeneratedFieldsSchema().load({}, context=ctx) == {
         "gen_function": "ctx-func-value",
         "gen_method": "ctx-meth-value",
     }
-    assert GeneratedFieldsSchema(context=ctx).dump({}) == {
+    assert GeneratedFieldsSchema().dump({}, context=ctx) == {
         "gen_function": "ctx-func-value",
         "gen_method": "ctx-meth-value",
     }
@@ -170,11 +171,11 @@ def test_custom_generated_fields():
     }
 
     # Context and data
-    assert GeneratedFieldsSchema(context=ctx).load(data) == {
+    assert GeneratedFieldsSchema().load(data, context=ctx) == {
         "gen_function": "ctx-func-value",
         "gen_method": "ctx-meth-value",
     }
-    assert GeneratedFieldsSchema(context=ctx).dump(data) == {
+    assert GeneratedFieldsSchema().dump(data, context=ctx) == {
         "gen_function": "ctx-func-value",
         "gen_method": "ctx-meth-value",
     }

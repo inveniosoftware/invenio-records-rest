@@ -2,6 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2015-2018 CERN.
+# Copyright (C) 2026 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -12,6 +13,7 @@ from invenio_pidstore.models import PersistentIdentifier
 from invenio_records import Record
 from invenio_rest.serializer import BaseSchema as Schema
 from marshmallow import fields
+from marshmallow_utils.context import context_schema
 
 from invenio_records_rest.serializers.base import PreprocessorMixin
 from invenio_records_rest.serializers.marshmallow import MarshmallowMixin
@@ -23,7 +25,7 @@ class SimpleMarshmallowSerializer(MarshmallowMixin, PreprocessorMixin):
 
 class _TestSchema(Schema):
     title = fields.Str(attribute="metadata.title")
-    author = fields.Function(lambda metadata, context: context["author"])
+    author = fields.Function(lambda *args, **kwargs: context_schema.get()["author"])
 
 
 def test_transform_record():
