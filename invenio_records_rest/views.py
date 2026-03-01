@@ -925,8 +925,13 @@ class RecordResource(ContentNegotiatedMethodView):
 
         self.check_etag(str(record.revision_id))
 
+        # Preserve internal system keys (e.g. file bucket references)
+        # that must survive a full metadata replacement.
+        _system_keys = ('_bucket', '_files')
+        preserved = {k: record[k] for k in _system_keys if k in record}
         record.clear()
         record.update(data)
+        record.update(preserved)
         record.commit()
         db.session.commit()
         if self.indexer_class:
