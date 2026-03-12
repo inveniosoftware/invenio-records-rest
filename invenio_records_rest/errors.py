@@ -2,6 +2,7 @@
 #
 # This file is part of Invenio.
 # Copyright (C) 2016-2018 CERN.
+# Copyright (C) 2026 Graz University of Technology.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -30,8 +31,15 @@ class SearchPaginationRESTError(RESTException):
         """Initialize exception."""
         _errors = []
         if errors:
-            for field, messages in errors.items():
-                _errors.extend([FieldError(field, msg) for msg in messages])
+            try:
+                # webargs >=6.0.0b7
+                for location, field_data in errors.items():
+                    for field, messages in field_data.items():
+                        _errors.extend([FieldError(field, msg) for msg in messages])
+            except AttributeError:
+                # webargs < 6.0.0b7
+                for field, messages in errors.items():
+                    _errors.extend([FieldError(field, msg) for msg in messages])
         super().__init__(errors=_errors, **kwargs)
 
 

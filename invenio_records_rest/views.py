@@ -455,23 +455,46 @@ def use_paginate_args(default_size=25, max_results=10000):
             _max_results = max_results(self) if callable(max_results) else max_results
 
             try:
-                req = parser.parse(
-                    {
-                        "page": fields.Int(
-                            validate=validate.Range(min=1),
-                        ),
-                        "from": fields.Int(
-                            metadata={"load_from": "from"},
-                            validate=validate.Range(min=1),
-                        ),
-                        "size": fields.Int(
-                            validate=validate.Range(min=1), load_default=_default_size
-                        ),
-                    },
-                    locations=["querystring"],
-                    validate=_validate_pagination_args,
-                    error_status_code=400,
-                )
+                try:
+                    # webargs >= 6.0.0b1
+                    req = parser.parse(
+                        {
+                            "page": fields.Int(
+                                validate=validate.Range(min=1),
+                            ),
+                            "from": fields.Int(
+                                metadata={"load_from": "from"},
+                                validate=validate.Range(min=1),
+                            ),
+                            "size": fields.Int(
+                                validate=validate.Range(min=1),
+                                load_default=_default_size,
+                            ),
+                        },
+                        location="querystring",
+                        validate=_validate_pagination_args,
+                        error_status_code=400,
+                    )
+                except TypeError:
+                    # webargs < 6.0.0b1
+                    req = parser.parse(
+                        {
+                            "page": fields.Int(
+                                validate=validate.Range(min=1),
+                            ),
+                            "from": fields.Int(
+                                metadata={"load_from": "from"},
+                                validate=validate.Range(min=1),
+                            ),
+                            "size": fields.Int(
+                                validate=validate.Range(min=1),
+                                load_default=_default_size,
+                            ),
+                        },
+                        locations=["querystring"],
+                        validate=_validate_pagination_args,
+                        error_status_code=400,
+                    )
             # For validation errors, webargs raises an enhanced BadRequest
             except BadRequest as err:
                 raise SearchPaginationRESTError(

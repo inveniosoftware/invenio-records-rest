@@ -90,7 +90,12 @@ class CiteprocSerializer(object):
         csl_args = {"style": cls._default_style, "locale": cls._default_locale}
 
         if has_request_context():
-            parser = FlaskParser(locations=("view_args", "query"))
+            try:
+                # webargs >= 6.0.0b1
+                parser = FlaskParser(location="query")
+            except TypeError:
+                # webargs < 6.0.0b1
+                parser = FlaskParser(locations=("view_args", "query"))
             csl_args.update(parser.parse(cls._user_args, request))
 
         csl_args.update({k: kwargs[k] for k in ("style", "locale") if k in kwargs})
