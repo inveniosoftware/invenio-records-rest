@@ -151,6 +151,43 @@ def test_invalid_put(app, search, test_records, charset, search_url):
         assert res.status_code == 412
 
 
+def test_put_preserves_system_keys(app, search, test_records, search_class):
+    """Test that PUT preserves _bucket and _files keys (invenio/invenio#3989).
+
+    When a record has file-related system keys (_bucket, _files), a PUT
+    that replaces the metadata must not discard those keys.
+    """
+    HEADERS = [
+        ("Accept", "application/json"),
+        ("Content-Type", "application/json"),
+    ]
+
+    pid, record = test_records[0]
+
+    fake_bucket = "deadbeef-dead-dead-dead-deaddeadbeef"
+    fake_files = [{"key": "test.txt", "size": 42}]
+    record["_bucket"] = fake_bucket
+    record["_files"] = fake_files
+    record.commit()
+
+    from invenio_db import db
+
+    db.session.commit()
+
+    with app.test_client() as client:
+        url = record_url(pid)
+
+        updated_data = {"title": "Updated title", "year": 9999}
+        res = client.put(url, data=json.dumps(updated_data), headers=HEADERS)
+        assert res.status_code == 200
+
+        result = get_json(res)["metadata"]
+        assert result["title"] == "Updated title"
+        assert result["year"] == 9999
+        assert result["_bucket"] == fake_bucket
+        assert result["_files"] == fake_files
+
+
 @mock.patch("invenio_records.api.Record.commit", _mock_validate_fail)
 @pytest.mark.parametrize(
     "content_type", ["application/json", "application/json;charset=utf-8"]
