@@ -70,6 +70,31 @@ def test_valid_put_etag(
         assert_hits_len(res, 1)
 
 
+def test_valid_put_weak_etag(app, search, test_records):
+    """Test that a weak ETag in If-Match is accepted (nginx+gzip compatibility).
+
+    When nginx compresses a response it converts the ETag from strong ("N") to
+    weak (W/"N"). Clients that round-trip this value in If-Match must not
+    receive a 412: check_etag is called with weak=True so that W/"N" and "N"
+    are both accepted for a version-counter ETag.
+    """
+    pid, record = test_records[0]
+    record["year"] = 1234
+
+    with app.test_client() as client:
+        url = record_url(pid)
+        res = client.put(
+            url,
+            data=json.dumps(record.dumps()),
+            headers={
+                "Content-Type": "application/json",
+                "If-Match": 'W/"{0}"'.format(record.revision_id),
+            },
+        )
+        assert res.status_code == 200
+        assert get_json(client.get(url))["metadata"]["year"] == 1234
+
+
 @pytest.mark.parametrize(
     "content_type", ["application/json", "application/json;charset=utf-8"]
 )

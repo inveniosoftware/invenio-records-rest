@@ -834,7 +834,7 @@ class RecordResource(ContentNegotiatedMethodView):
         :param pid: Persistent identifier for record.
         :param record: Record object.
         """
-        self.check_etag(str(record.model.version_id))
+        self.check_etag(str(record.model.version_id), weak=True)
 
         record.delete()
         # mark all PIDs as DELETED
@@ -871,7 +871,7 @@ class RecordResource(ContentNegotiatedMethodView):
         :returns: The requested record.
         """
         etag = str(record.revision_id)
-        self.check_etag(str(record.revision_id))
+        self.check_etag(str(record.revision_id), weak=True)
         self.check_if_modified_since(record.updated, etag=etag)
 
         return self.make_response(pid, record, links_factory=self.links_factory)
@@ -905,7 +905,7 @@ class RecordResource(ContentNegotiatedMethodView):
         if data is None:
             raise InvalidDataRESTError()
 
-        self.check_etag(str(record.revision_id))
+        self.check_etag(str(record.revision_id), weak=True)
         try:
             record = record.patch(data)
         except (JsonPatchException, JsonPointerException):
@@ -948,7 +948,7 @@ class RecordResource(ContentNegotiatedMethodView):
         if data is None:
             raise InvalidDataRESTError()
 
-        self.check_etag(str(record.revision_id))
+        self.check_etag(str(record.revision_id), weak=True)
 
         record.clear()
         record.update(data)
