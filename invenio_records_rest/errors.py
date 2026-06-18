@@ -204,6 +204,20 @@ class PatchJSONFailureRESTError(RESTException):
         super().__init__(**kwargs)
 
 
+class RecordConflictRESTError(RESTException):
+    """Record was modified concurrently."""
+
+    code = 409
+
+    def __init__(self, **kwargs):
+        """Initialize exception."""
+        if "description" not in kwargs:
+            kwargs["description"] = _(
+                "The record was modified concurrently, please retry."
+            )
+        super().__init__(**kwargs)
+
+
 class SuggestMissingContextRESTError(RESTException):
     """Missing a context value when getting record suggestions."""
 
