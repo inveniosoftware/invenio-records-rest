@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2015-2018 CERN.
+# SPDX-FileCopyrightText: 2026 RERO.
 # SPDX-License-Identifier: MIT
 
 """Record PUT tests."""
@@ -9,6 +10,8 @@ import mock
 import pytest
 from conftest import IndexFlusher
 from helpers import _mock_validate_fail, assert_hits_len, get_json, record_url
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm.exc import StaleDataError
 
 
 @pytest.mark.parametrize(
@@ -162,3 +165,47 @@ def test_validation_error(app, test_records, content_type):
         url = record_url(pid)
         res = client.put(url, data=json.dumps(record.dumps()), headers=HEADERS)
         assert res.status_code == 400
+
+
+def test_put_stale_data_returns_409(app, db, test_records):
+    """PUT on a stale record returns 409, not 500 PIDResolveRESTError.
+
+    SQLAlchemy optimistic-locking raises StaleDataError when two concurrent
+    requests read revision N and the second one tries to commit after the first
+    already bumped the revision to N+1.  The fix moves the return inside put()
+    outside pass_record's try/except so the error is handled locally as a 409.
+    """
+    HEADERS = [("Accept", "application/json"), ("Content-Type", "application/json")]
+    pid, record = test_records[0]
+
+    with mock.patch(
+        "invenio_db.db.session.commit", side_effect=StaleDataError("stale")
+    ):
+        with app.test_client() as client:
+            url = record_url(pid)
+            res = client.put(url, data=json.dumps(record.dumps()), headers=HEADERS)
+            assert res.status_code == 409
+
+
+def test_pass_record_does_not_swallow_handler_sqlalchemy_errors(app, db, test_records):
+    """SQLAlchemyError from the handler must not be caught by pass_record.
+
+    Before the fix, pass_record wrapped the handler call inside the
+    try/except SQLAlchemyError used for PID resolution, so any database error
+    raised inside put() (e.g. IntegrityError) would be silently re-raised as a
+    PIDResolveRESTError(500) with a misleading "PID could not be resolved"
+    message.  After the fix, such errors propagate unmodified.
+    """
+    HEADERS = [("Accept", "application/json"), ("Content-Type", "application/json")]
+    pid, record = test_records[0]
+
+    with mock.patch(
+        "invenio_db.db.session.commit", side_effect=SQLAlchemyError("db error")
+    ):
+        with app.test_client() as client:
+            url = record_url(pid)
+            # TESTING=True propagates unhandled exceptions; catch at the
+            # test level and verify it is the original SQLAlchemyError, NOT
+            # a PIDResolveRESTError swallowing it.
+            with pytest.raises(SQLAlchemyError):
+                client.put(url, data=json.dumps(record.dumps()), headers=HEADERS)

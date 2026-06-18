@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2015-2019 CERN.
 # SPDX-FileCopyrightText: 2023-2026 Graz University of Technology.
+# SPDX-FileCopyrightText: 2026 RERO.
 # SPDX-License-Identifier: MIT
 
 """REST API resources."""
@@ -32,6 +33,7 @@ from invenio_search.engine import search as search_engine
 from jsonpatch import JsonPatchException, JsonPointerException
 from jsonschema.exceptions import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm.exc import StaleDataError
 from webargs import ValidationError as WebargsValidationError
 from webargs import fields, validate
 from webargs.flaskparser import parser
@@ -377,10 +379,14 @@ def pass_record(f):
     @wraps(f)
     def inner(self, pid_value, *args, **kwargs):
         try:
+            # .data is a cached_property that triggers the actual DB queries
+            # (PersistentIdentifier lookup + Record.get_record) via the
+            # Werkzeug PIDConverter lazy resolver. SQLAlchemyError can be
+            # raised here if the DB is unavailable or the connection is lost.
             pid, record = request.view_args["pid_value"].data
-            return f(self, pid=pid, record=record, *args, **kwargs)
         except SQLAlchemyError:
             raise PIDResolveRESTError(pid_value)
+        return f(self, pid=pid, record=record, *args, **kwargs)
 
     return inner
 
@@ -945,8 +951,12 @@ class RecordResource(ContentNegotiatedMethodView):
 
         record.clear()
         record.update(data)
-        record.commit()
-        db.session.commit()
+        try:
+            record.commit()
+            db.session.commit()
+        except StaleDataError:
+            db.session.rollback()
+            abort(409)
         if self.indexer_class:
             self.indexer_class().index(record)
         return self.make_response(pid, record, links_factory=self.links_factory)

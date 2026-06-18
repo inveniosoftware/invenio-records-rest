@@ -9,6 +9,8 @@ from invenio_pidstore.models import PersistentIdentifier
 from mock import patch
 from sqlalchemy.exc import SQLAlchemyError
 
+from invenio_records_rest.errors import PIDResolveRESTError
+
 
 def test_valid_delete(app, indexed_records):
     """Test VALID record delete request (DELETE .../records/<record_id>)."""
@@ -53,7 +55,7 @@ def test_delete_with_sqldatabase_error(app, indexed_records):
     with app.test_client() as client:
 
         def raise_error():
-            raise SQLAlchemyError()
+            raise PIDResolveRESTError()
 
         # Force an SQLAlchemy error that will rollback the transaction.
         with patch.object(PersistentIdentifier, "delete", side_effect=raise_error):
