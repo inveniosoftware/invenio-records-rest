@@ -35,7 +35,7 @@ class JSONSerializerMixin(SerializerMixinInterface):
         """
         return json.dumps(
             self.transform_record(pid, record, links_factory, **kwargs),
-            **self._format_args()
+            **self._format_args(),
         )
 
     def serialize_search(
@@ -56,7 +56,7 @@ class JSONSerializerMixin(SerializerMixinInterface):
                             pid_fetcher(hit["_id"], hit["_source"]),
                             hit,
                             links_factory=item_links_factory,
-                            **kwargs
+                            **kwargs,
                         )
                         for hit in search_result["hits"]["hits"]
                     ],
@@ -65,7 +65,7 @@ class JSONSerializerMixin(SerializerMixinInterface):
                 links=links or {},
                 aggregations=search_result.get("aggregations", dict()),
             ),
-            **self._format_args()
+            **self._format_args(),
         )
 
 
