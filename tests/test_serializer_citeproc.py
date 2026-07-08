@@ -75,7 +75,7 @@ def test_serializer_args():
     assert "1." in data
     assert "J. Doe," in data
     assert "J. Smith," in data
-    assert "Citeproc test" in data
+    assert "Citeproc Test" in data
     assert "(2016)" in data
 
 
@@ -99,7 +99,7 @@ def test_serializer_in_request(app):
         assert "1." in data
         assert "J. Doe," in data
         assert "J. Smith," in data
-        assert "Citeproc test" in data
+        assert "Citeproc Test" in data
         assert "(2016)" in data
 
     with app.test_request_context(query_string={"style": "non-existent"}):
