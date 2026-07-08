@@ -43,11 +43,11 @@ class CiteprocSerializer(object):
     method that returns the CSL-JSON/BibTeX result.
     """
 
-    _default_style = "harvard1"
-    """The `citeproc-py` library supports by default the 'harvard1' style."""
+    _default_style = "harvard-cite-them-right"
+    """The `citeproc-py` library supports by default the 'harvard-cite-them-right' style."""
 
     _default_locale = "en-US"
-    """The `citeproc-py` library supports by default the 'harvard1' style."""
+    """The `citeproc-py` library supports by default the 'harvard-cite-them-right' style."""
 
     _user_args = {
         "style": fields.Str(load_default=_default_style),
