@@ -4,6 +4,7 @@
 # Copyright (C) 2015-2023 CERN.
 # Copyright (C) 2024-2026 Graz University of Technology.
 # Copyright (C) 2025 KTH Royal Institute of Technology.
+# Copyright (C) 2026 TU Wien.
 #
 # Invenio is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -713,6 +714,6 @@ by Invenio-PIDStore.
 from .ext import InvenioRecordsREST
 from .proxies import current_records_rest
 
-__version__ = "5.0.0"
+__version__ = "5.0.1"
 
 __all__ = ("__version__", "current_records_rest", "InvenioRecordsREST")

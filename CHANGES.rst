@@ -3,11 +3,17 @@
     Copyright (C) 2015-2023 CERN.
     Copyright (C) 2024-2026 Graz University of Technology.
     Copyright (C) 2025 KTH Royal Institute of Technology.
+    Copyright (C) 2026 TU Wien.
     Invenio is free software; you can redistribute it and/or modify it
     under the terms of the MIT License; see LICENSE file for more details.
 
 Changes
 =======
+
+Version v5.0.1 (released 2026-07-09)
+
+- citeproc: update default citation style to 'harvard-cite-them-right'
+- tests: improved title case in csl 1.0.2
 
 Version v5.0.0 (released 2026-05-29)
 
