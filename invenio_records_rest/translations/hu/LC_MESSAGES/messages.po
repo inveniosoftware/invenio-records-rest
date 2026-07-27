@@ -1,8 +1,8 @@
 # Translations template for invenio-records-rest.
-# Copyright (C) 2025 CERN
+# Copyright (C) 2026 CERN
 # This file is distributed under the same license as the
 # invenio-records-rest project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 # 
 # Translators:
 # Dora Szauter, 2025
@@ -12,16 +12,16 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: invenio-records-rest 3.1.0\n"
+"Project-Id-Version: invenio-records-rest 5.0.0\n"
 "Report-Msgid-Bugs-To: info@inveniosoftware.org\n"
-"POT-Creation-Date: 2025-07-08 19:51+0000\n"
+"POT-Creation-Date: 2026-06-22 20:37+0000\n"
 "PO-Revision-Date: 2025-04-03 11:38+0000\n"
 "Last-Translator: Zoltán Kanász-Nagy, 2025\n"
 "Language-Team: Hungarian (https://app.transifex.com/inveniosoftware/teams/23537/hu/)\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.17.0\n"
+"Generated-By: Babel 2.18.0\n"
 "Language: hu\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
@@ -33,71 +33,71 @@ msgstr "Legjobb találat"
 msgid "Most recent"
 msgstr "Legutóbbi"
 
-#: invenio_records_rest/errors.py:51
+#: invenio_records_rest/errors.py:59
 msgid "Invalid query syntax."
 msgstr "Érvénytelen lekérdezési szintaxis."
 
-#: invenio_records_rest/errors.py:67
+#: invenio_records_rest/errors.py:75
 #, python-format
 msgid "Style %(style)s could not be found."
 msgstr "A stílus %(style)s nem található."
 
-#: invenio_records_rest/errors.py:93
+#: invenio_records_rest/errors.py:101
 msgid "PID does not exist."
 msgstr "A PID nem létezik."
 
-#: invenio_records_rest/errors.py:105
+#: invenio_records_rest/errors.py:113
 msgid "PID is not registered."
 msgstr "A PID nincs regisztrálva."
 
-#: invenio_records_rest/errors.py:117
+#: invenio_records_rest/errors.py:125
 msgid "PID has been deleted."
 msgstr "PID törölve."
 
-#: invenio_records_rest/errors.py:129
+#: invenio_records_rest/errors.py:137
 #, python-format
 msgid "No object assigned to %(pid)s."
 msgstr "Nincs objektum hozzárendelve a közvetkezőhöz: %(pid)s"
 
-#: invenio_records_rest/errors.py:142
+#: invenio_records_rest/errors.py:150
 #, python-format
 msgid "Invalid redirect - pid_type %(pid_type)s endpoint missing."
 msgstr "Érvénytelen átirányítás - pid_type: %(pid_type)s végpont hiányzik."
 
-#: invenio_records_rest/errors.py:160
+#: invenio_records_rest/errors.py:168
 #, python-format
 msgid "PID %(pid)s could not be resolved."
 msgstr "PID feloldása sikertelen: %(pid)s."
 
-#: invenio_records_rest/errors.py:174
+#: invenio_records_rest/errors.py:182
 #, python-format
 msgid "Unsupported media type \"%(content_type)s\"."
 msgstr "Nem támogatott médiatípus: \"%(content_type)s\""
 
-#: invenio_records_rest/errors.py:188
+#: invenio_records_rest/errors.py:196
 msgid "Could not load data."
 msgstr "Adatok betöltése sikertelen."
 
-#: invenio_records_rest/errors.py:200
+#: invenio_records_rest/errors.py:208
 msgid "Could not patch JSON."
 msgstr "JSON frissítése sikertelen."
 
-#: invenio_records_rest/errors.py:213
+#: invenio_records_rest/errors.py:221
 #, python-format
 msgid "Missing %(ctx_field)s context."
 msgstr "%(ctx_field)s kontextus hiányzik."
 
-#: invenio_records_rest/errors.py:228
+#: invenio_records_rest/errors.py:236
 #, python-format
 msgid "No completions requested.%(options)s"
 msgstr "Kiegészítés nem lett kérvényezve. %(options)s"
 
-#: invenio_records_rest/errors.py:243
+#: invenio_records_rest/errors.py:251
 #, python-format
 msgid "Validation error: %(error)s."
 msgstr "Validációs hiba: %(error)s"
 
-#: invenio_records_rest/errors.py:257
+#: invenio_records_rest/errors.py:265
 msgid "An internal server error occurred when handling the request."
 msgstr "Belső szerver hiba történt a kérés kiszolgálásakor."
 
@@ -111,11 +111,11 @@ msgstr ""
 "A \"page\" és \"from\" query paraméterek egyszerre történő használata nem "
 "megengedett."
 
-#: invenio_records_rest/views.py:478
+#: invenio_records_rest/views.py:501
 msgid "Invalid pagination parameters."
 msgstr "Érvénytelen lapozási paraméterek."
 
-#: invenio_records_rest/views.py:515
+#: invenio_records_rest/views.py:538
 #, python-format
 msgid "Maximum number of %(count)s results have been reached."
 msgstr "Elértük a maximális %(count)s számú találatot."
