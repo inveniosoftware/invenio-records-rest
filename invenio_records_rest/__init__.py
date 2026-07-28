@@ -708,6 +708,6 @@ by Invenio-PIDStore.
 from .ext import InvenioRecordsREST
 from .proxies import current_records_rest
 
-__version__ = "5.0.2"
+__version__ = "5.1.0"
 
 __all__ = ("__version__", "current_records_rest", "InvenioRecordsREST")
