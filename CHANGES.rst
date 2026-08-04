@@ -8,6 +8,13 @@
 Changes
 =======
 
+Version v6.0.2 (released 2026-08-04)
+
+- fix(build): include mo files
+- fix(ci): run tests on maint-*
+- fix(views): accept weak ETags in If-Match for nginx+gzip compatibility
+- fix(views): pass_record swallows StaleDataError as PIDResolveRESTError
+
 Version v6.0.1 (released 2026-07-09)
 
 - fix(citeproc): update default citation style to 'harvard-cite-them-right'
