@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2015-2018 CERN.
+# SPDX-FileCopyrightText: 2026 CESNET z.s.p.o.
 # SPDX-License-Identifier: MIT
 
 """Helper methods for tests."""
@@ -6,13 +7,13 @@
 import copy
 import json
 import uuid
+from urllib.parse import parse_qs, urlparse
 
 from flask import url_for
 from invenio_db import db
 from invenio_pidstore import current_pidstore
 from invenio_records import Record
 from jsonschema.exceptions import ValidationError
-from six.moves.urllib.parse import parse_qs, urlparse
 
 
 def get_json(response):
