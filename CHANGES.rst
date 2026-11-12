@@ -7,6 +7,10 @@
 Changes
 =======
 
+Version v5.1.2 (released 2026-11-12)
+
+- chore: remove six
+
 Version v5.1.1 (released 2026-08-27)
 
 - i18n: pulled translations
