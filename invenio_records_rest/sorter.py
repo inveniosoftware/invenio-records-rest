@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2016-2018 CERN.
+# SPDX-FileCopyrightText: 2026 CESNET z.s.p.o.
 # SPDX-License-Identifier: MIT
 
 r"""Sorter factories for REST API.
@@ -15,7 +16,6 @@ https://www.elastic.co/guide/en/elasticsearch/reference/7.0/search-request-sort.
 
 import copy
 
-import six
 from flask import current_app, request
 
 
@@ -110,8 +110,7 @@ def default_sorter_factory(search, index):
 
     # Get default sorting if sort is not specified.
     if not urlfield:
-        # cast to six.text_type to handle unicodes in Python 2
-        has_query = request.values.get("q", type=six.text_type)
+        has_query = request.values.get("q")
         urlfield = (
             current_app.config["RECORDS_REST_DEFAULT_SORT"]
             .get(index, {})
