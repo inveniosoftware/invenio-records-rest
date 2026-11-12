@@ -95,6 +95,29 @@ def test_valid_put_weak_etag(app, search, test_records):
         assert get_json(client.get(url))["metadata"]["year"] == 1234
 
 
+def test_valid_put_representation_etag(app, search, test_records):
+    """Test that If-Match accepts the ETag of a record representation.
+
+    The ETag returned by GET identifies the revision and the representation:
+    only the revision matters for the precondition.
+    """
+    pid, record = test_records[0]
+    record["year"] = 1234
+
+    with app.test_client() as client:
+        url = record_url(pid)
+        headers = {
+            "Content-Type": "application/json",
+            "If-Match": client.get(url).headers["ETag"],
+        }
+        res = client.put(url, data=json.dumps(record.dumps()), headers=headers)
+        assert res.status_code == 200
+
+        # The revision moved, so the ETag is now stale
+        res = client.put(url, data=json.dumps(record.dumps()), headers=headers)
+        assert res.status_code == 412
+
+
 @pytest.mark.parametrize(
     "content_type", ["application/json", "application/json;charset=utf-8"]
 )
