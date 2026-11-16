@@ -7,6 +7,7 @@
 
 import copy
 import uuid
+import zlib
 from collections import defaultdict
 from functools import partial, wraps
 
@@ -28,6 +29,7 @@ from invenio_pidstore.models import PersistentIdentifier
 from invenio_records.api import Record
 from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.decorators import require_content_types
+from invenio_rest.errors import SameContentException
 from invenio_search import RecordsSearch
 from invenio_search.engine import search as search_engine
 from jsonpatch import JsonPatchException, JsonPointerException
@@ -814,6 +816,38 @@ class RecordResource(ContentNegotiatedMethodView):
         self.loaders = loaders or current_records_rest.loaders
         self.indexer_class = indexer_class
 
+    def _representation_etag(self, record):
+        """Return the ETag of the record representation negotiated for the request.
+
+        All the representations of a record share its revision, so the ETag
+        adds a hash of their media type to tell them apart.
+        """
+        serializers, default_media_type = self.get_method_serializers(request.method)
+        serializer = self.match_serializers(serializers, default_media_type)
+        if serializer is None:
+            abort(406)
+        media_type = next(
+            key for key, value in serializers.items() if value is serializer
+        )
+        return f"{record.revision_id}-{zlib.crc32(media_type.encode()):08x}"
+
+    def check_revision_etag(self, revision_id):
+        """Validate the request ETags against a record revision.
+
+        The ETags of all the representations of a revision match it, as well
+        as the bare revision.
+        """
+        revision_id = str(revision_id)
+        client_etags = {
+            *request.if_match.as_set(include_weak=True),
+            *request.if_none_match.as_set(include_weak=True),
+        }
+        etag = next(
+            (tag for tag in client_etags if tag.split("-", 1)[0] == revision_id),
+            revision_id,
+        )
+        self.check_etag(etag, weak=True)
+
     @pass_record
     @need_record_permission("delete_permission_factory")
     def delete(self, pid, record, **kwargs):
@@ -870,11 +904,19 @@ class RecordResource(ContentNegotiatedMethodView):
         :param record: Record object.
         :returns: The requested record.
         """
-        etag = str(record.revision_id)
-        self.check_etag(str(record.revision_id), weak=True)
-        self.check_if_modified_since(record.updated, etag=etag)
-
-        return self.make_response(pid, record, links_factory=self.links_factory)
+        etag = self._representation_etag(record)
+        try:
+            self.check_etag(etag, weak=True)
+            # If-None-Match takes precedence over If-Modified-Since (RFC 9110)
+            if "If-None-Match" not in request.headers:
+                self.check_if_modified_since(record.updated, etag=etag)
+        except SameContentException as not_modified:
+            response = not_modified.get_response()
+        else:
+            response = self.make_response(pid, record, links_factory=self.links_factory)
+        response.set_etag(etag)
+        response.vary.add("Accept")
+        return response
 
     @require_content_types("application/json-patch+json")
     @pass_record
@@ -905,7 +947,7 @@ class RecordResource(ContentNegotiatedMethodView):
         if data is None:
             raise InvalidDataRESTError()
 
-        self.check_etag(str(record.revision_id), weak=True)
+        self.check_revision_etag(record.revision_id)
         try:
             record = record.patch(data)
         except (JsonPatchException, JsonPointerException):
@@ -948,7 +990,7 @@ class RecordResource(ContentNegotiatedMethodView):
         if data is None:
             raise InvalidDataRESTError()
 
-        self.check_etag(str(record.revision_id), weak=True)
+        self.check_revision_etag(record.revision_id)
 
         record.clear()
         record.update(data)
