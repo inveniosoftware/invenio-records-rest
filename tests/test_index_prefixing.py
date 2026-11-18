@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2015-2019 CERN.
+# SPDX-FileCopyrightText: 2026 CESNET z.s.p.o.
 # SPDX-License-Identifier: MIT
 
 """Index prefixing tests."""
@@ -10,12 +11,12 @@ from helpers import assert_hits_len, get_json, record_url
 from invenio_search import current_search
 
 
-def test_index_creation(app, prefixed_search):
+def test_index_creation(app, prefixed_search, search_index_names):
     """Sanity check for index creation."""
     suffix = current_search.current_suffix
     es_aliases = prefixed_search.indices.get_alias()
     # Keys are the indices
-    assert set(es_aliases.keys()) == {
+    assert search_index_names() == {
         "test-invenio-records-rest-testrecord{}".format(suffix),
     }
 
