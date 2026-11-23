@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2015-2018 CERN.
+# SPDX-FileCopyrightText: 2026 CESNET z.s.p.o.
 # SPDX-License-Identifier: MIT
 
 """Invenio marshmallow loader tests."""
@@ -6,6 +7,7 @@
 import json
 from copy import deepcopy
 
+import pytest
 from helpers import get_json
 from invenio_records.models import RecordMetadata
 from invenio_rest.serializer import BaseSchema as Schema
@@ -19,6 +21,15 @@ from invenio_records_rest.loaders.marshmallow import (
 from invenio_records_rest.schemas import Nested
 from invenio_records_rest.schemas.fields import PersistentIdentifier
 from invenio_records_rest.utils import marshmallow_major_version
+
+
+@pytest.fixture(autouse=True)
+def reset_loaders(base_app):
+    """Drop the loaders cached on the (module-scoped) app around each test."""
+    state = base_app.extensions["invenio-records-rest"]
+    state.__dict__.pop("loaders", None)
+    yield
+    state.__dict__.pop("loaders", None)
 
 
 class _TestSchema(Schema):
@@ -53,11 +64,17 @@ class _TestMetadataSchema(Schema):
     control_number = PersistentIdentifier()
 
 
-def test_marshmallow_load(app, db, search, test_data, search_url, search_class):
+def test_marshmallow_load(
+    app, set_app_config_fn_scoped, db, search_clear, test_data, search_url, search_class
+):
     """Test marshmallow loader."""
-    app.config["RECORDS_REST_DEFAULT_LOADERS"] = {
-        "application/json": marshmallow_loader(_TestMetadataSchema)
-    }
+    set_app_config_fn_scoped(
+        {
+            "RECORDS_REST_DEFAULT_LOADERS": {
+                "application/json": marshmallow_loader(_TestMetadataSchema)
+            }
+        }
+    )
 
     with app.test_client() as client:
         HEADERS = [("Accept", "application/json"), ("Content-Type", "application/json")]
@@ -83,11 +100,17 @@ def test_marshmallow_load(app, db, search, test_data, search_url, search_class):
         assert res_data["metadata"] == model_record.json
 
 
-def test_marshmallow_load_errors(app, db, search, test_data, search_url, search_class):
+def test_marshmallow_load_errors(
+    app, set_app_config_fn_scoped, db, search_clear, test_data, search_url, search_class
+):
     """Test marshmallow loader errors."""
-    app.config["RECORDS_REST_DEFAULT_LOADERS"] = {
-        "application/json": marshmallow_loader(_TestSchema)
-    }
+    set_app_config_fn_scoped(
+        {
+            "RECORDS_REST_DEFAULT_LOADERS": {
+                "application/json": marshmallow_loader(_TestSchema)
+            }
+        }
+    )
 
     with app.test_client() as client:
         HEADERS = [("Accept", "application/json"), ("Content-Type", "application/json")]
@@ -100,12 +123,16 @@ def test_marshmallow_load_errors(app, db, search, test_data, search_url, search_
 
 
 def test_marshmallow_load_nested_errors(
-    app, db, search, test_data, search_url, search_class
+    app, set_app_config_fn_scoped, db, search_clear, test_data, search_url, search_class
 ):
     """Test loading nested errors."""
-    app.config["RECORDS_REST_DEFAULT_LOADERS"] = {
-        "application/json": marshmallow_loader(_TestSchemaNested)
-    }
+    set_app_config_fn_scoped(
+        {
+            "RECORDS_REST_DEFAULT_LOADERS": {
+                "application/json": marshmallow_loader(_TestSchemaNested)
+            }
+        }
+    )
 
     with app.test_client() as client:
         HEADERS = [("Accept", "application/json"), ("Content-Type", "application/json")]
@@ -123,12 +150,16 @@ def test_marshmallow_load_nested_errors(
 
 
 def test_marshmallow_load_nested_subfield_errors(
-    app, db, search, test_data, search_url, search_class
+    app, set_app_config_fn_scoped, db, search_clear, test_data, search_url, search_class
 ):
     """Test loading nested subfield errors."""
-    app.config["RECORDS_REST_DEFAULT_LOADERS"] = {
-        "application/json": marshmallow_loader(_TestSchemaNested)
-    }
+    set_app_config_fn_scoped(
+        {
+            "RECORDS_REST_DEFAULT_LOADERS": {
+                "application/json": marshmallow_loader(_TestSchemaNested)
+            }
+        }
+    )
 
     with app.test_client() as client:
         HEADERS = [("Accept", "application/json"), ("Content-Type", "application/json")]
@@ -173,9 +204,13 @@ def test_marshmallow_errors(test_data):
     assert me.errors
 
 
-def test_json_pid_checker_loader(app, db, search, search_url, search_class):
+def test_json_pid_checker_loader(
+    app, set_app_config_fn_scoped, db, search_clear, search_url, search_class
+):
     """Test loading using the record metadata schema."""
-    app.config["RECORDS_REST_DEFAULT_LOADERS"] = {"application/json": json_pid_checker}
+    set_app_config_fn_scoped(
+        {"RECORDS_REST_DEFAULT_LOADERS": {"application/json": json_pid_checker}}
+    )
 
     with app.test_client() as client:
         HEADERS = [("Accept", "application/json"), ("Content-Type", "application/json")]

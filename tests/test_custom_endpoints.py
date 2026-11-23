@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2017-2018 CERN.
 # SPDX-FileCopyrightText: 2024 Graz University of Technology.
+# SPDX-FileCopyrightText: 2026 CESNET z.s.p.o.
 # SPDX-License-Identifier: MIT
 
 """Test using Invenio Records REST view classes directly.
@@ -27,41 +28,30 @@ from invenio_records_rest.utils import allow_all
 from invenio_records_rest.views import RecordResource, RecordsListResource
 
 
-@pytest.fixture()
-def test_custom_endpoints_app(app):
-    """Create an application enabling the creation of a custom endpoint."""
+@pytest.fixture(scope="module")
+def app_config(app_config):
+    """Disable all endpoints from config. The tests create the endpoints."""
+    app_config["RECORDS_REST_ENDPOINTS"] = {}
+    return app_config
 
-    """Extend redirects between PID types."""
+
+@pytest.fixture(scope="module")
+def base_app(base_app):
+    """Register the custom endpoints (before the first request is handled)."""
+    # Extend redirects between PID types.
     endpoint_prefixes = utils.build_default_endpoint_prefixes(
         {"recid": {"pid_type": "recid"}}
     )
-    current_records_rest = app.extensions["invenio-records-rest"]
+    current_records_rest = base_app.extensions["invenio-records-rest"]
     current_records_rest.default_endpoint_prefixes.update(endpoint_prefixes)
 
-    return app
-
-
-@pytest.mark.parametrize(
-    "app",
-    [
-        dict(
-            # Disable all endpoints from config. The test will create the endpoint.
-            records_rest_endpoints=dict(),
-        )
-    ],
-    indirect=["app"],
-)
-def test_get_record(test_custom_endpoints_app, test_records):
-    """Test the creation of a custom endpoint using RecordResource."""
-    test_records = test_records
-    """Test creation of a RecordResource view."""
     blueprint = Blueprint(
         "test_invenio_records_rest",
         __name__,
     )
-
     json_v1 = JSONSerializer(RecordSchemaJSONV1)
 
+    # Creation of a RecordResource view.
     blueprint.add_url_rule(
         "/records/<pid(recid):pid_value>",
         view_func=RecordResource.as_view(
@@ -76,40 +66,7 @@ def test_get_record(test_custom_endpoints_app, test_records):
         ),
     )
 
-    test_custom_endpoints_app.register_blueprint(blueprint)
-
-    with test_custom_endpoints_app.app_context():
-        pid, record = test_records[0]
-        url = url_for(
-            "test_invenio_records_rest.recid_item", pid_value=pid.pid_value, user=1
-        )
-        with test_custom_endpoints_app.test_client() as client:
-            res = client.get(url)
-            assert res.status_code == 200
-
-            # Check metadata
-            data = get_json(res)
-            assert record == data["metadata"]
-
-
-@pytest.mark.parametrize(
-    "test_custom_endpoints_app",
-    [
-        dict(
-            # Disable all endpoints from config. The test will create the endpoint.
-            records_rest_endpoints=dict(),
-        )
-    ],
-    indirect=["test_custom_endpoints_app"],
-)
-def test_get_records_list(test_custom_endpoints_app, indexed_records):
-    """Test the creation of a custom endpoint using RecordsListResource."""
-    blueprint = Blueprint(
-        "test_invenio_records_rest",
-        __name__,
-    )
-    json_v1 = JSONSerializer(RecordSchemaJSONV1)
-
+    # Creation of a RecordsListResource view.
     blueprint.add_url_rule(
         "/records/",
         view_func=RecordsListResource.as_view(
@@ -127,11 +84,30 @@ def test_get_records_list(test_custom_endpoints_app, indexed_records):
             default_media_type="application/json",
         ),
     )
-    test_custom_endpoints_app.register_blueprint(blueprint)
 
-    with test_custom_endpoints_app.test_request_context():
-        search_url = url_for("test_invenio_records_rest.recid_list")
-    with test_custom_endpoints_app.test_client() as client:
+    base_app.register_blueprint(blueprint)
+    yield base_app
+
+
+def test_get_record(app, test_records):
+    """Test the creation of a custom endpoint using RecordResource."""
+    pid, record = test_records[0]
+    url = url_for(
+        "test_invenio_records_rest.recid_item", pid_value=pid.pid_value, user=1
+    )
+    with app.test_client() as client:
+        res = client.get(url)
+        assert res.status_code == 200
+
+        # Check metadata
+        data = get_json(res)
+        assert record == data["metadata"]
+
+
+def test_get_records_list(app, indexed_records):
+    """Test the creation of a custom endpoint using RecordsListResource."""
+    search_url = url_for("test_invenio_records_rest.recid_list")
+    with app.test_client() as client:
         # Get a query with only one record
         res = client.get(search_url, query_string={"q": "year:2015"})
         record = next(iter([rec for rec in indexed_records if rec[1]["year"] == 2015]))

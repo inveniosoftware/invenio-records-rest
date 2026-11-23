@@ -11,7 +11,7 @@ from flask import url_for
 
 
 @pytest.mark.parametrize(
-    "app",
+    "app_config",
     [
         dict(
             endpoint=dict(
@@ -28,7 +28,7 @@ from flask import url_for
             )
         )
     ],
-    indirect=["app"],
+    indirect=["app_config"],
 )
 def test_valid_suggest(app, db, search, indexed_records):
     """Test VALID record creation request (POST .../records/)."""

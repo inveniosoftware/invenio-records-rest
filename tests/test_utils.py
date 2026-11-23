@@ -11,7 +11,7 @@ from invenio_records_rest.utils import build_default_endpoint_prefixes
 
 
 @pytest.mark.parametrize(
-    "app",
+    "app_config",
     [
         dict(
             records_rest_endpoints=dict(
@@ -22,7 +22,7 @@ from invenio_records_rest.utils import build_default_endpoint_prefixes
             ),
         )
     ],
-    indirect=["app"],
+    indirect=["app_config"],
 )
 def test_build_default_endpoint_prefixes_simple(app):
     with app.test_client():
@@ -30,7 +30,7 @@ def test_build_default_endpoint_prefixes_simple(app):
 
 
 @pytest.mark.parametrize(
-    "app",
+    "app_config",
     [
         dict(
             records_rest_endpoints=dict(
@@ -41,7 +41,7 @@ def test_build_default_endpoint_prefixes_simple(app):
             ),
         )
     ],
-    indirect=["app"],
+    indirect=["app_config"],
 )
 def test_build_default_endpoint_prefixes_simple_with_default(app):
     with app.test_client():
@@ -49,7 +49,7 @@ def test_build_default_endpoint_prefixes_simple_with_default(app):
 
 
 @pytest.mark.parametrize(
-    "app",
+    "app_config",
     [
         dict(
             records_rest_endpoints=dict(
@@ -64,7 +64,7 @@ def test_build_default_endpoint_prefixes_simple_with_default(app):
             ),
         )
     ],
-    indirect=["app"],
+    indirect=["app_config"],
 )
 def test_build_default_endpoint_prefixes_two_simple_endpoints(app):
     with app.test_client():
@@ -72,7 +72,7 @@ def test_build_default_endpoint_prefixes_two_simple_endpoints(app):
 
 
 @pytest.mark.parametrize(
-    "app",
+    "app_config",
     [
         dict(
             records_rest_endpoints=dict(
@@ -87,7 +87,7 @@ def test_build_default_endpoint_prefixes_two_simple_endpoints(app):
             ),
         )
     ],
-    indirect=["app"],
+    indirect=["app_config"],
 )
 def test_build_default_endpoint_prefixes_redundant_default(app):
     with app.test_client():
@@ -95,7 +95,7 @@ def test_build_default_endpoint_prefixes_redundant_default(app):
 
 
 @pytest.mark.parametrize(
-    "app",
+    "app_config",
     [
         dict(
             records_rest_endpoints=dict(
@@ -110,7 +110,7 @@ def test_build_default_endpoint_prefixes_redundant_default(app):
             ),
         )
     ],
-    indirect=["app"],
+    indirect=["app_config"],
 )
 def test_build_default_endpoint_prefixes_two_endpoints_with_default(app):
     with app.test_client():

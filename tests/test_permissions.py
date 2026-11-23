@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2015-2018 CERN.
+# SPDX-FileCopyrightText: 2026 CESNET z.s.p.o.
 # SPDX-License-Identifier: MIT
 
 
@@ -6,7 +7,54 @@
 
 import json
 
+import pytest
+from flask_login import LoginManager, UserMixin
 from helpers import record_url
+
+from invenio_records_rest import config
+
+
+@pytest.fixture(scope="module")
+def base_app(base_app):
+    """Allow easy login for tests purposes: ``?user=<id>``.
+
+    Set up before the first request is handled, as Flask does not allow
+    it later on.
+    """
+    lm = LoginManager(base_app)
+
+    class User(UserMixin):
+        def __init__(self, id):
+            self.id = id
+
+    @lm.request_loader
+    def load_user(request):
+        uid = request.args.get("user", type=int)
+        if uid:
+            return User(uid)
+        return None
+
+    yield base_app
+
+
+@pytest.fixture()
+def default_permissions(app, set_app_config_fn_scoped):
+    """Test default deny all permission."""
+    set_app_config_fn_scoped(
+        {
+            key: getattr(config, key)
+            for key in [
+                "RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY",
+                "RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY",
+                "RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY",
+                "RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY",
+            ]
+        }
+    )
+    # The factories are cached on the extension, so drop them before and after.
+    app.extensions["invenio-records-rest"].reset_permission_factories()
+    yield app
+    app.extensions["invenio-records-rest"].reset_permission_factories()
 
 
 def test_default_permissions(

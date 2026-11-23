@@ -41,7 +41,7 @@ def xml_search(*args, **kwargs):
 
 
 @pytest.mark.parametrize(
-    "app",
+    "app_config",
     [
         dict(
             endpoint=dict(
@@ -57,7 +57,7 @@ def xml_search(*args, **kwargs):
             ),
         )
     ],
-    indirect=["app"],
+    indirect=["app_config"],
     scope="function",
 )
 def test_default_serializer(app, db, search, indexed_records):
@@ -93,7 +93,7 @@ def test_default_serializer(app, db, search, indexed_records):
 
 
 @pytest.mark.parametrize(
-    "app",
+    "app_config",
     [
         dict(
             endpoint=dict(
@@ -115,7 +115,7 @@ def test_default_serializer(app, db, search, indexed_records):
             ),
         )
     ],
-    indirect=["app"],
+    indirect=["app_config"],
     scope="function",
 )
 def test_serializer_aliases(app, db, search, indexed_records):

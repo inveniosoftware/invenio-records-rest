@@ -9,23 +9,27 @@ import pytest
 from flask import url_for
 
 
-def test_options_view(app, search_class):
+def test_options_view(app, set_app_config_fn_scoped, search_class):
     """Test default sorter factory."""
-    app.config["RECORDS_REST_SORT_OPTIONS"] = {
-        search_class.Meta.index: dict(
-            myfield=dict(
-                fields=["field1:asc"],
-                title="My Field",
-                order=2,
-            ),
-            anotherfield=dict(
-                fields=["field2:asc"],
-                title="My Field",
-                default_order="desc",
-                order=1,
-            ),
-        )
-    }
+    set_app_config_fn_scoped(
+        {
+            "RECORDS_REST_SORT_OPTIONS": {
+                search_class.Meta.index: dict(
+                    myfield=dict(
+                        fields=["field1:asc"],
+                        title="My Field",
+                        order=2,
+                    ),
+                    anotherfield=dict(
+                        fields=["field2:asc"],
+                        title="My Field",
+                        default_order="desc",
+                        order=1,
+                    ),
+                )
+            }
+        }
+    )
 
     with app.test_client() as client:
         res = client.get(url_for("invenio_records_rest.recid_list_options"))
@@ -41,7 +45,7 @@ def test_options_view(app, search_class):
 
 
 @pytest.mark.parametrize(
-    "app", [dict(endpoint=dict(use_options_view=False))], indirect=["app"]
+    "app_config", [dict(endpoint=dict(use_options_view=False))], indirect=["app_config"]
 )
 def test_use_options(app, db):
     """Test extension initialization."""

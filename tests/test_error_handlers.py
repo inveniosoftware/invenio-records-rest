@@ -30,7 +30,7 @@ def custom_error_handler(error):
 
 
 @pytest.mark.parametrize(
-    "app",
+    "app_config",
     [
         dict(
             endpoint=dict(
@@ -40,7 +40,7 @@ def custom_error_handler(error):
             ),
         )
     ],
-    indirect=["app"],
+    indirect=["app_config"],
 )
 def test_custom_error_handlers(app, db, test_data):
     """Test custom error handlers for endpoints."""

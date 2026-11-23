@@ -3,6 +3,7 @@
 
 """Search tests."""
 
+import copy
 import re
 
 import pytest
@@ -148,7 +149,7 @@ def test_query(app, indexed_records, search_url):
 
 
 @pytest.mark.parametrize(
-    "app",
+    "app_config",
     [
         dict(
             endpoint=dict(
@@ -156,7 +157,7 @@ def test_query(app, indexed_records, search_url):
             )
         )
     ],
-    indirect=["app"],
+    indirect=["app_config"],
 )
 def test_search_query_syntax(app, indexed_records, search_url):
     """Test search engine query syntax."""
@@ -195,7 +196,7 @@ def test_invalid_accept(app, indexed_records, search_url):
 def test_aggregations_info(app, indexed_records, search_url):
     """Test aggregations."""
     with app.test_client() as client:
-        # Facets are defined in the "app" fixture.
+        # Facets are defined in the "app_config" fixture.
         res = client.get(search_url)
         data = get_json(res)
         assert "aggregations" in data
@@ -228,7 +229,7 @@ def test_query_wrong(app, indexed_records, search_url):
 
 
 @pytest.mark.parametrize(
-    "app",
+    "app_config",
     [
         dict(
             endpoint=dict(
@@ -236,7 +237,7 @@ def test_query_wrong(app, indexed_records, search_url):
             )
         )
     ],
-    indirect=["app"],
+    indirect=["app_config"],
 )
 def test_search_exception(app, indexed_records):
     """Test search exception."""
@@ -248,7 +249,9 @@ def test_search_exception(app, indexed_records):
         )
 
 
-def test_dynamic_aggregation(app, indexed_records, search_url):
+def test_dynamic_aggregation(
+    app, set_app_config_fn_scoped, indexed_records, search_url
+):
     """Test invalid accept header."""
     with app.test_client() as client:
 
@@ -256,9 +259,9 @@ def test_dynamic_aggregation(app, indexed_records, search_url):
             """Include only my deposits in the aggregation."""
             return {"terms": {"field": "stars", "include": [4, 5]}}
 
-        app.config["RECORDS_REST_FACETS"]["invenio-records-rest"]["aggs"][
-            "test"
-        ] = stars_aggs
+        facets = copy.deepcopy(app.config["RECORDS_REST_FACETS"])
+        facets["invenio-records-rest"]["aggs"]["test"] = stars_aggs
+        set_app_config_fn_scoped({"RECORDS_REST_FACETS": facets})
         res = client.get(search_url, query_string={"q": ""})
         assert res.status_code == 200
         data = get_json(res)
@@ -353,7 +356,7 @@ def test_from_parameter_invalid_pagination(app, indexed_records, search_url):
 
 
 @pytest.mark.parametrize(
-    "app",
+    "app_config",
     [
         dict(
             records_rest_endpoints=dict(
@@ -364,7 +367,7 @@ def test_from_parameter_invalid_pagination(app, indexed_records, search_url):
             ),
         )
     ],
-    indirect=["app"],
+    indirect=["app_config"],
 )
 def test_max_result_window_valid_params(app, indexed_records, search_url):
     """Test max_result_window with a valid page/from/size parameters."""
@@ -385,7 +388,7 @@ def test_max_result_window_valid_params(app, indexed_records, search_url):
 
 
 @pytest.mark.parametrize(
-    "app",
+    "app_config",
     [
         dict(
             records_rest_endpoints=dict(
@@ -396,7 +399,7 @@ def test_max_result_window_valid_params(app, indexed_records, search_url):
             ),
         )
     ],
-    indirect=["app"],
+    indirect=["app_config"],
 )
 def test_max_result_window_invalid_params(app, indexed_records, search_url):
     """Test max_result_window with an invalid page/from/size parameters."""

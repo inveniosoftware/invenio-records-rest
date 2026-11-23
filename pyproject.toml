@@ -85,6 +85,7 @@ tests = [
   "datacite>=1.0.1",
   "dcxml>=0.1.2",
   "flask-login>=0.3.2",
+  "invenio-app>=3.0.0,<4.0.0",
   "invenio-config>=1.0.2,<2.0.0",
   "invenio-db[mysql,postgresql]>=2.2.0,<3.0.0",
   "mock>=4",
