@@ -17,7 +17,9 @@ from sqlalchemy.orm.exc import StaleDataError
 @pytest.mark.parametrize(
     "content_type", ["application/json", "application/json;charset=utf-8"]
 )
-def test_valid_put(app, search, test_records, content_type, search_url, search_class):
+def test_valid_put(
+    app, search_clear, test_records, content_type, search_url, search_class
+):
     """Test VALID record patch request (PATCH .../records/<record_id>)."""
     HEADERS = [("Accept", "application/json"), ("Content-Type", content_type)]
 
@@ -43,7 +45,7 @@ def test_valid_put(app, search, test_records, content_type, search_url, search_c
     "content_type", ["application/json", "application/json;charset=utf-8"]
 )
 def test_valid_put_etag(
-    app, search, test_records, content_type, search_url, search_class
+    app, search_clear, test_records, content_type, search_url, search_class
 ):
     """Test concurrency control with etags."""
     HEADERS = [("Accept", "application/json"), ("Content-Type", content_type)]
@@ -70,7 +72,7 @@ def test_valid_put_etag(
         assert_hits_len(res, 1)
 
 
-def test_valid_put_weak_etag(app, search, test_records):
+def test_valid_put_weak_etag(app, search_clear, test_records):
     """Test that a weak ETag in If-Match is accepted (nginx+gzip compatibility).
 
     When nginx compresses a response it converts the ETag from strong ("N") to
@@ -99,7 +101,7 @@ def test_valid_put_weak_etag(app, search, test_records):
     "content_type", ["application/json", "application/json;charset=utf-8"]
 )
 def test_put_on_deleted(
-    app, db, search, test_data, content_type, search_url, search_class
+    app, db, search_clear, test_data, content_type, search_url, search_class
 ):
     """Test putting to a deleted record."""
     with app.test_client() as client:
@@ -121,7 +123,7 @@ def test_put_on_deleted(
 
 
 @pytest.mark.parametrize("charset", ["", ";charset=utf-8"])
-def test_invalid_put(app, search, test_records, charset, search_url):
+def test_invalid_put(app, search_clear, test_records, charset, search_url):
     """Test INVALID record put request (PUT .../records/<record_id>)."""
     HEADERS = [
         ("Accept", "application/json"),

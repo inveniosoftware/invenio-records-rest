@@ -33,14 +33,14 @@ config["recid"]["links_factory_imp"] = lambda pid: {
 
 
 @pytest.mark.parametrize(
-    "app",
+    "app_config",
     [
         dict(
             # Provide the configuration with the old links_factory
             records_rest_endpoints=config,
         )
     ],
-    indirect=["app"],
+    indirect=["app_config"],
 )
 def test_old_signature_backward_compatibility(app, test_records):
     """Check that the old Links_factory signature is still supported.

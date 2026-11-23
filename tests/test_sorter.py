@@ -77,20 +77,28 @@ def test_geolocation_sort(app):
         }
 
 
-def test_default_sorter_factory(app):
+def test_default_sorter_factory(app, set_app_config_fn_scoped):
     """Test default sorter factory."""
-    app.config["RECORDS_REST_SORT_OPTIONS"] = dict(
-        myindex=dict(
-            myfield=dict(
-                fields=["field1", "-field2"],
+    set_app_config_fn_scoped(
+        {
+            "RECORDS_REST_SORT_OPTIONS": dict(
+                myindex=dict(
+                    myfield=dict(
+                        fields=["field1", "-field2"],
+                    )
+                ),
             )
-        ),
+        }
     )
-    app.config["RECORDS_REST_DEFAULT_SORT"] = dict(
-        myindex=dict(
-            query="-myfield",
-            noquery="myfield",
-        ),
+    set_app_config_fn_scoped(
+        {
+            "RECORDS_REST_DEFAULT_SORT": dict(
+                myindex=dict(
+                    query="-myfield",
+                    noquery="myfield",
+                ),
+            )
+        }
     )
 
     # Sort

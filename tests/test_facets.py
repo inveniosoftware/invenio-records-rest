@@ -136,7 +136,7 @@ def test_aggregations(app):
         assert _aggregations(search, defs).to_dict()["aggs"] == defs
 
 
-def test_default_facets_factory(app):
+def test_default_facets_factory(app, set_app_config_fn_scoped):
     """Test aggregations."""
     defs = dict(
         aggs=dict(
@@ -154,7 +154,9 @@ def test_default_facets_factory(app):
             type=terms_filter("type"),
         ),
     )
-    app.config["RECORDS_REST_FACETS"]["testidx"] = defs
+    set_app_config_fn_scoped(
+        {"RECORDS_REST_FACETS": {**app.config["RECORDS_REST_FACETS"], "testidx": defs}}
+    )
     with app.test_request_context("?type=a&subtype=b"):
         search = dsl.Search().query(dsl.Q(query="value"))
         search, urlkwargs = default_facets_factory(search, "testidx")
@@ -169,7 +171,7 @@ def test_default_facets_factory(app):
         assert "bool" not in search.to_dict()["query"]
 
 
-def test_selecting_one_specified_facet(app):
+def test_selecting_one_specified_facet(app, set_app_config_fn_scoped):
     defs = dict(
         aggs=dict(
             facet_1=dict(
@@ -189,14 +191,21 @@ def test_selecting_one_specified_facet(app):
     )
 
     expected_agg = dict(facet_2=dict(terms=dict(field="other_field")))
-    app.config["RECORDS_REST_FACETS"]["test_facet_names"] = defs
+    set_app_config_fn_scoped(
+        {
+            "RECORDS_REST_FACETS": {
+                **app.config["RECORDS_REST_FACETS"],
+                "test_facet_names": defs,
+            }
+        }
+    )
     with app.test_request_context("?type=a&subtype=b&facets=facet_2"):
         search = dsl.Search().query(dsl.Q(query="value"))
         search, urlkwargs = default_facets_factory(search, "test_facet_names")
         assert search.to_dict().get("aggs") == expected_agg
 
 
-def test_selecting_specified_facet(app):
+def test_selecting_specified_facet(app, set_app_config_fn_scoped):
     defs = dict(
         aggs=dict(
             facet_1=dict(
@@ -221,14 +230,21 @@ def test_selecting_specified_facet(app):
         ),
         facet_3=dict(terms=dict(field="some_other_field")),
     )
-    app.config["RECORDS_REST_FACETS"]["test_facet_names"] = defs
+    set_app_config_fn_scoped(
+        {
+            "RECORDS_REST_FACETS": {
+                **app.config["RECORDS_REST_FACETS"],
+                "test_facet_names": defs,
+            }
+        }
+    )
     with app.test_request_context("?type=a&subtype=b&facets=facet_1,facet_3"):
         search = dsl.Search().query(dsl.Q(query="value"))
         search, urlkwargs = default_facets_factory(search, "test_facet_names")
         assert search.to_dict().get("aggs") == expected_agg
 
 
-def test_turn_off_facets(app):
+def test_turn_off_facets(app, set_app_config_fn_scoped):
     defs = dict(
         aggs=dict(
             facet_1=dict(
@@ -247,14 +263,21 @@ def test_turn_off_facets(app):
         ),
     )
 
-    app.config["RECORDS_REST_FACETS"]["test_facet_names"] = defs
+    set_app_config_fn_scoped(
+        {
+            "RECORDS_REST_FACETS": {
+                **app.config["RECORDS_REST_FACETS"],
+                "test_facet_names": defs,
+            }
+        }
+    )
     with app.test_request_context("?type=a&subtype=b&facets=null"):
         search = dsl.Search().query(dsl.Q(query="value"))
         search, urlkwargs = default_facets_factory(search, "test_facet_names")
         assert search.to_dict().get("aggs") is None
 
 
-def test_selecting_all_facets_by_default(app):
+def test_selecting_all_facets_by_default(app, set_app_config_fn_scoped):
     defs = dict(
         aggs=dict(
             facet_1=dict(
@@ -274,7 +297,14 @@ def test_selecting_all_facets_by_default(app):
     )
 
     expected_agg = defs["aggs"]
-    app.config["RECORDS_REST_FACETS"]["test_facet_names"] = defs
+    set_app_config_fn_scoped(
+        {
+            "RECORDS_REST_FACETS": {
+                **app.config["RECORDS_REST_FACETS"],
+                "test_facet_names": defs,
+            }
+        }
+    )
     with app.test_request_context("?type=a&subtype=b"):
         search = dsl.Search().query(dsl.Q(query="value"))
         search, urlkwargs = default_facets_factory(search, "test_facet_names")

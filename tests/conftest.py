@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2015-2018 CERN.
 # SPDX-FileCopyrightText: 2024 Graz University of Technology.
+# SPDX-FileCopyrightText: 2026 CESNET z.s.p.o.
 # SPDX-License-Identifier: MIT
 
 """Pytest configuration."""
@@ -7,39 +8,19 @@
 import copy
 import json
 import os
-import shutil
 import sys
-import tempfile
 from os.path import dirname, join
 
 import pytest
-from flask import Flask, g, url_for
-from flask_login import LoginManager, UserMixin
+from flask import url_for
 from helpers import create_record
-from invenio_config import InvenioConfigDefault
-from invenio_db import InvenioDB
-from invenio_db import db as db_
-from invenio_i18n import InvenioI18N
-from invenio_indexer import InvenioIndexer
+from invenio_app.factory import create_api
 from invenio_indexer.api import RecordIndexer
 from invenio_indexer.signals import before_record_index
-from invenio_pidstore import InvenioPIDStore
-from invenio_records import InvenioRecords
-from invenio_rest import InvenioREST
-from invenio_search import (
-    InvenioSearch,
-    RecordsSearch,
-    current_search,
-    current_search_client,
-)
-from invenio_search.engine import search as search_engine
-from invenio_search.errors import IndexAlreadyExistsError
-from sqlalchemy_utils.functions import create_database, database_exists
+from invenio_search import RecordsSearch, current_search
 
-from invenio_records_rest import InvenioRecordsREST, config
+from invenio_records_rest import config
 from invenio_records_rest.facets import terms_filter
-from invenio_records_rest.utils import PIDConverter
-from invenio_records_rest.views import create_blueprint_from_app
 
 sys.path.append(os.path.dirname(__file__))
 
@@ -82,21 +63,38 @@ def search_url():
     yield url_for("invenio_records_rest.recid_list")
 
 
-@pytest.fixture()
-def app(request, search_class):
-    """Flask application fixture.
+@pytest.fixture(scope="module")
+def extra_entry_points():
+    """Register the test mappings."""
+    return {
+        "invenio_search.mappings": [
+            "invenio-records-rest = mock_module.mappings",
+        ],
+    }
+
+
+@pytest.fixture(scope="module")
+def create_app(instance_path, entry_points):
+    """Application factory fixture."""
+    return create_api
+
+
+@pytest.fixture(scope="module")
+def app_config(app_config, request, search_class):
+    """Application configuration fixture.
 
     Note that RECORDS_REST_ENDPOINTS is used during application creation to
-    create blueprints on the fly, hence once you have this fixture in a test,
+    create blueprints on the fly, hence once you have the app in a test,
     it's too late to customize the configuration variable. You can however
-    customize it using parameterized tests:
+    customize it using indirectly parameterized tests:
 
     .. code-block:: python
 
-    @pytest.mark.parametrize('app', [dict(
+    @pytest.mark.parametrize('app_config', [dict(
         endpoint=dict(
             search_class='conftest:TestSearch',
         )
+    )], indirect=['app_config'])
     def test_mytest(app, db, search):
         # ...
 
@@ -107,20 +105,24 @@ def app(request, search_class):
 
     .. code-block:: python
 
-    @pytest.mark.parametrize('app', [dict(
+    @pytest.mark.parametrize('app_config', [dict(
         records_rest_endpoints=dict(
             recid=dict(
                 search_class='conftest:TestSearch',
             )
         )
+    )], indirect=['app_config'])
     def test_mytest(app, db, search):
         # ...
 
     This will fully parameterize RECORDS_REST_ENDPOINTS.
+
+    Each distinct parameter gets its own (module-scoped) application.
     """
-    instance_path = tempfile.mkdtemp()
-    app = Flask("testapp", instance_path=instance_path)
-    app.config.update(
+    # pytest-invenio's app_config is shared by all parameter variants within
+    # a module, so work on a copy to keep the variants from leaking.
+    app_config = dict(app_config)
+    app_config.update(
         ACCOUNTS_JWT_ENABLE=False,
         INDEXER_DEFAULT_DOC_TYPE="testrecord",
         INDEXER_DEFAULT_INDEX=search_class.Meta.index,
@@ -148,101 +150,24 @@ def app(request, search_class):
             )
         },
         SERVER_NAME="localhost:5000",
-        SQLALCHEMY_DATABASE_URI=os.environ.get(
-            "SQLALCHEMY_DATABASE_URI", "sqlite:///test.db"
-        ),
-        SQLALCHEMY_TRACK_MODIFICATIONS=True,
-        TESTING=True,
     )
-    app.config["RECORDS_REST_ENDPOINTS"]["recid"]["search_class"] = search_class
+    endpoints = app_config["RECORDS_REST_ENDPOINTS"]
+    endpoints["recid"]["search_class"] = search_class
 
     # Parameterize application.
     if hasattr(request, "param"):
         if "endpoint" in request.param:
-            app.config["RECORDS_REST_ENDPOINTS"]["recid"].update(
-                request.param["endpoint"]
-            )
+            endpoints["recid"].update(request.param["endpoint"])
         if "records_rest_endpoints" in request.param:
-            original_endpoint = app.config["RECORDS_REST_ENDPOINTS"]["recid"]
-            del app.config["RECORDS_REST_ENDPOINTS"]["recid"]
+            original_endpoint = endpoints.pop("recid")
             for new_endpoint_prefix, new_endpoint_value in request.param[
                 "records_rest_endpoints"
             ].items():
                 new_endpoint = dict(original_endpoint)
                 new_endpoint.update(new_endpoint_value)
-                app.config["RECORDS_REST_ENDPOINTS"][new_endpoint_prefix] = new_endpoint
+                endpoints[new_endpoint_prefix] = new_endpoint
 
-    app.url_map.converters["pid"] = PIDConverter
-
-    InvenioDB(app)
-    InvenioREST(app)
-    InvenioRecords(app)
-    InvenioIndexer(app)
-    InvenioPIDStore(app)
-    InvenioConfigDefault(app)
-    InvenioI18N(app)
-    search = InvenioSearch(app)
-    search.register_mappings(search_class.Meta.index, "mock_module.mappings")
-    InvenioRecordsREST(app)
-    app.register_blueprint(create_blueprint_from_app(app))
-
-    with app.app_context():
-        yield app
-
-    # Teardown instance path.
-    shutil.rmtree(instance_path)
-
-
-@pytest.fixture()
-def db(app):
-    """Database fixture."""
-    if (
-        not database_exists(str(db_.engine.url.render_as_string(hide_password=False)))
-        and app.config["SQLALCHEMY_DATABASE_URI"] != "sqlite://"
-    ):
-        create_database(db_.engine.url.render_as_string(hide_password=False))
-    db_.create_all()
-
-    yield db_
-
-    db_.session.remove()
-    db_.drop_all()
-
-
-@pytest.fixture()
-def search(app):
-    """Search engine fixture."""
-    try:
-        list(current_search.create())
-    except (search_engine.RequestError, IndexAlreadyExistsError):
-        list(current_search.delete(ignore=[404]))
-        list(current_search.create(ignore=[400]))
-    current_search_client.indices.refresh()
-    yield current_search_client
-    list(current_search.delete(ignore=[404]))
-
-
-@pytest.fixture()
-def prefixed_search(app):
-    """Search engine fixture."""
-    app.config["SEARCH_INDEX_PREFIX"] = "test-"
-    try:
-        list(current_search.create())
-    except (search_engine.RequestError, IndexAlreadyExistsError):
-        list(current_search.delete(ignore=[404]))
-        list(current_search.create(ignore=[400]))
-
-    try:
-        current_search_client.indices.delete(".opensearch-sap-log-types-config")
-        current_search_client.indices.delete(".opensearch-observability")
-        current_search_client.indices.delete(".plugins-ml-config")
-    except Exception:
-        pass
-
-    current_search_client.indices.refresh()
-    yield current_search_client
-    list(current_search.delete(ignore=[404]))
-    app.config["SEARCH_INDEX_PREFIX"] = ""
+    return app_config
 
 
 def record_indexer_receiver(sender, json=None, record=None, index=None, **kwargs):
@@ -263,9 +188,8 @@ def record_indexer_receiver(sender, json=None, record=None, index=None, **kwargs
 
 
 @pytest.fixture()
-def indexer(app, search):
+def indexer(app, search_clear):
     """Create a record indexer."""
-    InvenioIndexer(app)
     before_record_index.connect(record_indexer_receiver, sender=app)
     yield RecordIndexer()
 
@@ -302,38 +226,3 @@ def indexed_records(search_class, indexer, test_records):
 def test_patch():
     """A JSON patch."""
     yield [{"op": "replace", "path": "/year", "value": 1985}]
-
-
-@pytest.fixture()
-def default_permissions(app):
-    """Test default deny all permission."""
-    for key in [
-        "RECORDS_REST_DEFAULT_CREATE_PERMISSION_FACTORY",
-        "RECORDS_REST_DEFAULT_UPDATE_PERMISSION_FACTORY",
-        "RECORDS_REST_DEFAULT_DELETE_PERMISSION_FACTORY",
-        "RECORDS_REST_DEFAULT_READ_PERMISSION_FACTORY",
-    ]:
-        app.config[key] = getattr(config, key)
-
-    lm = LoginManager(app)
-
-    # Allow easy login for tests purposes :-)
-    class User(UserMixin):
-        def __init__(self, id):
-            self.id = id
-
-    @lm.request_loader
-    def load_user(request):
-        uid = request.args.get("user", type=int)
-        if uid:
-            return User(uid)
-        return None
-
-    @app.after_request
-    def logout(response):
-        g.pop("_login_user", None)
-        return response
-
-    yield app
-
-    app.extensions["invenio-records-rest"].reset_permission_factories()

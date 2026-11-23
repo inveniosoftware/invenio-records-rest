@@ -73,9 +73,11 @@ Initialization
 
 First create a Flask application:
 
+>>> import os
 >>> from flask import Flask
 >>> app = Flask('myapp')
->>> app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
+>>> db_uri = os.environ.get('SQLALCHEMY_DATABASE_URI', 'sqlite://')
+>>> app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 >>> app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 Initialize the required dependencies:
