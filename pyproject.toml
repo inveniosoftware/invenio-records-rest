@@ -9,7 +9,7 @@
 name = "invenio-records-rest"
 description = "REST API for invenio-records."
 readme = "README.rst"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 license = "MIT"
 authors = [
   { name = "CERN", email = "info@inveniosoftware.org" },
